@@ -1,0 +1,4 @@
+venv
+mysite/static
+__pycache__/
+db.sqlite3
