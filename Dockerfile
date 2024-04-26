@@ -13,4 +13,4 @@ COPY requirements.txt /code/
 RUN pip install --upgrade pip \
     && pip3 install -r requirements.txt --no-cache-dir
 COPY . /code/
-WORKDIR /code/mysite
+WORKDIR /code/terno
