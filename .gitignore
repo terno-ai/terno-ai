@@ -2,3 +2,4 @@ venv
 /terno/static
 __pycache__/
 db.sqlite3
+/terno/assets
