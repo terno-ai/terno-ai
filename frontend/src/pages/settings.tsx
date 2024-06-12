@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const Settings: React.FC = () => {
+const Settings = () => {
   const [apiKey, setApiKey] = useState(''); // State to hold the API key
   const [newApiKey, setNewApiKey] = useState(''); // State to hold the new API key input value
 
