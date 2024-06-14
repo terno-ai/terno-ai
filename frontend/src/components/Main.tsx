@@ -1,37 +1,20 @@
-import '../../index.css'
-// import { PlaceholdersAndVanishInputDemo } from '../QueryInput'
-import sendMessage from '../../utils/api'
+import '../index.css'
+import { sendMessage, table_data } from '../utils/api'
 import { useState } from 'react'
-import RenderTable from '../RenderTable'
+import RenderTable from './RenderTable'
+import DropDownMenu from './DropDownMenu';
 
-interface TableData {
+
+  interface TableData {
     columns: string[];
     data: Record<string, string | number>[];
-}
-const table_data = {
-    "columns": ["Invoice", "Status", "Method", "Amount"],
-    "data": [
-      {
-        "id": 1,
-        "Invoice": "INV001",
-        "Status": "Paid",
-        "Method": "Credit Card",
-        "Amount": "$250.00",
-      },
-      {
-        "id": 2,
-        "Invoice": "INV002",
-        "Status": "Pending",
-        "Method": "PayPal",
-        "Amount": "$150.00",
-      }
-    ]
 }
 
 const Main = () => {
     const [inputText, setInputText] = useState('');
     const [generatedQueryText, setGeneratedQueryText] = useState('');
     const [tableData, setTableData] = useState<TableData>({ columns: [], data: [] });
+
     const handleSendMessage = async () => {
         const response = await sendMessage(inputText);
         setGeneratedQueryText(String(response));
@@ -43,10 +26,9 @@ const Main = () => {
     <div className="main flex-1 min-h-screen pb-36 relative overflow-scroll">
         <div className="nav flex items-center justify-between text-xl p-5 text-gray-600">
             <p className='font-semibold text-black'>Terno AI</p>
-            <img className='w-10 rounded-full' />
+            <DropDownMenu />
         </div>
         <div className="main-container max-w-4xl mx-auto">
-        {/* <PlaceholdersAndVanishInputDemo /> */}
             <div className="search-box flex items-center justify-between gap-5 p-2.5 px-5 rounded-full bg-slate-100 drop-shadow-md hover:drop-shadow-lg">
                 <input
                     type='text'

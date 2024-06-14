@@ -13,3 +13,7 @@ def generate_table_response(request):
 
 def chat(request):
     return JsonResponse({'response': 'This is LLM response'})
+
+
+def settings(request):
+    return render(request, 'frontend/index.html')
