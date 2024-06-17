@@ -1,9 +1,9 @@
 from django.apps import AppConfig
 
 
-class SqlshieldConfig(AppConfig):
+class TernoConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'sqlshield'
+    name = 'terno'
 
     def ready(self):
         from . import receivers

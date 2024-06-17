@@ -1,5 +1,5 @@
 
-from .models import DataSource, Table, TableColumn
+from terno.models import DataSource, Table, TableColumn
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 
@@ -19,16 +19,16 @@ def load_metadata(datasource):
             if len(existing_tables) > 0:
                 mtable = existing_tables[0]
             else:
-                mtable = Table(name=table_name)
+                mtable = Table(name=table_name, data_source=datasource)
                 mtable.save()
             current_tabcols = []
             current_tables[table_name] = current_tabcols
             for col in inspector.get_columns(table_name, schema=schema):
-                dbcol = TableColumn.objects.filter(table=mtable, name=col)
+                dbcol = TableColumn.objects.filter(name=col, table=mtable)
                 if len(dbcol) > 0:
                     tabcol = dbcol[0]
                 else:
-                    tabcol = TableColumn(**col)
+                    tabcol = TableColumn(name=col['name'], table=mtable, data_type=col['type'])
                     tabcol.save()
                 current_tabcols.append(col)
     return current_tables
@@ -38,7 +38,7 @@ def load_metadata(datasource):
 def update_tables_on_datasource_change(sender, instance, created, **kwargs):
     """Fetches and saves table information when a data source is saved."""
     print("SIGNAL is fired!! I will load the models here.")
-    load_metadata(sender)
+    load_metadata(instance)
     if created:
         print("Created: SIGNAL is fired!! I will load the models here.")
         # for table_name in retrieved_tables:

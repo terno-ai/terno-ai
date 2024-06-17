@@ -1,15 +1,12 @@
 from django.contrib import admin
-
 from . import models
 
-# Register your models here.
 
+@admin.register(models.DataSource)
 class DataSourceAdmin(admin.ModelAdmin):
     pass
 
+
+@admin.register(models.TableSelector)
 class TableSelectorAdmin(admin.ModelAdmin):
     pass
-
-admin.site.register(models.DataSource, DataSourceAdmin)
-
-admin.site.register(models.TableSelector, TableSelectorAdmin)
