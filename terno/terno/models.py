@@ -9,15 +9,15 @@ class DataSource(models.Model):
         Oracle = "oracle", _("Oracle")
         MSSQL = "mysql", _("MySQL")
         postgres = "postgres", _("Postgres")
-    type = models.CharField(max_length=20,
-                            choices=DBType,
-                            default=DBType.default
-                            )
-    connection_str = models.CharField(max_length=300)
+    display_name = models.CharField(max_length=20, default='Datasource 1')
+    type = models.CharField(max_length=20, choices=DBType,
+                            default=DBType.default)
+    connection_str = models.TextField(
+        max_length=300, help_text="Connection string for the datasource")
     enabled = models.BooleanField(default=True)
 
     def __str__(self):
-        return self.connection_str
+        return self.display_name
 
 
 class Table(models.Model):
@@ -27,7 +27,7 @@ class Table(models.Model):
     data_source = models.ForeignKey(DataSource, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.data_source} - {self.name}"
+        return f"{self.data_source.display_name} - {self.name}"
 
     def get_table_name(self):
         return self.pub_name if self.pub_name else self.name
@@ -38,7 +38,7 @@ class TableColumn(models.Model):
     name = models.CharField(max_length=255)
     pub_name = models.CharField(max_length=255, null=True, blank=True)
     table = models.ForeignKey(Table, on_delete=models.CASCADE)
-    data_type = models.CharField(max_length=50, blank=True)  # Optional field for data type
+    data_type = models.CharField(max_length=50, blank=True)
 
     def __str__(self):
         return f"{self.table} - {self.name}"
@@ -53,8 +53,7 @@ class TableSelector(models.Model):
     tables = models.ManyToManyField(Table, blank=True)
 
     def __str__(self):
-        selected_tables = ", ".join([str(table) for table in self.tables.all()])
-        return f"Selected tables from {self.data_source}: {selected_tables}"
+        return f'{self.data_source}'
 
 
 class GroupTableSelector(models.Model):
