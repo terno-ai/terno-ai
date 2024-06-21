@@ -50,7 +50,7 @@ class TableColumn(models.Model):
 class TableSelector(models.Model):
     """Model for user to select tables."""
     data_source = models.ForeignKey(DataSource, on_delete=models.CASCADE)
-    tables = models.ManyToManyField(Table, blank=True)
+    tables = models.ManyToManyField(Table, blank=True, related_name='public_tables')
 
     def __str__(self):
         return f'{self.data_source}'

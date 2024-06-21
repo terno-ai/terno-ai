@@ -40,11 +40,11 @@ class GroupTableSelectorAdmin(admin.ModelAdmin):
     exclude = ['exclude_tables']
     filter_horizontal = ['tables']
 
-    # def formfield_for_manytomany(self, db_field, request, **kwargs):
-    #     if db_field.name == "tables":
-    #         tables = models.TableSelector.objects.all().first().tables.all()
-    #         kwargs["queryset"] = tables
-    #     return super().formfield_for_manytomany(db_field, request, **kwargs)
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        if db_field.name == "tables":
+            tables = models.Table.objects.exclude(public_tables__in=models.TableSelector.objects.all())
+            kwargs["queryset"] = tables
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
 
 
 @admin.register(models.GroupColumnSelector)
