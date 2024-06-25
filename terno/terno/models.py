@@ -47,7 +47,7 @@ class TableColumn(models.Model):
         return self.pub_name if self.pub_name else self.name
 
 
-class TableSelector(models.Model):
+class PrivateTableSelector(models.Model):
     """Model for user to select tables."""
     data_source = models.ForeignKey(DataSource, on_delete=models.CASCADE)
     tables = models.ManyToManyField(Table, blank=True, related_name='public_tables')
@@ -92,4 +92,9 @@ class GroupColumnSelector(models.Model):
 
 class GroupTableRowFilterSelector(models.Model):
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    filter_str = models.CharField(max_length=300)
+
+
+class TableRowFilterSelector(models.Model):
+    table = models.ForeignKey(Table, on_delete=models.CASCADE)
     filter_str = models.CharField(max_length=300)

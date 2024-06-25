@@ -17,8 +17,8 @@ class TableAdmin(admin.ModelAdmin):
     search_fields = ['name', 'pub_name', 'data_source__display_name']
 
 
-@admin.register(models.TableSelector)
-class TableSelectorAdmin(admin.ModelAdmin):
+@admin.register(models.PrivateTableSelector)
+class PrivateTableSelectorAdmin(admin.ModelAdmin):
     list_display = ['data_source']
     filter_horizontal = ['tables']
     list_filter = ['data_source']
@@ -42,7 +42,8 @@ class GroupTableSelectorAdmin(admin.ModelAdmin):
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == "tables":
-            tables = models.Table.objects.exclude(public_tables__in=models.TableSelector.objects.all())
+            tables = models.Table.objects.filter(
+                public_tables__in=models.PrivateTableSelector.objects.all())
             kwargs["queryset"] = tables
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
@@ -51,9 +52,15 @@ class GroupTableSelectorAdmin(admin.ModelAdmin):
 class GroupColumnSelectorAdmin(admin.ModelAdmin):
     list_display = ['group']
     search_fields = ['group__name']
+    exclude = ['exclude_columns']
     filter_horizontal = ['columns', 'exclude_columns']
 
 
 @admin.register(models.GroupTableRowFilterSelector)
 class GroupTableRowFilterSelectorAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(models.TableRowFilterSelector)
+class TableRowFilterSelectorAdmin(admin.ModelAdmin):
     pass

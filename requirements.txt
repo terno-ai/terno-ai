@@ -6,3 +6,5 @@ soupsieve==2.5
 sqlparse==0.5.0
 sqlshield==0.0.2
 sqlalchemy==2.0.30
+openai==1.35.3
+sqlglot==25.3.0
