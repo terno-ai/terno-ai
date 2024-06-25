@@ -2,8 +2,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 import terno.models as models
 import terno.utils as utils
-import sqlalchemy
-import sqlshield.models as shield_models
+import json
 
 
 def index(request):
@@ -15,7 +14,9 @@ def settings(request):
 
 
 def get_sql(request):
-    # question = request.POST.get('prompt')
+    data = json.loads(request.body)
+    question = data.get('prompt')
+    print('ques', question)
     datasource = models.DataSource.objects.first()
     role = request.user.groups.all()
     allowed_tables, allowed_columns = utils.get_admin_config_object(datasource, role)
@@ -26,23 +27,20 @@ def get_sql(request):
     print(tables)
 
     schema_generated = mDb.generate_schema()
-    question = "Get all artists"
-    aSQL = utils.llm_response(question, schema_generated)
+    generated_sql = utils.llm_response(question, schema_generated)
 
     return JsonResponse({
-        'response': 'This is LLM response',
-        'tables': list(tables.keys()),
-        'llm_response': aSQL,
+        'generated_sql': generated_sql,
     })
 
 
 def execute_sql(request):
+    data = json.loads(request.body)
+    aSQL = data.get('sql')
     datasource = models.DataSource.objects.first()
     mDb = utils.generate_mdb(datasource)
-    # aSQL = request.POST.get('sql')
-    aSQL = 'SELECT * FROM Artist;'
     gSQL = utils.generate_native_sql(mDb, aSQL)
     data = utils.execute_native_sql(datasource, gSQL)
     return JsonResponse({
-        'data': data
+        'table_data': data
     })

@@ -4,6 +4,7 @@ from openai import OpenAI
 from sqlshield.shield import Session
 from sqlshield.models import MDatabase
 import sqlalchemy
+from django.conf import settings
 
 
 def get_all_group_tables(datasource, roles):
@@ -16,7 +17,7 @@ def get_all_group_tables(datasource, roles):
     print(roles)
     group_tables_object = models.GroupTableSelector.objects.filter(
         group__in=roles,
-        tables__data_source=datasource).first()  # Take tables for all groups
+        tables__data_source=datasource).first()
     print(group_tables_object.id)
     group_tables = group_tables_object.tables.all()
     print(group_tables)
@@ -44,7 +45,7 @@ def get_admin_config_object(datasource, roles):
 
 
 def llm_response(question, schema_generated):
-    client = OpenAI(api_key='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')
+    client = OpenAI(api_key=settings.OPENAI_API_KEY)
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
@@ -82,5 +83,8 @@ def execute_native_sql(datasource, gSQL):
         table_data['columns'] = list(rs.keys())
         table_data['data'] = []
         for row in rs:
-            table_data['data'].append(list(row))
+            data = {}
+            for i, column in enumerate(table_data['columns']):
+                data[column] = row[i]
+            table_data['data'].append(data)
         return table_data

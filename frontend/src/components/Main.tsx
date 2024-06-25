@@ -1,11 +1,11 @@
 import '../index.css'
-import { sendMessage, table_data } from '../utils/api'
+import { executeSQL, sendMessage } from '../utils/api'
 import { useState } from 'react'
 import RenderTable from './RenderTable'
 import DropDownMenu from './DropDownMenu';
 
 
-  interface TableData {
+interface TableData {
     columns: string[];
     data: Record<string, string | number>[];
 }
@@ -20,7 +20,8 @@ const Main = () => {
         setGeneratedQueryText(String(response));
     }
     const handleQueryExecute = async () => {
-        setTableData(table_data);
+        const response = await executeSQL(generatedQueryText);
+        setTableData(response);
     }
   return (
     <div className="main flex-1 min-h-screen pb-36 relative overflow-scroll">

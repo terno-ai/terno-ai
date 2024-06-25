@@ -20,9 +20,9 @@ const DropDownMenu = () => {
         <DropdownMenuLabel>Choose Data Source</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuRadioGroup value={position} onValueChange={setPosition}>
-        <DropdownMenuRadioItem value="top">Top</DropdownMenuRadioItem>
-        <DropdownMenuRadioItem value="bottom">Bottom</DropdownMenuRadioItem>
-        <DropdownMenuRadioItem value="right">Right</DropdownMenuRadioItem>
+        <DropdownMenuRadioItem value="top">First</DropdownMenuRadioItem>
+        <DropdownMenuRadioItem value="bottom">Second</DropdownMenuRadioItem>
+        <DropdownMenuRadioItem value="right">Third</DropdownMenuRadioItem>
         </DropdownMenuRadioGroup>
     </DropdownMenuContent>
     </DropdownMenu>

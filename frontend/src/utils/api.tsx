@@ -1,12 +1,37 @@
 export const sendMessage = async (prompt: string) => {
-    const dummy_query = 'SELECT * FROM invoices';
-    return dummy_query
+  const csrfToken = getCsrfToken();
+  const response = await fetch(endpoints.getSQL(), {
+    method: 'POST',
+    headers: {
+      "Content-Type": "application/json",
+      'X-CSRFToken': csrfToken || ''
+    },
+    body: JSON.stringify({'prompt': prompt})
+  });
+  const result = await response.json();
+  return result['generated_sql'];
+}
+
+export const executeSQL = async (sql: string) => {
+  const csrfToken = getCsrfToken();
+  const response = await fetch(endpoints.executeSQL(), {
+    method: 'POST',
+    headers: {
+      "Content-Type": "application/json",
+      'X-CSRFToken': csrfToken || ''
+    },
+    body: JSON.stringify({'sql': sql})
+  });
+  const result = await response.json();
+  return result['table_data'];
 }
 
 // const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-const API_BASE_URL = '127.0.0.1:8000';
+const API_BASE_URL = '';
 
 export const endpoints = {
+  getSQL: () => `${API_BASE_URL}/get-sql/`,
+  executeSQL: () => `${API_BASE_URL}/execute-sql`,
   getUser: (userId: string) => `${API_BASE_URL}/users/${userId}`,
   getPosts: () => `${API_BASE_URL}/posts`,
   createPost: () => `${API_BASE_URL}/posts`,
@@ -33,3 +58,12 @@ export const table_data = {
       }
     ]
 }
+
+export const getCsrfToken = () => {
+  const cookieValue = document.cookie
+    .split('; ')
+    .find(row => row.startsWith('csrftoken='))
+    ?.split('=')[1];
+
+  return cookieValue;
+};
