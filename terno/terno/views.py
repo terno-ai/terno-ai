@@ -13,6 +13,14 @@ def settings(request):
     return render(request, 'frontend/index.html')
 
 
+def get_datasource(request):
+    datasources = models.DataSource.objects.all()
+    d = datasources.values_list('display_name', flat=True)
+    return JsonResponse({
+        'datasources': list(d),
+    })
+
+
 def get_sql(request):
     data = json.loads(request.body)
     question = data.get('prompt')

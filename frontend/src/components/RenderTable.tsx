@@ -17,7 +17,7 @@ interface RenderTableProps {
 const RenderTable: React.FC<RenderTableProps> = ({columns, data}) => {
   return (
     <Table>
-    <TableCaption>A list of your recent invoices.</TableCaption>
+    <TableCaption>A list of your result.</TableCaption>
     <TableHeader>
         <TableRow>
         {columns.map((column) => (

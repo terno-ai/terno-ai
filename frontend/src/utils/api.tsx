@@ -26,12 +26,26 @@ export const executeSQL = async (sql: string) => {
   return result['table_data'];
 }
 
+export const getDatasource = async () => {
+  const csrfToken = getCsrfToken();
+  const response = await fetch(endpoints.getDatasource(), {
+    method: 'GET',
+    headers: {
+      "Content-Type": "application/json",
+      'X-CSRFToken': csrfToken || ''
+    },
+  });
+  const result = await response.json();
+  return result['datasources'];
+}
+
 // const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const API_BASE_URL = '';
 
 export const endpoints = {
   getSQL: () => `${API_BASE_URL}/get-sql/`,
   executeSQL: () => `${API_BASE_URL}/execute-sql`,
+  getDatasource: () => `${API_BASE_URL}/get-datasource`,
   getUser: (userId: string) => `${API_BASE_URL}/users/${userId}`,
   getPosts: () => `${API_BASE_URL}/posts`,
   createPost: () => `${API_BASE_URL}/posts`,

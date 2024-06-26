@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,26 +7,47 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "./ui/dropdown-menu"
+} from "./ui/dropdown-menu";
+import { FaAngleDown } from "react-icons/fa";
+import { getDatasource } from "../utils/api";
+
 
 const DropDownMenu = () => {
   const [position, setPosition] = useState("bottom");
+  const [datasource, setDatasource] = useState([]);
+
+  useEffect(() => {
+    const fetchDatasource = async () => {
+      const response = await getDatasource();
+      setDatasource(response);
+    };
+    fetchDatasource();
+  }, []);
+
   return (
     <DropdownMenu>
-    <DropdownMenuTrigger asChild>
-        <button className='rounded-md border border-slate-400 px-6 py-1'>Open</button>
-    </DropdownMenuTrigger>
-    <DropdownMenuContent className="w-56">
+      <DropdownMenuTrigger asChild>
+        <button className="rounded-md border border-slate-400 px-6 py-1 flex justify-center items-center">
+          Data Source
+          <FaAngleDown />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-56">
         <DropdownMenuLabel>Choose Data Source</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuRadioGroup value={position} onValueChange={setPosition}>
-        <DropdownMenuRadioItem value="top">First</DropdownMenuRadioItem>
-        <DropdownMenuRadioItem value="bottom">Second</DropdownMenuRadioItem>
-        <DropdownMenuRadioItem value="right">Third</DropdownMenuRadioItem>
+          {datasource.map((row, rowIndex) => (
+            <DropdownMenuRadioItem
+              value={rowIndex.toString()}
+              key={rowIndex.toString()}
+            >
+              {row}
+            </DropdownMenuRadioItem>
+          ))}
         </DropdownMenuRadioGroup>
-    </DropdownMenuContent>
+      </DropdownMenuContent>
     </DropdownMenu>
-  )
-}
+  );
+};
 
 export default DropDownMenu
