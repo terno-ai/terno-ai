@@ -3,6 +3,16 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import Group
 
 
+class LLMApiKey(models.Model):
+    LLM_PROVIDER = {
+        'openai': 'OpenAI',
+        'gemini': 'Gemini',
+        'anthropic': 'Anthropic'
+    }
+    provider = models.CharField(max_length=20, choices=LLM_PROVIDER)
+    key = models.CharField(max_length=150)
+
+
 class DataSource(models.Model):
     class DBType(models.TextChoices):
         default = "generic", _("Generic")
