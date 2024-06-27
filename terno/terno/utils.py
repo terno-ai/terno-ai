@@ -38,7 +38,10 @@ def get_admin_config_object(datasource, roles):
     group_columns_object = models.GroupColumnSelector.objects.filter(
         group__in=roles,
         columns__in=table_columns).first()
-    group_columns = group_columns_object.columns.all()
+    if group_columns_object:
+        group_columns = group_columns_object.columns.all()
+    else:
+        group_columns = table_columns
     print('final columns', group_columns)
     return all_group_tables, group_columns
 
