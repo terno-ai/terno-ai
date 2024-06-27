@@ -3,6 +3,7 @@ import { executeSQL, sendMessage } from '../utils/api'
 import { useState } from 'react'
 import RenderTable from './RenderTable'
 import DropDownMenu from './DropDownMenu';
+import SqlEditor from './SqlEditor';
 
 
 interface TableData {
@@ -20,6 +21,8 @@ const Main = () => {
         setGeneratedQueryText(String(response));
     }
     const handleQueryExecute = async () => {
+        console.log('------');
+        console.log(generatedQueryText);
         const response = await executeSQL(generatedQueryText);
         setTableData(response);
     }
@@ -42,12 +45,10 @@ const Main = () => {
             </div>
             <div className='mt-10 generated-query'>
                 <div className='mt-4 mb-1 font-medium text-lg'>Generated Query</div>
-                <div className="flex align-center justify-center bg-slate-100 rounded-md px-1">
-                    <input
-                        type='text'
-                        className='flex-1 bg-transparent p-4 outline-none'
+                <div className="flex align-center justify-center rounded-md">
+                    <SqlEditor
                         value={generatedQueryText}
-                        onChange={(e) => setGeneratedQueryText(e.target.value)}
+                        onChange={(value: string) => setGeneratedQueryText(value)}
                     />
                 </div>
                 <div className='text-right'>
