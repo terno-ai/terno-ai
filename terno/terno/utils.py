@@ -10,21 +10,20 @@ from django.conf import settings
 def get_all_group_tables(datasource, roles):
     table_object = models.PrivateTableSelector.objects.filter(
         data_source=datasource).first()
-    global_tables_ids = table_object.tables.all().values_list('id', flat=True)
     global_tables = models.Table.objects.filter(
         data_source=datasource)
-    global_tables = global_tables.exclude(id__in=global_tables_ids)
-    print(roles)
+    if table_object:
+        global_tables_ids = table_object.tables.all().values_list('id', flat=True)
+        global_tables = global_tables.exclude(id__in=global_tables_ids)
+
     group_tables_object = models.GroupTableSelector.objects.filter(
         group__in=roles,
         tables__data_source=datasource).first()
-    print(group_tables_object.id)
-    group_tables = group_tables_object.tables.all()
-    print(group_tables)
-    all_group_tables = global_tables.union(group_tables)
-    print('global tables', global_tables)
-    print('group tables', group_tables)
-    print('final tables', all_group_tables)
+    if group_tables_object:
+        group_tables = group_tables_object.tables.all()
+        all_group_tables = global_tables.union(group_tables)
+    else:
+        all_group_tables = global_tables
     return all_group_tables
 
 
