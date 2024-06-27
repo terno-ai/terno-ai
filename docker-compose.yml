@@ -10,3 +10,10 @@ services:
       - .:/code
     ports:
       - "8000:8000"
+    networks:
+      - app
+
+networks:
+  app:
+    external: true
+    name: app
