@@ -12,6 +12,8 @@ services:
       - "8000:8000"
     networks:
       - app
+    env_file:
+      - env.sh
 
 networks:
   app:
