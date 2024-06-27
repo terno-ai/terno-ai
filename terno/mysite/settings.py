@@ -27,6 +27,8 @@ SECRET_KEY = 'django-insecure-!g#q#cgl#o%(3wo+_l+k9cxesoh%mwft&_lrd7_=9rceb&03q4
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
+CSRF_TRUSTED_ORIGINS = ['https://app.terno.io']
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
 # Application definition
