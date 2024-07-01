@@ -2,6 +2,13 @@ from django.contrib import admin
 import terno.models as models
 
 
+@admin.register(models.LLMApiKey)
+class LLMApiKeyAdmin(admin.ModelAdmin):
+    list_display = ['provider']
+    list_filter = ['provider']
+    search_fields = ['provider']
+
+
 @admin.register(models.DataSource)
 class DataSourceAdmin(admin.ModelAdmin):
     list_display = ['display_name', 'type', 'connection_str', 'enabled']

@@ -52,3 +52,13 @@ def execute_sql(request):
     return JsonResponse({
         'table_data': data
     })
+
+
+def get_tables(request):
+    datasource = models.DataSource.objects.first()
+    role = request.user.groups.all()
+    allowed_tables, allowed_columns = utils.get_admin_config_object(datasource, role)
+    return JsonResponse({
+        'allowed_tables': list(allowed_tables.values_list('name', flat=True)),
+        # 'allowed_columns': allowed_columns
+    })

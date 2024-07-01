@@ -2,7 +2,6 @@ import '../index.css'
 import { executeSQL, sendMessage } from '../utils/api'
 import { useState } from 'react'
 import RenderTable from './RenderTable'
-import DropDownMenu from './DropDownMenu';
 import SqlEditor from './SqlEditor';
 
 
@@ -30,7 +29,6 @@ const Main = () => {
     <div className="main flex-1 min-h-screen pb-36 relative overflow-scroll">
         <div className="nav flex items-center justify-between text-xl p-5 text-gray-600">
             <p className='font-semibold text-black'>Terno AI</p>
-            <DropDownMenu />
         </div>
         <div className="main-container max-w-4xl mx-auto">
             <div className="search-box flex items-center justify-between gap-5 p-2.5 px-5 rounded-full bg-slate-100 drop-shadow-md hover:drop-shadow-lg">
