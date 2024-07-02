@@ -11,7 +11,6 @@ import {
 import { FaAngleDown } from "react-icons/fa";
 import { getDatasource } from "../utils/api";
 
-
 const DropDownMenu = () => {
   const [position, setPosition] = useState("bottom");
   const [datasource, setDatasource] = useState([]);
@@ -50,4 +49,4 @@ const DropDownMenu = () => {
   );
 };
 
-export default DropDownMenu
+export default DropDownMenu;

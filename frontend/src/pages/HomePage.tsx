@@ -1,5 +1,5 @@
-import Main from '../components/Main'
-import Sidebar from '../components/Sidebar'
+import Main from "../components/Main";
+import Sidebar from "../components/Sidebar";
 
 const Home = () => {
   return (
@@ -7,7 +7,7 @@ const Home = () => {
       <Sidebar />
       <Main />
     </>
-  )
-}
+  );
+};
 
-export default Home
+export default Home;

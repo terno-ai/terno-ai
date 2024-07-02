@@ -15,20 +15,17 @@ const SchemaPane = () => {
 
   return (
     <div>
-        <DropDownMenu />
-        <div className="font-bold">Allowed Tables</div>
-        <div>
+      <DropDownMenu />
+      <div className="font-bold">Allowed Tables</div>
+      <div>
         {tables.map((row, rowIndex) => (
-            <div
-                key={rowIndex.toString()}
-                className=""
-            >
-                {row}
-            </div>
+          <div key={rowIndex.toString()} className="">
+            {row}
+          </div>
         ))}
-        </div>
+      </div>
     </div>
-  )
-}
+  );
+};
 
-export default SchemaPane
+export default SchemaPane;

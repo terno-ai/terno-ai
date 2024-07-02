@@ -1,43 +1,40 @@
 import {
-    Table,
-    TableBody,
-    TableCaption,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-  }
-from './ui/Table'
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "./ui/Table";
 
 interface RenderTableProps {
-    columns: string[];
-    data: Record<string, string | number>[];
+  columns: string[];
+  data: Record<string, string | number>[];
 }
 
-const RenderTable: React.FC<RenderTableProps> = ({columns, data}) => {
+const RenderTable: React.FC<RenderTableProps> = ({ columns, data }) => {
   return (
     <Table>
-    <TableCaption>A list of your result.</TableCaption>
-    <TableHeader>
+      <TableCaption>A list of your result.</TableCaption>
+      <TableHeader>
         <TableRow>
-        {columns.map((column) => (
+          {columns.map((column) => (
             <TableHead key={column}>{column}</TableHead>
-        ))}
+          ))}
         </TableRow>
-    </TableHeader>
-    <TableBody>
+      </TableHeader>
+      <TableBody>
         {data.map((row, rowIndex) => (
           <TableRow key={rowIndex}>
             {columns.map((column) => (
-              <TableCell key={`${rowIndex}-${column}`}>
-                {row[column]}
-              </TableCell>
+              <TableCell key={`${rowIndex}-${column}`}>{row[column]}</TableCell>
             ))}
           </TableRow>
         ))}
-    </TableBody>
+      </TableBody>
     </Table>
-  )
-}
+  );
+};
 
-export default RenderTable
+export default RenderTable;

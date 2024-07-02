@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import './App.css';
+import React, { useState } from "react";
+import "./App.css";
 
 interface Message {
   id: number;
@@ -8,52 +8,53 @@ interface Message {
 }
 
 const getCookie = (name: string): string | null => {
-  const cookieValue = document.cookie.split('; ')
-    .find(cookie => cookie.startsWith(name + '='));
+  const cookieValue = document.cookie
+    .split("; ")
+    .find((cookie) => cookie.startsWith(name + "="));
 
-  return cookieValue ? cookieValue.split('=')[1] : null;
+  return cookieValue ? cookieValue.split("=")[1] : null;
 };
 
 const App: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [inputText, setInputText] = useState('');
-  const [responseText, setResponseText] = useState('');
+  const [inputText, setInputText] = useState("");
+  const [responseText, setResponseText] = useState("");
 
   const handleSendMessage = async () => {
-    if (inputText.trim() !== '') {
+    if (inputText.trim() !== "") {
       const newMessage: Message = {
         id: messages.length,
         text: inputText,
-        sender: 'Me', // For simplicity, assuming the sender is "Me"
+        sender: "Me", // For simplicity, assuming the sender is "Me"
       };
 
       setMessages([...messages, newMessage]);
-      setInputText('');
+      setInputText("");
 
       try {
-        const csrftoken = getCookie('csrftoken');
+        const csrftoken = getCookie("csrftoken");
         if (!csrftoken) {
-          throw new Error('CSRF token not found');
+          throw new Error("CSRF token not found");
         }
 
-        const response = await fetch('/chat', {
-          method: 'POST',
+        const response = await fetch("/chat", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrftoken,
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrftoken,
           },
           body: JSON.stringify({ message: inputText }),
-          mode: 'same-origin',
+          mode: "same-origin",
         });
 
         if (!response.ok) {
-          throw new Error('Failed to fetch');
+          throw new Error("Failed to fetch");
         }
 
         const data = await response.json();
         setResponseText(data.response);
       } catch (error) {
-        console.error('Error:', error);
+        console.error("Error:", error);
       }
     }
   };
@@ -91,7 +92,11 @@ const App: React.FC = () => {
           <button onClick={handleSendMessage}>Send</button>
         </div>
         <div className="response-container">
-          {responseText && <p><strong>Response:</strong> {responseText}</p>}
+          {responseText && (
+            <p>
+              <strong>Response:</strong> {responseText}
+            </p>
+          )}
         </div>
       </div>
     </div>

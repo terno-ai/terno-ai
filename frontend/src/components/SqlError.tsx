@@ -1,9 +1,9 @@
-const SqlError = ({error}: {error: string}) => {
+const SqlError = ({ error }: { error: string }) => {
   return (
     <div>
-        <div>{error}</div>
+      <div>{error}</div>
     </div>
-  )
-}
+  );
+};
 
-export default SqlError
+export default SqlError;
