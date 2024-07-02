@@ -42,7 +42,7 @@ export const executeSQL = async (sql: string) => {
     body: JSON.stringify({'sql': sql})
   });
   const result = await response.json();
-  return result['table_data'];
+  return result;
 }
 
 export const getDatasource = async () => {

@@ -3,6 +3,7 @@ import { executeSQL, sendMessage } from '../utils/api'
 import { useState } from 'react'
 import RenderTable from './RenderTable'
 import SqlEditor from './SqlEditor';
+import SqlError from './SqlError';
 
 
 interface TableData {
@@ -14,16 +15,22 @@ const Main = () => {
     const [inputText, setInputText] = useState('');
     const [generatedQueryText, setGeneratedQueryText] = useState('');
     const [tableData, setTableData] = useState<TableData>({ columns: [], data: [] });
+    const [sqlError, setSqlError] = useState('');
 
     const handleSendMessage = async () => {
         const response = await sendMessage(inputText);
         setGeneratedQueryText(String(response));
     }
     const handleQueryExecute = async () => {
-        console.log('------');
-        console.log(generatedQueryText);
+        setSqlError('');
+        setTableData({columns: [], data: []});
         const response = await executeSQL(generatedQueryText);
-        setTableData(response);
+        if (response['status'] == 'success') {
+            setTableData(response['table_data']);
+        }
+        else {
+            setSqlError(response['error']);
+        }
     }
   return (
     <div className="main flex-1 min-h-screen pb-36 relative overflow-scroll">
@@ -61,6 +68,7 @@ const Main = () => {
             <div>
                 <div className='mt-10 font-medium text-lg'>Result</div>
                 <div>
+                    <SqlError error={sqlError} />
                     <RenderTable columns={tableData.columns} data={tableData.data} />
                 </div>
             </div>

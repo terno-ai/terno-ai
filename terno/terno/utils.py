@@ -72,15 +72,27 @@ def generate_mdb(datasource):
 def generate_native_sql(mDb, aSql):
     d = {'company': '\'Telus\''}
     sess = Session(mDb, d)
-    gSQL = sess.generateNativeSQL(aSql)
-    print("Native SQL: ", gSQL)
-    return gSQL
+    try:
+        gSQL = sess.generateNativeSQL(aSql)
+        print("Native SQL: ", gSQL)
+        status = 'success'
+        return status, gSQL
+    except Exception as e:
+        status = 'failed'
+        error = e.args[0]
+        return status, error
 
 
 def execute_native_sql(datasource, gSQL):
     engine = sqlalchemy.create_engine(datasource.connection_str)
     with engine.connect() as con:
-        rs = con.execute(sqlalchemy.text(gSQL))
+        try:
+            rs = con.execute(sqlalchemy.text(gSQL))
+            status = 'success'
+        except Exception as e:
+            status = 'failed'
+            error = e.args[0]
+            return status, error
         table_data = {}
         table_data['columns'] = list(rs.keys())
         table_data['data'] = []
@@ -89,4 +101,4 @@ def execute_native_sql(datasource, gSQL):
             for i, column in enumerate(table_data['columns']):
                 data[column] = row[i]
             table_data['data'].append(data)
-        return table_data
+        return status, table_data

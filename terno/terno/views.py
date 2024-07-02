@@ -45,13 +45,26 @@ def get_sql(request):
 def execute_sql(request):
     data = json.loads(request.body)
     aSQL = data.get('sql')
+    status = 'failed'
     datasource = models.DataSource.objects.first()
     mDb = utils.generate_mdb(datasource)
-    gSQL = utils.generate_native_sql(mDb, aSQL)
-    data = utils.execute_native_sql(datasource, gSQL)
-    return JsonResponse({
-        'table_data': data
-    })
+    status, response = utils.generate_native_sql(mDb, aSQL)
+    if status == 'failed':
+        return JsonResponse({
+            'status': status,
+            'error': response
+        })
+    status, data = utils.execute_native_sql(datasource, response)
+    if status == 'failed':
+        return JsonResponse({
+            'status': status,
+            'error': response
+        })
+    else:
+        return JsonResponse({
+            'status': status,
+            'table_data': data
+        })
 
 
 def get_tables(request):
