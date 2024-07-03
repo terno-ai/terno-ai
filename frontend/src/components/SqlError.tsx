@@ -1,9 +1,14 @@
 const SqlError = ({ error }: { error: string }) => {
-  return (
-    <div>
-      <div>{error}</div>
-    </div>
-  );
+  if (error == "") {
+    return null;
+  }
+  else {
+    return (
+      <div>
+        <div>Error: {error}</div>
+      </div>
+    );
+  }
 };
 
 export default SqlError;
