@@ -14,9 +14,9 @@ const SchemaPane = () => {
   }, []);
 
   return (
-    <div>
+    <div className="mt-3">
       <DropDownMenu />
-      <div className="font-bold">Allowed Tables</div>
+      <div className="mt-3 font-bold">Allowed Tables</div>
       <div>
         {tables.map((row, rowIndex) => (
           <div key={rowIndex.toString()} className="">

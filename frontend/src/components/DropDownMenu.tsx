@@ -26,12 +26,12 @@ const DropDownMenu = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="rounded-md border border-slate-400 px-6 py-1 flex justify-center items-center">
+        <button className="w-full rounded-md border border-slate-400 px-6 py-1 flex justify-center items-center">
           Data Source
           <FaAngleDown />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56">
+      <DropdownMenuContent className="w-[300px] bg-white">
         <DropdownMenuLabel>Choose Data Source</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuRadioGroup value={position} onValueChange={setPosition}>

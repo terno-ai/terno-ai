@@ -2,7 +2,7 @@ import SchemaPane from "./SchemaPane";
 
 const Sidebar = () => {
   return (
-    <div className="min-h-screen inline-flex flex-col justify-between bg-slate-100 py-[25px] px-[15px]">
+    <div className="min-h-screen inline-flex flex-col bg-slate-100 py-[25px] px-[15px]">
       <div className="top">
         <div className=" mt-[50px] inline-flex items-center gap-[10px] py-[10px] px-[15px] bg-slate-300 rounded-[50px] text-md slate-500 cursor-pointer">
           <p>New Chat</p>
