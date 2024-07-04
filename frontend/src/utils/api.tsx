@@ -14,7 +14,7 @@ export const endpoints = {
   getSQL: () => `${API_BASE_URL}/get-sql/`,
   executeSQL: () => `${API_BASE_URL}/execute-sql`,
   getDatasource: () => `${API_BASE_URL}/get-datasource`,
-  getTables: () => `${API_BASE_URL}/get-tables`,
+  getTables: (id: string) => `${API_BASE_URL}/get-tables/${id}`,
 };
 
 export const sendMessage = async (prompt: string) => {
@@ -58,9 +58,9 @@ export const getDatasource = async () => {
   return result["datasources"];
 };
 
-export const getTables = async () => {
+export const getTables = async (datasourceId: string) => {
   const csrfToken = getCsrfToken();
-  const response = await fetch(endpoints.getTables(), {
+  const response = await fetch(endpoints.getTables(datasourceId), {
     method: "GET",
     headers: {
       "Content-Type": "application/json",

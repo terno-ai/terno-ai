@@ -42,6 +42,7 @@ def get_admin_config_object(datasource, roles):
         group_columns = group_columns_object.columns.all()
     else:
         group_columns = table_columns
+    print('final tables', all_group_tables)
     print('final columns', group_columns)
     return all_group_tables, group_columns
 

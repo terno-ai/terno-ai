@@ -15,9 +15,9 @@ def settings(request):
 
 def get_datasource(request):
     datasources = models.DataSource.objects.all()
-    d = datasources.values_list('display_name', flat=True)
+    data = [{'name': d.display_name, 'id': d.id} for d in datasources]
     return JsonResponse({
-        'datasources': list(d),
+        'datasources': data
     })
 
 
@@ -67,8 +67,12 @@ def execute_sql(request):
         })
 
 
-def get_tables(request):
-    datasource = models.DataSource.objects.first()
+def get_tables(request, datasource_id):
+    if datasource_id:
+        print('here is dsid{datasource_id}', datasource_id)
+        datasource = models.DataSource.objects.get(id=datasource_id)
+    else:
+        datasource = models.DataSource.objects.first()
     role = request.user.groups.all()
     allowed_tables, allowed_columns = utils.get_admin_config_object(datasource, role)
     return JsonResponse({

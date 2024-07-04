@@ -7,7 +7,7 @@ const SchemaPane = () => {
 
   useEffect(() => {
     const fetchDatasource = async () => {
-      const response = await getTables();
+      const response = await getTables('1');
       setTables(response);
     };
     fetchDatasource();

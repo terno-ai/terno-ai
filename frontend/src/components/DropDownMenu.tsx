@@ -9,11 +9,17 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { FaAngleDown } from "react-icons/fa";
-import { getDatasource } from "../utils/api";
+import { getDatasource, getTables } from "../utils/api";
 
 const DropDownMenu = () => {
   const [position, setPosition] = useState("bottom");
   const [datasource, setDatasource] = useState([]);
+
+  const valChange = (value: string) => {
+    const response = getTables(value);
+    console.log(response);
+    setPosition(value);
+  }
 
   useEffect(() => {
     const fetchDatasource = async () => {
@@ -34,13 +40,13 @@ const DropDownMenu = () => {
       <DropdownMenuContent className="w-[300px] bg-white">
         <DropdownMenuLabel>Choose Data Source</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuRadioGroup value={position} onValueChange={setPosition}>
-          {datasource.map((row, rowIndex) => (
+        <DropdownMenuRadioGroup value={position} onValueChange={valChange}>
+          {datasource.map((row) => (
             <DropdownMenuRadioItem
-              value={rowIndex.toString()}
-              key={rowIndex.toString()}
+              value={row['id']}
+              key={row['id']}
             >
-              {row}
+              {row['name']}
             </DropdownMenuRadioItem>
           ))}
         </DropdownMenuRadioGroup>

@@ -34,8 +34,8 @@ const Main = () => {
     }
   };
   return (
-    <div className="main flex-1 min-h-screen pb-36 relative overflow-scroll">
-      <div className="nav flex items-center justify-between text-xl p-5 text-gray-600">
+    <div className="flex-1 h-full pb-36 relative overflow-scroll">
+      <div className="flex items-center justify-between text-xl p-5 text-gray-600">
         <p className="font-semibold text-black">Terno AI</p>
       </div>
       <div className="main-container max-w-4xl mx-auto">

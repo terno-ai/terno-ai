@@ -15,7 +15,7 @@ def load_metadata(datasource):
     current_tables = {}
     for schema in schemas[:1]:
         for table_name in inspector.get_table_names(schema=schema):
-            existing_tables = Table.objects.filter(name=table_name)
+            existing_tables = Table.objects.filter(name=table_name, data_source=datasource)
             if len(existing_tables) > 0:
                 mtable = existing_tables[0]
             else:
