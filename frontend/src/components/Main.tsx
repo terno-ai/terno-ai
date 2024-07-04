@@ -34,7 +34,7 @@ const Main = () => {
     }
   };
   return (
-    <div className="flex-1 h-full pb-36 relative overflow-scroll">
+    <div className="flex-1 min-w-[800px] pb-36 px-4 relative overflow-scroll">
       <div className="flex items-center justify-between text-xl p-5 text-gray-600">
         <p className="font-semibold text-black">Terno AI</p>
       </div>
@@ -70,7 +70,7 @@ const Main = () => {
         </div>
         <div>
           <div className="mt-10 font-medium text-lg">Result</div>
-          <div>
+          <div className="max-h-[200px]">
             <SqlError error={sqlError} />
             <RenderTable columns={tableData.columns} data={tableData.data} />
           </div>

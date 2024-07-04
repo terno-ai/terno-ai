@@ -10,7 +10,7 @@ const Home = () => {
   };
   return (
       <Split
-        className="flex w-full"
+        className="flex w-full h-full overflow-hidden"
         sizes={[20, 80]}
         minSize={100}
         expandToMin={false}
