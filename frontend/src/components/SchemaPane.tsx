@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getTables } from "../utils/api";
 import DropDownMenu from "./DropDownMenu";
+import TableColumnAccordian from "./TableColumnAccordian";
 
 const SchemaPane = () => {
   const [tables, setTables] = useState([]);
@@ -16,14 +17,8 @@ const SchemaPane = () => {
   return (
     <div className="mt-8">
       <DropDownMenu />
-      <div className="mt-4 font-bold">Allowed Tables</div>
-      <div>
-        {tables.map((row, rowIndex) => (
-          <div key={rowIndex.toString()} className="">
-            {row}
-          </div>
-        ))}
-      </div>
+      <div className="mt-4 font-bold text-lg">Allowed Tables</div>
+      <TableColumnAccordian data={tables} />
     </div>
   );
 };
