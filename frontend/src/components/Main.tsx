@@ -1,6 +1,6 @@
 import "../index.css";
 import { executeSQL, sendMessage } from "../utils/api";
-import { lazy, useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import RenderTable from "./RenderTable";
 const SqlEditor = lazy(() => import("./SqlEditor"))
 import SqlError from "./SqlError";
@@ -54,10 +54,12 @@ const Main = () => {
         <div className="mt-10">
           <div className="mt-4 mb-1 font-medium text-lg">Generated Query</div>
           <div className="flex align-center justify-center border focus-within:ring-1 focus-within:ring-sky-300">
-            <SqlEditor
-              value={generatedQueryText}
-              onChange={(value: string) => setGeneratedQueryText(value)}
-            />
+            <Suspense fallback={<div>Loading Editor...</div>}>
+              <SqlEditor
+                value={generatedQueryText}
+                onChange={(value: string) => setGeneratedQueryText(value)}
+              />
+            </Suspense>
           </div>
           <div className="text-right">
             <button
