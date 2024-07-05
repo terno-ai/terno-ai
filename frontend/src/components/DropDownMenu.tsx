@@ -9,15 +9,18 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { FaAngleDown } from "react-icons/fa";
-import { getDatasource, getTables } from "../utils/api";
+import { getDatasource } from "../utils/api";
 
-const DropDownMenu = () => {
-  const [position, setPosition] = useState("bottom");
+interface DropdownMenuProps {
+  onSelect: (value: string) => void;
+}
+
+const DropDownMenu: React.FC<DropdownMenuProps> = ({onSelect}) => {
+  const [position, setPosition] = useState("");
   const [datasource, setDatasource] = useState([]);
 
   const valChange = (value: string) => {
-    const response = getTables(value);
-    console.log(response);
+    onSelect(value);
     setPosition(value);
   }
 

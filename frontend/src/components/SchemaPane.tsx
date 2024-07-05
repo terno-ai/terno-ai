@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { getTables } from "../utils/api";
 import DropDownMenu from "./DropDownMenu";
 import TableColumnAccordian from "./TableColumnAccordian";
@@ -6,17 +6,14 @@ import TableColumnAccordian from "./TableColumnAccordian";
 const SchemaPane = () => {
   const [tables, setTables] = useState([]);
 
-  useEffect(() => {
-    const fetchDatasource = async () => {
-      const response = await getTables('1');
-      setTables(response);
-    };
-    fetchDatasource();
-  }, []);
+  const handleSelect = async (value: string) => {
+    const response = await getTables(value);
+    setTables(response);
+  };
 
   return (
     <div className="mt-8">
-      <DropDownMenu />
+      <DropDownMenu onSelect={handleSelect} />
       <div className="mt-4 font-bold text-lg">Allowed Tables</div>
       <TableColumnAccordian data={tables} />
     </div>

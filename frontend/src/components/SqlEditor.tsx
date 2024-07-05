@@ -8,7 +8,7 @@ const SqlEditor = ({ ...props }) => {
     <AceEditor
       className={props.className}
       mode="mysql"
-      theme="xcode"
+      theme="github"
       name="sql-editor"
       // onLoad={onLoad}
       onChange={props.onChange}
