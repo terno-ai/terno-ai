@@ -25,14 +25,17 @@ def get_sql(request):
     data = json.loads(request.body)
     question = data.get('prompt')
     print('ques', question)
-    datasource = models.DataSource.objects.first()
-    role = request.user.groups.all()
-    allowed_tables, allowed_columns = utils.get_admin_config_object(datasource, role)
+    datasource = models.DataSource.objects.first()  #TODO: get it from request
+    roles = request.user.groups.all()
+    allowed_tables, allowed_columns = utils.get_admin_config_object(datasource, roles)
 
     mDb = utils.generate_mdb(datasource)
     mDb.keep_only_tables(allowed_tables.values_list('name', flat=True))
+    
     tables = mDb.get_table_dict()
     print(tables)
+
+    utils.update_filters(tables, datasource, roles)
 
     schema_generated = mDb.generate_schema()
     generated_sql = utils.llm_response(question, schema_generated)
@@ -48,6 +51,9 @@ def execute_sql(request):
     status = 'failed'
     datasource = models.DataSource.objects.first()
     mDb = utils.generate_mdb(datasource)
+    roles = request.user.groups.all()
+    utils.update_filters(mDb.get_table_dict(), datasource, roles)
+
     status, response = utils.generate_native_sql(mDb, aSQL)
     if status == 'failed':
         return JsonResponse({

@@ -63,11 +63,11 @@ class GroupColumnSelectorAdmin(admin.ModelAdmin):
     filter_horizontal = ['columns', 'exclude_columns']
 
 
-@admin.register(models.GroupTableRowFilterSelector)
+@admin.register(models.GroupTableRowFilter)
 class GroupTableRowFilterSelectorAdmin(admin.ModelAdmin):
-    pass
+    list_display = ['table', 'group', 'filter_str']
 
 
-@admin.register(models.TableRowFilterSelector)
-class TableRowFilterSelectorAdmin(admin.ModelAdmin):
-    pass
+@admin.register(models.TableRowFilter)
+class TableRowFilterAdmin(admin.ModelAdmin):
+    list_display = ['table', 'filter_str']

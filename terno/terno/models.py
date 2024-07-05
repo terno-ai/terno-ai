@@ -100,11 +100,16 @@ class GroupColumnSelector(models.Model):
         return diff
 
 
-class GroupTableRowFilterSelector(models.Model):
+class GroupTableRowFilter(models.Model):
+    # TODO: Unique on datasource, table and role
+    data_source = models.ForeignKey(DataSource, on_delete=models.CASCADE)
+    table = models.ForeignKey(Table, on_delete=models.CASCADE)
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
     filter_str = models.CharField(max_length=300)
 
 
-class TableRowFilterSelector(models.Model):
+class TableRowFilter(models.Model):
+    # TODO: Unique on datasource and table
+    data_source = models.ForeignKey(DataSource, on_delete=models.CASCADE)
     table = models.ForeignKey(Table, on_delete=models.CASCADE)
     filter_str = models.CharField(max_length=300)
