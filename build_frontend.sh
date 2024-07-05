@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define paths relative to the current script location
-FRONTEND_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"/frontend
+FRONTEND_DIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"/frontend
 TEMPLATES_DIR=terno/frontend/templates/frontend
 STATIC_DIR=terno/frontend/static
 
