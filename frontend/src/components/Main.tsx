@@ -1,8 +1,8 @@
 import "../index.css";
 import { executeSQL, sendMessage } from "../utils/api";
-import { useState } from "react";
+import { lazy, useState } from "react";
 import RenderTable from "./RenderTable";
-import SqlEditor from "./SqlEditor";
+const SqlEditor = lazy(() => import("./SqlEditor"))
 import SqlError from "./SqlError";
 
 interface TableData {
