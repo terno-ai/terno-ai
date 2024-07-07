@@ -1,6 +1,6 @@
 import "../index.css";
 import { executeSQL, sendMessage } from "../utils/api";
-import { lazy, Suspense, useState } from "react";
+import { KeyboardEvent, lazy, Suspense, useState } from "react";
 import RenderTable from "./RenderTable";
 const SqlEditor = lazy(() => import("./SqlEditor"))
 import SqlError from "./SqlError";
@@ -33,6 +33,11 @@ const Main = () => {
       setSqlError(response["error"]);
     }
   };
+  const handleKeyDownSend = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.code === 'Enter') {
+      handleSendMessage();
+    }
+  };
   return (
     <div className="flex-1 min-w-[800px] pb-36 px-4 relative overflow-scroll">
       <div className="flex items-center justify-between text-xl p-5 text-gray-600">
@@ -45,6 +50,7 @@ const Main = () => {
             placeholder="Enter a prompt here"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
+            onKeyDown={handleKeyDownSend}
             className="flex-1 bg-transparent border-none outline-none p-2 text-lg focus:outline-none"
           />
           <p onClick={handleSendMessage} className="cursor-pointer">
