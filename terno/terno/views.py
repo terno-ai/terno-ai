@@ -90,7 +90,6 @@ def get_tables(request, datasource_id):
             'column_data': column_data
         }
         table_data.append(result)
-    print(table_data)
     return JsonResponse({
         'table_data': table_data
     })
