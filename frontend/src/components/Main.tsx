@@ -4,6 +4,7 @@ import { KeyboardEvent, lazy, Suspense, useState } from "react";
 import RenderTable from "./RenderTable";
 const SqlEditor = lazy(() => import("./SqlEditor"))
 import SqlError from "./SqlError";
+import { FaPaperPlane, FaPlay } from "react-icons/fa6";
 
 interface TableData {
   columns: string[];
@@ -53,8 +54,9 @@ const Main = () => {
             onKeyDown={handleKeyDownSend}
             className="flex-1 bg-transparent border-none outline-none p-2 text-lg focus:outline-none"
           />
-          <p onClick={handleSendMessage} className="cursor-pointer">
+          <p onClick={handleSendMessage} className="font-bold cursor-pointer inline-flex justify-center items-center">
             Send
+            <FaPaperPlane className="ml-1" />
           </p>
         </div>
         <div className="mt-10">
@@ -73,6 +75,7 @@ const Main = () => {
               onClick={handleQueryExecute}
             >
               Execute
+              <FaPlay className="ml-1" />
             </button>
           </div>
         </div>

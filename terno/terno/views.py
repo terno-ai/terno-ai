@@ -14,7 +14,7 @@ def settings(request):
 
 
 def get_datasource(request):
-    datasources = models.DataSource.objects.all()
+    datasources = models.DataSource.objects.filter(enabled=True)
     data = [{'name': d.display_name, 'id': d.id} for d in datasources]
     return JsonResponse({
         'datasources': data
@@ -31,7 +31,7 @@ def get_sql(request):
 
     mDb = utils.generate_mdb(datasource)
     mDb.keep_only_tables(allowed_tables.values_list('name', flat=True))
-    
+
     tables = mDb.get_table_dict()
     print(tables)
 
