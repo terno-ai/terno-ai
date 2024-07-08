@@ -81,7 +81,16 @@ def get_tables(request, datasource_id):
         datasource = models.DataSource.objects.first()
     role = request.user.groups.all()
     allowed_tables, allowed_columns = utils.get_admin_config_object(datasource, role)
+    table_data = []
+    for table in allowed_tables:
+        column = allowed_columns.filter(table_id=table)
+        column_data = list(column.values('name', 'data_type'))
+        result = {
+            'table_name': table.name,
+            'column_data': column_data
+        }
+        table_data.append(result)
+    print(table_data)
     return JsonResponse({
-        'allowed_tables': list(allowed_tables.values_list('name', flat=True)),
-        # 'allowed_columns': allowed_columns
+        'table_data': table_data
     })
