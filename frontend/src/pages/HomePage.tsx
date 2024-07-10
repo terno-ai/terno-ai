@@ -1,8 +1,10 @@
 import Split from "react-split";
 import Main from "../components/Main";
 import Sidebar from "../components/Sidebar";
+// import { useState } from "react";
 
 const Home = () => {
+  // const [datasource, setDatasource] = useState([]);
   const gutter = () => {
     const gutterElement = document.createElement('div');
     gutterElement.className = `gutter bg-slate-200 hover:bg-blue-300 hover:cursor-col-resize`;
@@ -22,6 +24,7 @@ const Home = () => {
         cursor="col-resize"
         gutter={gutter}
       >
+        {/* <Sidebar datasource={datasource} setDatasource={setDatasource} /> */}
         <Sidebar />
         <Main />
       </Split>

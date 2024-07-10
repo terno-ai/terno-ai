@@ -1,12 +1,29 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import JsonResponse
 import terno.models as models
 import terno.utils as utils
 import json
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import authenticate, login
+from django.contrib import messages
 
 
+@login_required
 def index(request):
     return render(request, 'frontend/index.html')
+
+
+def login_page(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('terno:index')  # Redirect to a home page or any other page
+        else:
+            messages.error(request, 'Invalid username or password')
+    return render(request, 'accounts/login.html')
 
 
 def settings(request):
@@ -45,6 +62,7 @@ def get_sql(request):
     })
 
 
+@login_required
 def execute_sql(request):
     data = json.loads(request.body)
     aSQL = data.get('sql')

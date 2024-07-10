@@ -28,10 +28,10 @@ const TableColumnAccordian: React.FC<RenderTableColumnProps> = ({data}) => {
           <AccordionContent>
             {t_data.column_data.map((c_data: ColumnData, idx) => (
               <div key={idx.toString()} className="flex flex-row justify-between text-xs leading-5">
-                <div className="text-slate-800">
+                <div className="text-gray-800">
                   {c_data['name']}
                 </div>
-                <div className="text-slate-400">
+                <div className="text-gray-400">
                   {c_data['data_type']}
                 </div>
               </div>

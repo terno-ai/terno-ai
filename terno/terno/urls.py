@@ -6,6 +6,7 @@ app_name = 'terno'
 
 urlpatterns = [
     path('', views.index, name='index'),
+    path('accounts/login/', views.login_page, name='login_page'),
     path('settings', views.settings, name='settings'),
     path('get-datasource', views.get_datasource, name='get_datasource'),
     path('get-sql/', views.get_sql, name='get_sql'),
