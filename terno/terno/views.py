@@ -23,7 +23,7 @@ def login_page(request):
             return redirect('terno:index')
         else:
             messages.error(request, 'Invalid username or password')
-    return render(request, 'accounts/login.html')
+    return render(request, 'frontend/index.html')
 
 
 def settings(request):

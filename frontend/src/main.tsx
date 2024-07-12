@@ -4,6 +4,8 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "./index.css";
 import Home from "./pages/HomePage";
 import Settings from "./pages/Settings";
+import { lazy } from "react";
+const Login = lazy(() => import("./pages/Login"))
 
 const router = createBrowserRouter([
   {
@@ -13,6 +15,10 @@ const router = createBrowserRouter([
   {
     path: "settings",
     element: <Settings />,
+  },
+  {
+    path: "accounts/login",
+    element: <Login />,
   },
 ]);
 
