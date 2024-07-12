@@ -6,6 +6,7 @@ import json
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 
 @login_required
@@ -13,6 +14,7 @@ def index(request):
     return render(request, 'frontend/index.html')
 
 
+@ensure_csrf_cookie
 def login_page(request):
     if request.method == 'POST':
         username = request.POST['username']
