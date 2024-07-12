@@ -32,6 +32,7 @@ def settings(request):
     return render(request, 'frontend/index.html')
 
 
+@login_required
 def get_datasource(request):
     datasources = models.DataSource.objects.filter(enabled=True)
     data = [{'name': d.display_name, 'id': d.id} for d in datasources]
@@ -40,6 +41,7 @@ def get_datasource(request):
     })
 
 
+@login_required
 def get_sql(request):
     data = json.loads(request.body)
     question = data.get('prompt')
@@ -93,6 +95,7 @@ def execute_sql(request):
         })
 
 
+@login_required
 def get_tables(request, datasource_id):
     if datasource_id:
         print('here is dsid{datasource_id}', datasource_id)
