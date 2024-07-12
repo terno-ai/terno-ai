@@ -4,7 +4,7 @@ import { KeyboardEvent, lazy, Suspense, useState } from "react";
 import RenderTable from "./RenderTable";
 const SqlEditor = lazy(() => import("./SqlEditor"))
 import SqlError from "./SqlError";
-import { FaPaperPlane, FaPlay } from "react-icons/fa6";
+import { FaArrowRight, FaPlay } from "react-icons/fa6";
 import terno from "../assets/terno.svg";
 
 interface TableData {
@@ -56,10 +56,9 @@ const Main = () => {
             onKeyDown={handleKeyDownSend}
             className="flex-1 bg-transparent border-none outline-none p-2 text-lg focus:outline-none"
           />
-          <p onClick={handleSendMessage} className="font-bold cursor-pointer inline-flex justify-center items-center">
-            Send
-            <FaPaperPlane className="ml-1" />
-          </p>
+          <div onClick={handleSendMessage} className="p-2 border text-cyan-500 border-cyan-500 rounded-full items-center justify-center cursor-pointer hover:bg-gray-200">
+            <FaArrowRight />
+          </div>
         </div>
         <div className="mt-10">
           <div className="mt-4 mb-1 font-medium text-lg">Generated Query</div>
