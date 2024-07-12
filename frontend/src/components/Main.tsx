@@ -5,6 +5,7 @@ import RenderTable from "./RenderTable";
 const SqlEditor = lazy(() => import("./SqlEditor"))
 import SqlError from "./SqlError";
 import { FaPaperPlane, FaPlay } from "react-icons/fa6";
+import terno from "../assets/terno.svg";
 
 interface TableData {
   columns: string[];
@@ -41,7 +42,8 @@ const Main = () => {
   };
   return (
     <div className="flex-1 min-w-[800px] pb-36 px-4 relative overflow-scroll">
-      <div className="flex items-center justify-between text-xl p-5 text-gray-600">
+      <div className="flex items-center text-xl p-5 text-gray-600">
+        <img src={terno} className="logo h-[40px]" alt="Terno logo" />
         <p className="font-semibold text-black">Terno AI</p>
       </div>
       <div className="max-w-4xl mx-auto">
@@ -71,7 +73,7 @@ const Main = () => {
           </div>
           <div className="text-right">
             <button
-              className="text-right inline-flex h-10 items-center justify-center rounded-md border border-slate-800 bg-[linear-gradient(110deg,#000103,45%,#1e2631,55%,#000103)] bg-[length:200%_100%] mt-4 px-10 font-medium text-white transition-colors hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50"
+              className="text-right inline-flex h-10 items-center justify-center rounded-md border bg-cyan-500 hover:bg-cyan-600 mt-4 px-10 font-medium text-white transition-colors hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 focus:ring-offset-slate-50"
               onClick={handleQueryExecute}
             >
               Execute

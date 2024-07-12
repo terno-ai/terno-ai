@@ -24,7 +24,7 @@ const TableColumnAccordian: React.FC<RenderTableColumnProps> = ({data}) => {
     <Accordion type="multiple" className="w-full">
       {data.map((t_data: TableData, index) => (
         <AccordionItem value={index.toString()}>
-          <AccordionTrigger>{t_data['table_name']}</AccordionTrigger>
+          <AccordionTrigger className="text-cyan-500">{t_data['table_name']}</AccordionTrigger>
           <AccordionContent>
             {t_data.column_data.map((c_data: ColumnData, idx) => (
               <div key={idx.toString()} className="flex flex-row justify-between text-xs leading-5">

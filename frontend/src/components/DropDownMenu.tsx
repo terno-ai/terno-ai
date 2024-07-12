@@ -35,19 +35,27 @@ const DropDownMenu: React.FC<DropdownMenuProps> = ({onSelect}) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="w-full rounded-md border border-slate-400 px-6 py-1 flex justify-center items-center">
-          Data Source
+        <button
+          className="w-full rounded-md border border-slate-400 px-6 py-2 flex justify-center items-center hover:bg-slate-100"
+        >
+          {position
+            ? <span>
+              {datasource.filter(d => d['id'] === position).map((ds) => <span>{ds['name']}</span>)}
+              </span>
+            : "Data Source"
+          }
           <FaAngleDown />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-[300px] bg-white">
-        <DropdownMenuLabel>Choose Data Source</DropdownMenuLabel>
+        <DropdownMenuLabel className="text-center">Choose Data Source</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuRadioGroup value={position} onValueChange={valChange}>
           {datasource.map((row) => (
             <DropdownMenuRadioItem
               value={row['id']}
               key={row['id']}
+              className="hover:bg-slate-100"
             >
               {row['name']}
             </DropdownMenuRadioItem>
