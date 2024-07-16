@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,6 +10,7 @@ import {
 } from "./ui/dropdown-menu";
 import { FaAngleDown } from "react-icons/fa";
 import { getDatasource } from "../utils/api";
+import { DataSourceContext } from "./ui/datasource-context";
 
 interface DropdownMenuProps {
   onSelect: (value: string) => void;
@@ -17,17 +18,22 @@ interface DropdownMenuProps {
 
 const DropDownMenu: React.FC<DropdownMenuProps> = ({onSelect}) => {
   const [position, setPosition] = useState("");
-  const [datasource, setDatasource] = useState([]);
+  const [datasources, setDatasources] = useState([]);
+  const { setDs } = useContext(DataSourceContext);
 
-  const valChange = (value: string) => {
-    onSelect(value);
-    setPosition(value);
+  const handleSelect = (id: string) => {
+    onSelect(id);
+    setPosition(id);
+    const selectedDb = datasources.find(db => db['id'] === id);
+    if (selectedDb) {
+      setDs(selectedDb);
+    }
   }
 
   useEffect(() => {
     const fetchDatasource = async () => {
       const response = await getDatasource();
-      setDatasource(response);
+      setDatasources(response);
     };
     fetchDatasource();
   }, []);
@@ -40,7 +46,7 @@ const DropDownMenu: React.FC<DropdownMenuProps> = ({onSelect}) => {
         >
           {position
             ? <span>
-              {datasource.filter(d => d['id'] === position).map((ds) => <span>{ds['name']}</span>)}
+              {datasources.filter(d => d['id'] === position).map((ds) => <span>{ds['name']}</span>)}
               </span>
             : "Data Source"
           }
@@ -50,8 +56,8 @@ const DropDownMenu: React.FC<DropdownMenuProps> = ({onSelect}) => {
       <DropdownMenuContent className="w-[300px] bg-white">
         <DropdownMenuLabel className="text-center">Choose Data Source</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuRadioGroup value={position} onValueChange={valChange}>
-          {datasource.map((row) => (
+        <DropdownMenuRadioGroup value={position} onValueChange={handleSelect}>
+          {datasources.map((row) => (
             <DropdownMenuRadioItem
               value={row['id']}
               key={row['id']}

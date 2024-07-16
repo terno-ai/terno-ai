@@ -1,11 +1,12 @@
 import "../index.css";
 import { executeSQL, sendMessage } from "../utils/api";
-import { KeyboardEvent, lazy, Suspense, useState } from "react";
+import { KeyboardEvent, lazy, Suspense, useContext, useState } from "react";
 import RenderTable from "./RenderTable";
 const SqlEditor = lazy(() => import("./SqlEditor"))
 import SqlError from "./SqlError";
 import { FaArrowRight, FaPlay } from "react-icons/fa6";
 import terno from "../assets/terno.svg";
+import { DataSourceContext } from "./ui/datasource-context";
 
 interface TableData {
   columns: string[];
@@ -13,6 +14,7 @@ interface TableData {
 }
 
 const Main = () => {
+  const { ds } = useContext(DataSourceContext);
   const [inputText, setInputText] = useState("");
   const [generatedQueryText, setGeneratedQueryText] = useState("");
   const [tableData, setTableData] = useState<TableData>({
@@ -42,9 +44,13 @@ const Main = () => {
   };
   return (
     <div className="flex-1 min-w-[800px] pb-36 px-4 relative overflow-scroll">
-      <div className="flex items-center text-xl p-5 text-gray-600">
-        <img src={terno} className="logo h-[40px]" alt="Terno logo" />
-        <p className="font-semibold text-black">Terno AI</p>
+      <div className="flex items-center justify-between text-xl p-5">
+        <div className="inline-flex items-center">
+          <img src={terno} className="logo h-[40px]" alt="Terno logo" />
+          <p className="font-semibold">Terno AI</p>
+        </div>
+        <div className="font-semibold">{ds.name}</div>
+        <div>Profile</div>
       </div>
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between gap-5 p-2.5 px-5 rounded-full bg-slate-100  hover:drop-shadow-sm focus-within:ring-1 focus-within:ring-sky-500 focus-within:hover:drop-shadow-none">
@@ -63,7 +69,7 @@ const Main = () => {
         <div className="mt-10">
           <div className="mt-4 mb-1 font-medium text-lg">Generated Query</div>
           <div className="flex align-center justify-center border focus-within:ring-1 focus-within:ring-sky-300">
-            <Suspense fallback={<div>Loading Editor...</div>}>
+            <Suspense fallback={<div className="p-5">Loading Editor...</div>}>
               <SqlEditor
                 value={generatedQueryText}
                 onChange={(value: string) => setGeneratedQueryText(value)}

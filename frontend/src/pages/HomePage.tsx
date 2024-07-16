@@ -1,10 +1,9 @@
 import Split from "react-split";
 import Main from "../components/Main";
 import Sidebar from "../components/Sidebar";
-// import { useState } from "react";
+import { DataSourceProvider } from "../components/ui/datasource-context";
 
 const Home = () => {
-  // const [datasource, setDatasource] = useState([]);
   const gutter = () => {
     const gutterElement = document.createElement('div');
     gutterElement.className = `relative bg-transparent hover:cursor-col-resize before:content-[''] before:absolute before:left-1/2 before:top-0 before:h-full before:w-px before:bg-slate-200 before:transform before:-translate-x-1/2 hover:before:bg-sky-300`
@@ -24,9 +23,10 @@ const Home = () => {
         cursor="col-resize"
         gutter={gutter}
       >
-        {/* <Sidebar datasource={datasource} setDatasource={setDatasource} /> */}
-        <Sidebar />
-        <Main />
+        <DataSourceProvider>
+          <Sidebar />
+          <Main />
+        </DataSourceProvider>
       </Split>
   );
 };
