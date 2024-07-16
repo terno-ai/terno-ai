@@ -76,6 +76,8 @@ def execute_sql(request):
     datasource = models.DataSource.objects.get(id=datasource_id)
     mDb = utils.generate_mdb(datasource)
     roles = request.user.groups.all()
+    allowed_tables, allowed_columns = utils.get_admin_config_object(datasource, roles)
+    mDb.keep_only_tables(allowed_tables.values_list('name', flat=True))
     utils.update_filters(mDb.get_table_dict(), datasource, roles)
 
     status, response = utils.generate_native_sql(mDb, aSQL)
