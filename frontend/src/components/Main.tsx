@@ -24,13 +24,13 @@ const Main = () => {
   const [sqlError, setSqlError] = useState("");
 
   const handleSendMessage = async () => {
-    const response = await sendMessage(inputText);
+    const response = await sendMessage(inputText, ds.id);
     setGeneratedQueryText(String(response));
   };
   const handleQueryExecute = async () => {
     setSqlError("");
     setTableData({ columns: [], data: [] });
-    const response = await executeSQL(generatedQueryText);
+    const response = await executeSQL(generatedQueryText, ds.id);
     if (response["status"] == "success") {
       setTableData(response["table_data"]);
     } else {

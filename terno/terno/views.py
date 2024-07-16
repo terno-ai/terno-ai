@@ -44,9 +44,10 @@ def get_datasource(request):
 @login_required
 def get_sql(request):
     data = json.loads(request.body)
+    datasource_id = data.get('datasourceId')
     question = data.get('prompt')
     print('ques', question)
-    datasource = models.DataSource.objects.first()  #TODO: get it from request
+    datasource = models.DataSource.objects.get(id=datasource_id)
     roles = request.user.groups.all()
     allowed_tables, allowed_columns = utils.get_admin_config_object(datasource, roles)
 
@@ -70,8 +71,9 @@ def get_sql(request):
 def execute_sql(request):
     data = json.loads(request.body)
     aSQL = data.get('sql')
+    datasource_id = data.get('datasourceId')
     status = 'failed'
-    datasource = models.DataSource.objects.first()
+    datasource = models.DataSource.objects.get(id=datasource_id)
     mDb = utils.generate_mdb(datasource)
     roles = request.user.groups.all()
     utils.update_filters(mDb.get_table_dict(), datasource, roles)

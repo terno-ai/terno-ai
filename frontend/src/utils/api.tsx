@@ -17,7 +17,7 @@ export const endpoints = {
   getTables: (id: string) => `${API_BASE_URL}/get-tables/${id}`,
 };
 
-export const sendMessage = async (prompt: string) => {
+export const sendMessage = async (prompt: string, datasourceId: string) => {
   const csrfToken = getCsrfToken();
   const response = await fetch(endpoints.getSQL(), {
     method: "POST",
@@ -25,13 +25,13 @@ export const sendMessage = async (prompt: string) => {
       "Content-Type": "application/json",
       "X-CSRFToken": csrfToken || "",
     },
-    body: JSON.stringify({ prompt: prompt }),
+    body: JSON.stringify({ prompt: prompt, datasourceId: datasourceId }),
   });
   const result = await response.json();
   return result["generated_sql"];
 };
 
-export const executeSQL = async (sql: string) => {
+export const executeSQL = async (sql: string, datasourceId: string) => {
   const csrfToken = getCsrfToken();
   const response = await fetch(endpoints.executeSQL(), {
     method: "POST",
@@ -39,7 +39,7 @@ export const executeSQL = async (sql: string) => {
       "Content-Type": "application/json",
       "X-CSRFToken": csrfToken || "",
     },
-    body: JSON.stringify({ sql: sql }),
+    body: JSON.stringify({ sql: sql, datasourceId: datasourceId }),
   });
   const result = await response.json();
   return result;
