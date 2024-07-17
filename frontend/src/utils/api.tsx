@@ -15,6 +15,7 @@ export const endpoints = {
   executeSQL: () => `${API_BASE_URL}/execute-sql`,
   getDatasource: () => `${API_BASE_URL}/get-datasource`,
   getTables: (id: string) => `${API_BASE_URL}/get-tables/${id}`,
+  getUserDetails: () => `${API_BASE_URL}/get-user-details`
 };
 
 export const sendMessage = async (prompt: string, datasourceId: string) => {
@@ -70,4 +71,17 @@ export const getTables = async (datasourceId: string) => {
   const result = await response.json();
   console.log(result["table_data"]);
   return result["table_data"];
+};
+
+export const getUserDetails =  async () => {
+  const csrfToken = getCsrfToken();
+  const response = await fetch(endpoints.getUserDetails(), {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": csrfToken || "",
+    },
+  });
+  const result = await response.json();
+  return result;
 };

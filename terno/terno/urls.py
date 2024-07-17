@@ -12,4 +12,5 @@ urlpatterns = [
     path('get-sql/', views.get_sql, name='get_sql'),
     path('execute-sql', views.execute_sql, name='execute_sql'),
     path('get-tables/<int:datasource_id>', views.get_tables, name='get_tables'),
+    path('get-user-details', views.get_user_details, name='get_user_details'),
 ]

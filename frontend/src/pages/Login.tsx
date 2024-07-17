@@ -6,14 +6,14 @@ const Login = () => {
       <div className="text-xl font-bold">Login</div>
       <form method="post">
         <CSRFToken />
-        <div className="flex justify-center items-center gap-5 m-3">
+        <div className="flex justify-center items-center gap-5 m-3 flex-wrap">
           <label
             htmlFor="username"
             className="text-black dark:text-white leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
           >
             Username:
           </label>
-          <div className="gap-5 px-5 rounded-full bg-slate-100  hover:drop-shadow-sm focus-within:ring-1 focus-within:ring-sky-500 focus-within:hover:drop-shadow-none">
+          <div className="gap-5 px-5 rounded-full bg-slate-100 hover:drop-shadow-sm focus-within:ring-1 focus-within:ring-sky-500 focus-within:hover:drop-shadow-none">
             <input
               type="text"
               id="username"
@@ -23,9 +23,14 @@ const Login = () => {
             />
           </div>
         </div>
-        <div className="flex justify-center items-center gap-5">
-          <label htmlFor="password">Password:</label>
-          <div className="gap-5 px-5 rounded-full bg-slate-100  hover:drop-shadow-sm focus-within:ring-1 focus-within:ring-sky-500 focus-within:hover:drop-shadow-none">
+        <div className="flex justify-center items-center gap-5 m-3 flex-wrap">
+          <label
+            htmlFor="password"
+            className="text-black dark:text-white leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          >
+            Password:
+          </label>
+          <div className="gap-5 px-5 rounded-full bg-slate-100 hover:drop-shadow-sm focus-within:ring-1 focus-within:ring-sky-500 focus-within:hover:drop-shadow-none">
             <input
               type="password"
               id="password"

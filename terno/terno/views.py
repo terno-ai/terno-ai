@@ -120,3 +120,12 @@ def get_tables(request, datasource_id):
     return JsonResponse({
         'table_data': table_data
     })
+
+
+@login_required
+def get_user_details(request):
+    user = request.user
+    return JsonResponse({
+        'id': user.id,
+        'username': user.username
+    })

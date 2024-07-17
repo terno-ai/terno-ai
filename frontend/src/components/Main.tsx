@@ -1,6 +1,6 @@
 import "../index.css";
-import { executeSQL, sendMessage } from "../utils/api";
-import { KeyboardEvent, lazy, Suspense, useContext, useState } from "react";
+import { executeSQL, getUserDetails, sendMessage } from "../utils/api";
+import { KeyboardEvent, lazy, Suspense, useContext, useEffect, useState } from "react";
 import RenderTable from "./RenderTable";
 const SqlEditor = lazy(() => import("./SqlEditor"))
 import SqlError from "./SqlError";
@@ -22,6 +22,7 @@ const Main = () => {
     data: [],
   });
   const [sqlError, setSqlError] = useState("");
+  const [user, setUser] = useState({id: '', username: ''});
 
   const handleSendMessage = async () => {
     const response = await sendMessage(inputText, ds.id);
@@ -42,6 +43,15 @@ const Main = () => {
       handleSendMessage();
     }
   };
+
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      const response = await getUserDetails();
+      setUser(response);
+    };
+    fetchUserDetails();
+  }, []);
+
   return (
     <div className="flex-1 min-w-[800px] pb-36 px-4 relative overflow-scroll">
       <div className="flex items-center justify-between text-xl p-5">
@@ -50,7 +60,7 @@ const Main = () => {
           <p className="font-semibold">Terno AI</p>
         </div>
         <div className="font-semibold">{ds.name}</div>
-        <div>Profile</div>
+        <div>{user.username}</div>
       </div>
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between gap-5 p-2.5 px-5 rounded-full bg-slate-100  hover:drop-shadow-sm focus-within:ring-1 focus-within:ring-sky-500 focus-within:hover:drop-shadow-none">
