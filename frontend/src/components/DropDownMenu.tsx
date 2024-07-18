@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { FaAngleDown } from "react-icons/fa";
-import { getDatasource } from "../utils/api";
+import { getDatasources } from "../utils/api";
 import { DataSourceContext } from "./ui/datasource-context";
 
 interface DropdownMenuProps {
@@ -31,11 +31,11 @@ const DropDownMenu: React.FC<DropdownMenuProps> = ({onSelect}) => {
   }
 
   useEffect(() => {
-    const fetchDatasource = async () => {
-      const response = await getDatasource();
+    const fetchDatasources = async () => {
+      const response = await getDatasources();
       setDatasources(response);
     };
-    fetchDatasource();
+    fetchDatasources();
   }, []);
 
   return (

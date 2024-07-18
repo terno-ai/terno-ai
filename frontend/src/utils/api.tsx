@@ -13,7 +13,7 @@ const API_BASE_URL = "";
 export const endpoints = {
   getSQL: () => `${API_BASE_URL}/get-sql/`,
   executeSQL: () => `${API_BASE_URL}/execute-sql`,
-  getDatasource: () => `${API_BASE_URL}/get-datasource`,
+  getDatasources: () => `${API_BASE_URL}/get-datasources`,
   getTables: (id: string) => `${API_BASE_URL}/get-tables/${id}`,
   getUserDetails: () => `${API_BASE_URL}/get-user-details`
 };
@@ -46,9 +46,9 @@ export const executeSQL = async (sql: string, datasourceId: string) => {
   return result;
 };
 
-export const getDatasource = async () => {
+export const getDatasources = async () => {
   const csrfToken = getCsrfToken();
-  const response = await fetch(endpoints.getDatasource(), {
+  const response = await fetch(endpoints.getDatasources(), {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
