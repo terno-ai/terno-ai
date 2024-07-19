@@ -10,3 +10,4 @@ openai==1.35.3
 sqlglot==25.3.0
 google-generativeai==0.7.2
 anthropic==0.31.2
+mysqlclient==2.2.4
