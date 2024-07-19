@@ -93,7 +93,7 @@ if os.getenv('DATABASE_ENGINE') == 'MYSQL':
 else:
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.sqlite',
+            'ENGINE': 'django.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
