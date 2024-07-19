@@ -3,14 +3,27 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import Group
 
 
-class LLMApiKey(models.Model):
-    LLM_PROVIDER = {
-        'openai': 'OpenAI',
-        'gemini': 'Gemini',
-        'anthropic': 'Anthropic'
-    }
-    provider = models.CharField(max_length=20, choices=LLM_PROVIDER)
-    key = models.CharField(max_length=150)
+class LLMConfiguration(models.Model):
+    LLM_TYPES = [
+        ('openai', 'OpenAI'),
+        ('gemini', 'Gemini'),
+        ('anthropic', 'Anthropic'),
+        ('custom', 'CustomLLM')
+        # Add other LLM types here
+    ]
+
+    llm_type = models.CharField(max_length=64, choices=LLM_TYPES, help_text="Select the type of LLM (e.g., OpenAI, Gemini, etc.).")
+    api_key = models.CharField(max_length=512, help_text="Enter the API key for accessing the LLM service.")
+    model_name = models.CharField(max_length=256, blank=True, null=True, help_text="Specify the model name to use (leave blank for default).")
+    temperature = models.FloatField(blank=True, null=True, help_text="Set the sampling temperature where higher values make output more random (leave blank for default).")
+    custom_system_message = models.TextField(blank=True, null=True, help_text="Optional system message to set the behavior of the assistant (leave blank for default)")
+    max_tokens = models.IntegerField(blank=True, null=True, help_text="Specify the maximum number of tokens to generate (leave blank for default).")
+    top_p = models.FloatField(blank=True, null=True, help_text="Set the top-p sampling value (controls diversity via nucleus sampling). Leave blank for default.")
+    top_k = models.FloatField(blank=True, null=True, help_text="Set the top-k parameter value (Limits the model to consider only the top k most probable next words). Leave blank for default.")
+    enabled = models.BooleanField(default=True, help_text="Make sure to enable only one LLM at a time.")
+
+    def __str__(self):
+        return f"{self.llm_type} - {self.model_name or 'default-model'}"
 
 
 class DataSource(models.Model):
