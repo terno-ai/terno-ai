@@ -52,7 +52,7 @@ def get_sql(request):
     allowed_tables, allowed_columns = utils.get_admin_config_object(datasource, roles)
 
     mDb = utils.generate_mdb(datasource)
-    mDb.keep_only_tables(allowed_tables.values_list('name', flat=True))
+    mDb.keep_only_tables(allowed_tables.values_list('pub_name', flat=True))
 
     tables = mDb.get_table_dict()
 

@@ -6,15 +6,18 @@ from sqlshield.models import MDatabase
 import sqlalchemy
 from django.conf import settings
 
+
 def _get_base_filters(datasource):
-        tbl_base_filters = {}
-        for trf in models.TableRowFilter.objects.filter(data_source=datasource):
-            filter_str = trf.filter_str.strip()
-            if len(filter_str) > 0:
-                tbl_base_filters[trf.table.name] = ["(" + filter_str + ")"]
-        return tbl_base_filters
+    tbl_base_filters = {}
+    for trf in models.TableRowFilter.objects.filter(data_source=datasource):
+        filter_str = trf.filter_str.strip()
+        if len(filter_str) > 0:
+            tbl_base_filters[trf.table.name] = ["(" + filter_str + ")"]
+    return tbl_base_filters
+
+
 def _get_grp_filters(datasource, roles):
-    tbls_grp_filter = {} # key: table_name, value = [filter1, filter2]
+    tbls_grp_filter = {}  # key: table_name, value = [filter1, filter2]
     for gtrf in models.GroupTableRowFilter.objects.filter(data_source=datasource, group__in=roles):
         filter_str = gtrf.filter_str.strip()
         if len(filter_str) > 0:
@@ -26,12 +29,14 @@ def _get_grp_filters(datasource, roles):
                 lst = tbls_grp_filter[tbl_name]
             lst.append("(" + filter_str + ")")
     return tbls_grp_filter
-'''
-Updates the row filter for each table in tables based on TableRowFIlter or GroupTableFilter.
-argument `tables' should be a dictionary of name and Mtable.
 
-'''
+
 def _merge_grp_filters(tbl_base_filters, tbls_grp_filter):
+    '''
+    Updates the row filter for each table in tables based on TableRowFIlter or GroupTableFilter.
+    argument `tables' should be a dictionary of name and Mtable.
+
+    '''
     for tbl, grp_filters in tbls_grp_filter.items():
         role_filter_str = " ( " + ' OR '.join(grp_filters) + " ) "
         all_filters = []
@@ -41,6 +46,7 @@ def _merge_grp_filters(tbl_base_filters, tbls_grp_filter):
             tbl_base_filters[tbl] = all_filters
         all_filters.append(role_filter_str)
 
+
 def update_filters(tables, datasource, roles):
     tbl_base_filters = _get_base_filters(datasource) # table_name -> ["(a=2)", "(x = 1) or (y = 2)"]
     tbls_grp_filter = _get_grp_filters(datasource, roles)
@@ -48,6 +54,7 @@ def update_filters(tables, datasource, roles):
     for tbl, filters_list in tbl_base_filters.items():
         if len(filters_list) > 0:
             tables[tbl].filters = 'WHERE ' + ' AND '.join(filters_list)
+
 
 def get_all_group_tables(datasource, roles):
     table_object = models.PrivateTableSelector.objects.filter(
@@ -72,7 +79,7 @@ def get_all_group_tables(datasource, roles):
 # @cache_page(24*3600)
 def get_admin_config_object(datasource, roles):
     """
-    Tables and columns accessible for user
+    Return Tables and columns accessible for user
     """
     all_group_tables = get_all_group_tables(datasource, roles)
     all_group_tables_ids = list(all_group_tables.values_list('id', flat=True))
@@ -84,8 +91,6 @@ def get_admin_config_object(datasource, roles):
         group_columns = group_columns_object.columns.all()
     else:
         group_columns = table_columns
-    print('final tables', all_group_tables)
-    print('final columns', group_columns)
     return all_group_tables, group_columns
 
 

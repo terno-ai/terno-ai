@@ -10,6 +10,7 @@ const Home = () => {
     return gutterElement;
   };
   return (
+    <DataSourceProvider>
       <Split
         className="flex w-full h-full overflow-hidden"
         sizes={[20, 80]}
@@ -23,11 +24,10 @@ const Home = () => {
         cursor="col-resize"
         gutter={gutter}
       >
-        <DataSourceProvider>
           <Sidebar />
           <Main />
-        </DataSourceProvider>
       </Split>
+    </DataSourceProvider>
   );
 };
 
