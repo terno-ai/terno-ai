@@ -41,7 +41,6 @@ class LLMFactory:
                 max_tokens=config.max_tokens,
                 system_message=config.custom_system_message,
                 top_p=config.top_p,
-                top_k=config.top_k,
             )
         elif config.llm_type == "gemini":
             from .gemini import GeminiLLM
@@ -66,6 +65,11 @@ class LLMFactory:
                 top_k=config.top_k,
             )
         elif config.llm_type == "custom":
-            pass
+            from .custom_llm import CustomLLM
+            return CustomLLM(
+                api_key=config.api_key,
+                system_message=config.custom_system_message
+                #Custom parameters to pass
+                )
         else:
             raise ValueError(f"Unknown LLM type: {config.llm_type}")
