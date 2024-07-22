@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.core.exceptions import ObjectDoesNotExist
 
 
 @login_required
@@ -47,15 +48,28 @@ def get_sql(request):
     datasource_id = data.get('datasourceId')
     question = data.get('prompt')
 
-    datasource = models.DataSource.objects.get(id=datasource_id)
+    try:
+        datasource = models.DataSource.objects.get(id=datasource_id,
+                                                   enabled=True)
+    except ObjectDoesNotExist:
+        return JsonResponse({
+            'status': 'error',
+            'error': 'No Datasource found.'
+        })
     roles = request.user.groups.all()
 
     mDB = utils.prepare_mdb(datasource, roles)
     schema_generated = mDB.generate_schema()
-    generated_sql = utils.llm_response(question, schema_generated)
+    llm_response = utils.llm_response(question, schema_generated)
+    if llm_response['status'] == 'error':
+        return JsonResponse({
+            'status': llm_response['status'],
+            'error': llm_response['error'],
+        })
 
     return JsonResponse({
-        'generated_sql': generated_sql,
+        'status': llm_response['status'],
+        'generated_sql': llm_response['generated_sql'],
     })
 
 

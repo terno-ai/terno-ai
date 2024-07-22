@@ -1,3 +1,4 @@
 from django.test import TestCase
 
-# Create your tests here.
+# Generate sql tests
+## Test if datasource is provided and exists
