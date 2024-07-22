@@ -23,13 +23,14 @@ class OpenAILLM(BaseLLM):
     is at least top_p. A lower value reduces randomness, focusing on more
     probable words."""
 
-    def __init__(self, api_key: str, 
-                 model_name: str = None, 
-                 temperature: float = None, 
+    def __init__(self, api_key: str,
+                 model_name: str = None,
+                 temperature: float = None,
                  max_tokens: int = None,
                  system_message: str = None,
-                 top_p: float = None):
-        super().__init__(api_key, system_message)
+                 top_p: float = None,
+                 **kwargs):
+        super().__init__(api_key, system_message, **kwargs)
         self.model_name = model_name or self.model_name
         self.temperature = temperature if temperature is not None else self.temperature
         self.max_tokens = max_tokens if max_tokens is not None else self.max_tokens
@@ -54,5 +55,6 @@ class OpenAILLM(BaseLLM):
             temperature=self.temperature,
             max_tokens=self.max_tokens,
             top_p=self.top_p,
+            **self.custom_parameters
         )
         return response.choices[0].message.content
