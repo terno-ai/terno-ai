@@ -2,11 +2,16 @@ from django.contrib import admin
 import terno.models as models
 
 
-@admin.register(models.LLMApiKey)
-class LLMApiKeyAdmin(admin.ModelAdmin):
-    list_display = ['provider']
-    list_filter = ['provider']
-    search_fields = ['provider']
+@admin.register(models.LLMConfiguration)
+class LLMConfigurationAdmin(admin.ModelAdmin):
+    list_display = ('llm_type', 'api_key', 'model_name', 'temperature', 'custom_system_message', 'max_tokens', 'top_p', 'top_k', 'enabled')
+    search_fields = ('llm_type', 'model_name')
+
+    def save_model(self, request, obj, form, change):
+        if obj.enabled:
+            # Disable all other configurations
+            models.LLMConfiguration.objects.filter(enabled=True).update(enabled=False)
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(models.DataSource)
