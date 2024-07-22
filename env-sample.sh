@@ -1,3 +1,3 @@
-export OPENAI_API_KEY=''
 export DATABASE_ENGINE=''
 export CSRF_TRUSTED_ORIGINS=['http://127.0.0.1:8000']
+export SECRET_KEY=''
