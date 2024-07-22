@@ -7,6 +7,19 @@ import sqlalchemy
 from django.conf import settings
 
 
+def prepare_mdb(datasource, roles):
+    allowed_tables, allowed_columns = get_admin_config_object(datasource, roles)
+
+    mDb = generate_mdb(datasource)
+    mDb.keep_only_tables(allowed_tables.values_list('pub_name', flat=True))
+    # mDb.keep_only_columns(allowed_columns)
+
+    tables = mDb.get_table_dict()
+    update_filters(tables, datasource, roles)
+
+    return mDb
+
+
 def _get_base_filters(datasource):
     tbl_base_filters = {}
     for trf in models.TableRowFilter.objects.filter(data_source=datasource):
