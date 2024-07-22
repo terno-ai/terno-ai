@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import Group
+import json
+from django.core.exceptions import ValidationError
 
 
 class LLMConfiguration(models.Model):
@@ -21,6 +23,25 @@ class LLMConfiguration(models.Model):
     top_p = models.FloatField(blank=True, null=True, help_text="Set the top-p sampling value (controls diversity via nucleus sampling). Leave blank for default.")
     top_k = models.FloatField(blank=True, null=True, help_text="Set the top-k parameter value (Limits the model to consider only the top k most probable next words). Leave blank for default.")
     enabled = models.BooleanField(default=True, help_text="Make sure to enable only one LLM at a time.")
+    custom_parameters = models.JSONField(blank=True, null=True, help_text=(
+         "Enter parameters as a JSON object. Use this field if you want to pass additional paramters than the one defined above. These parameters will be passed when invoking the LLM. "
+         "Example: {\"param1\": value1, \"param2\": value2, ... and so on }. In case of string values, enclose it in either single or double quotes." 
+         "Note: Only include parameters that are supported by the LLM you are using, otherwise an error may occur."
+    ))
+
+    def clean(self):
+        super().clean()
+        if self.custom_parameters:
+            try:
+                parameters_dict = json.loads(json.dumps(self.custom_parameters))                
+                if not isinstance(parameters_dict, dict):
+                    raise ValidationError("Parameters must be a JSON object containing key-value pairs.")
+            except (ValueError, TypeError) as e:
+                raise ValidationError(f"Invalid JSON format: {e}")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()  # This will call the clean method
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.llm_type} - {self.model_name or 'default-model'}"

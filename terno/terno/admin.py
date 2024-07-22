@@ -4,7 +4,7 @@ import terno.models as models
 
 @admin.register(models.LLMConfiguration)
 class LLMConfigurationAdmin(admin.ModelAdmin):
-    list_display = ('llm_type', 'api_key', 'model_name', 'temperature', 'custom_system_message', 'max_tokens', 'top_p', 'top_k', 'enabled')
+    list_display = ('llm_type', 'api_key', 'model_name', 'temperature', 'custom_system_message', 'max_tokens', 'top_p', 'top_k', 'enabled', 'custom_parameters')
     search_fields = ('llm_type', 'model_name')
 
     def save_model(self, request, obj, form, change):

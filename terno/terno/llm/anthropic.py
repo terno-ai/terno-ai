@@ -19,14 +19,15 @@ class AnthropicLLM(BaseLLM):
     A lower value reduces randomness by restricting the choice to fewer words,
     ensuring more deterministic and focused output."""
 
-    def __init__(self, api_key: str, 
-                 model_name: str = None, 
-                 temperature: float = None, 
+    def __init__(self, api_key: str,
+                 model_name: str = None,
+                 temperature: float = None,
                  max_tokens: int = None,
                  system_message: str = None,
                  top_p: float = None,
-                 top_k: int = None):
-        super().__init__(api_key, system_message)
+                 top_k: int = None,
+                 **kwargs):
+        super().__init__(api_key, system_message, **kwargs)
         self.model_name = model_name or self.model_name
         self.temperature = temperature if temperature is not None else self.temperature
         self.max_tokens = max_tokens if max_tokens is not None else self.max_tokens
@@ -49,7 +50,9 @@ class AnthropicLLM(BaseLLM):
                 temperature=self.temperature,
                 system=self.system_message,
                 messages=messages,
-                top_k=self.top_k
+                top_p=self.top_p,
+                top_k=self.top_k,
+                **self.custom_parameters
             )
 
         return response.content
