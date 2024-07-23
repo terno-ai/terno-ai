@@ -33,7 +33,7 @@ class LLMConfiguration(models.Model):
         super().clean()
         if self.custom_parameters:
             try:
-                parameters_dict = json.loads(json.dumps(self.custom_parameters))                
+                parameters_dict = json.loads(json.dumps(self.custom_parameters))
                 if not isinstance(parameters_dict, dict):
                     raise ValidationError("Parameters must be a JSON object containing key-value pairs.")
             except (ValueError, TypeError) as e:
@@ -93,9 +93,9 @@ class TableColumn(models.Model):
 
 
 class PrivateTableSelector(models.Model):
-    """Model for user to select tables."""
+    """Model for user to select private tables."""
     data_source = models.ForeignKey(DataSource, on_delete=models.CASCADE)
-    tables = models.ManyToManyField(Table, blank=True, related_name='public_tables')
+    tables = models.ManyToManyField(Table, blank=True, related_name='private_tables')
 
     def __str__(self):
         return f'{self.data_source}'
@@ -116,6 +116,15 @@ class GroupTableSelector(models.Model):
         exclude_tables_items = self.exclude_tables.all()
         diff = tables_items.difference(exclude_tables_items)
         return diff
+
+
+class PrivateColumnSelector(models.Model):
+    """Model for user to select private columns."""
+    data_source = models.ForeignKey(DataSource, on_delete=models.CASCADE)
+    columns = models.ManyToManyField(TableColumn, blank=True, related_name='private_columns')
+
+    def __str__(self):
+        return f'{self.data_source}'
 
 
 class GroupColumnSelector(models.Model):

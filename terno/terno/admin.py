@@ -55,9 +55,17 @@ class GroupTableSelectorAdmin(admin.ModelAdmin):
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == "tables":
             tables = models.Table.objects.filter(
-                public_tables__in=models.PrivateTableSelector.objects.all())
+                private_tables__in=models.PrivateTableSelector.objects.all())
             kwargs["queryset"] = tables
         return super().formfield_for_manytomany(db_field, request, **kwargs)
+
+
+@admin.register(models.PrivateColumnSelector)
+class PrivateColumnSelectorAdmin(admin.ModelAdmin):
+    list_display = ['data_source']
+    filter_horizontal = ['columns']
+    list_filter = ['data_source']
+    search_fields = ['data_source__display_name']
 
 
 @admin.register(models.GroupColumnSelector)
