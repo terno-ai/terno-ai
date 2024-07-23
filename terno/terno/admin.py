@@ -31,10 +31,13 @@ class TableAdmin(admin.ModelAdmin):
 
 @admin.register(models.PrivateTableSelector)
 class PrivateTableSelectorAdmin(admin.ModelAdmin):
-    list_display = ['data_source']
+    list_display = ['data_source', 'private_tables_count']
     filter_horizontal = ['tables']
     list_filter = ['data_source']
     search_fields = ['data_source__display_name']
+
+    def private_tables_count(self, obj):
+        return obj.tables.count()
 
 
 @admin.register(models.TableColumn)
@@ -62,11 +65,13 @@ class GroupTableSelectorAdmin(admin.ModelAdmin):
 
 @admin.register(models.PrivateColumnSelector)
 class PrivateColumnSelectorAdmin(admin.ModelAdmin):
-    list_display = ['data_source']
+    list_display = ['data_source', 'private_columns_count']
     filter_horizontal = ['columns']
     list_filter = ['data_source']
     search_fields = ['data_source__display_name']
 
+    def private_columns_count(self, obj):
+        return obj.columns.count()
 
 @admin.register(models.GroupColumnSelector)
 class GroupColumnSelectorAdmin(admin.ModelAdmin):
