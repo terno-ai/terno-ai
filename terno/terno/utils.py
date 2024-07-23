@@ -10,7 +10,7 @@ def prepare_mdb(datasource, roles):
     allowed_tables, allowed_columns = get_admin_config_object(datasource, roles)
 
     mDb = generate_mdb(datasource)
-    mDb.keep_only_tables(allowed_tables.values_list('pub_name', flat=True))
+    mDb.keep_only_tables(allowed_tables.values_list('public_name', flat=True))
     # mDb.keep_only_columns(allowed_columns)
 
     tables = mDb.get_table_dict()

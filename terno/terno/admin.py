@@ -23,10 +23,10 @@ class DataSourceAdmin(admin.ModelAdmin):
 
 @admin.register(models.Table)
 class TableAdmin(admin.ModelAdmin):
-    list_display = ['name', 'pub_name', 'data_source']
-    list_editable = ['pub_name']
+    list_display = ['name', 'public_name', 'data_source']
+    list_editable = ['public_name']
     list_filter = ['data_source']
-    search_fields = ['name', 'pub_name', 'data_source__display_name']
+    search_fields = ['name', 'public_name', 'data_source__display_name']
 
 
 @admin.register(models.PrivateTableSelector)
@@ -39,10 +39,10 @@ class PrivateTableSelectorAdmin(admin.ModelAdmin):
 
 @admin.register(models.TableColumn)
 class TableColumnAdmin(admin.ModelAdmin):
-    list_display = ['name', 'pub_name', 'table', 'data_type']
-    list_editable = ['pub_name']
+    list_display = ['name', 'public_name', 'table', 'data_type']
+    list_editable = ['public_name']
     list_filter = ['table__data_source', 'table', ]
-    search_fields = ['name', 'pub_name', 'table__name', 'table__data_source']
+    search_fields = ['name', 'public_name', 'table__name', 'table__data_source']
 
 
 @admin.register(models.GroupTableSelector)

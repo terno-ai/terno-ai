@@ -67,20 +67,21 @@ class DataSource(models.Model):
 class Table(models.Model):
     """Model to represent a table in the data source."""
     name = models.CharField(max_length=255)
-    pub_name = models.CharField(max_length=255, null=True, blank=True)
+    public_name = models.CharField(max_length=255, null=True, blank=True)
     data_source = models.ForeignKey(DataSource, on_delete=models.CASCADE)
+    description = models.CharField(max_length=300, null=True, blank=True)
 
     def __str__(self):
         return f"{self.data_source.display_name} - {self.name}"
 
     def get_table_name(self):
-        return self.pub_name if self.pub_name else self.name
+        return self.public_name if self.public_name else self.name
 
 
 class TableColumn(models.Model):
     """Model to represent a column in a table."""
     name = models.CharField(max_length=255)
-    pub_name = models.CharField(max_length=255, null=True, blank=True)
+    public_name = models.CharField(max_length=255, null=True, blank=True)
     table = models.ForeignKey(Table, on_delete=models.CASCADE)
     data_type = models.CharField(max_length=50, blank=True)
 
@@ -88,7 +89,7 @@ class TableColumn(models.Model):
         return f"{self.table} - {self.name}"
 
     def get_column_name(self):
-        return self.pub_name if self.pub_name else self.name
+        return self.public_name if self.public_name else self.name
 
 
 class PrivateTableSelector(models.Model):

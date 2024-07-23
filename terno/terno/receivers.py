@@ -19,7 +19,7 @@ def load_metadata(datasource):
             if len(existing_tables) > 0:
                 mtable = existing_tables[0]
             else:
-                mtable = Table(name=table_name, pub_name=table_name, data_source=datasource)
+                mtable = Table(name=table_name, public_name=table_name, data_source=datasource)
                 mtable.save()
             current_tabcols = []
             current_tables[table_name] = current_tabcols
