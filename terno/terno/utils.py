@@ -11,12 +11,22 @@ def prepare_mdb(datasource, roles):
 
     mDb = generate_mdb(datasource)
     mDb.keep_only_tables(allowed_tables.values_list('public_name', flat=True))
-    # mDb.keep_only_columns(allowed_columns)
+    keep_only_columns(mDb, allowed_tables, allowed_columns)
 
     tables = mDb.get_table_dict()
     update_filters(tables, datasource, roles)
 
     return mDb
+
+
+def keep_only_columns(mDb, tables, columns):
+    for table in mDb.tables:
+        t = tables.filter(name=table.name)
+        keep_columns = columns.filter(table__name=table.name).values_list('name', flat=True)
+        table_columns = models.TableColumn.objects.filter(table__in=t).values_list('name', flat=True)
+        drop_columns = set(table_columns).difference(keep_columns)
+        print('drop columns', drop_columns)
+        table.drop_columns = drop_columns
 
 
 def _get_base_filters(datasource):
@@ -73,12 +83,12 @@ def get_all_group_tables(datasource, roles):
     global_tables = models.Table.objects.filter(
         data_source=datasource)
     # Get private tables in datasource
-    table_object = models.PrivateTableSelector.objects.filter(
+    private_table_object = models.PrivateTableSelector.objects.filter(
         data_source=datasource).first()
-    if table_object:
-        global_tables_ids = table_object.tables.all().values_list('id', flat=True)
+    if private_table_object:
+        private_tables_ids = private_table_object.tables.all().values_list('id', flat=True)
         # Get tables excluding private tables
-        global_tables = global_tables.exclude(id__in=global_tables_ids)
+        global_tables = global_tables.exclude(id__in=private_tables_ids)
 
     # Add tables accessible by the user's group
     group_tables_object = models.GroupTableSelector.objects.filter(
@@ -87,22 +97,36 @@ def get_all_group_tables(datasource, roles):
     if group_tables_object:
         group_tables = group_tables_object.tables.all()
         all_group_tables = global_tables.union(group_tables)
+        # Using subquery to allow filtering after union
+        all_group_tables = models.Table.objects.filter(
+            id__in=all_group_tables.values('id'))
     else:
         all_group_tables = global_tables
     return all_group_tables
 
 
-def get_all_group_columns(tables, roles):
+def get_all_group_columns(datasource, tables, roles):
     tables_ids = list(tables.values_list('id', flat=True))
+    # Get all columns for the tables
     table_columns = models.TableColumn.objects.filter(table_id__in=tables_ids)
+    # Get private columns for tables
+    private_columns_object = models.PrivateColumnSelector.objects.filter(data_source=datasource).first()
+    if private_columns_object:
+        private_columns_ids = private_columns_object.columns.all().values_list('id', flat=True)
+        table_columns = table_columns.exclude(id__in=private_columns_ids)
+
     group_columns_object = models.GroupColumnSelector.objects.filter(
         group__in=roles,
-        columns__in=table_columns).first()
+        columns__table__in=tables).first()
     if group_columns_object:
         group_columns = group_columns_object.columns.all()
+        all_table_columns = table_columns.union(group_columns)
+        # Using subquery to allow filtering after union
+        all_table_columns = models.TableColumn.objects.filter(
+            id__in=all_table_columns.values('id'))
     else:
-        group_columns = table_columns
-    return group_columns
+        all_table_columns = table_columns
+    return all_table_columns
 
 
 # @cache_page(24*3600)
@@ -111,7 +135,7 @@ def get_admin_config_object(datasource, roles):
     Return Tables and columns accessible for user
     """
     all_group_tables = get_all_group_tables(datasource, roles)
-    group_columns = get_all_group_columns(all_group_tables, roles)
+    group_columns = get_all_group_columns(datasource, all_group_tables, roles)
     return all_group_tables, group_columns
 
 
