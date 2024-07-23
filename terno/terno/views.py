@@ -61,6 +61,7 @@ def get_sql(request):
     mDB = utils.prepare_mdb(datasource, roles)
     schema_generated = mDB.generate_schema()
     llm_response = utils.llm_response(question, schema_generated)
+
     if llm_response['status'] == 'error':
         return JsonResponse({
             'status': llm_response['status'],
@@ -76,31 +77,42 @@ def get_sql(request):
 @login_required
 def execute_sql(request):
     data = json.loads(request.body)
-    aSQL = data.get('sql')
+    user_sql = data.get('sql')
     datasource_id = data.get('datasourceId')
-    status = 'failed'
-    datasource = models.DataSource.objects.get(id=datasource_id)
+
+    try:
+        datasource = models.DataSource.objects.get(id=datasource_id,
+                                                   enabled=True)
+    except ObjectDoesNotExist:
+        return JsonResponse({
+            'status': 'error',
+            'error': 'No Datasource found.'
+        })
     roles = request.user.groups.all()
 
     mDB = utils.prepare_mdb(datasource, roles)
 
-    status, response = utils.generate_native_sql(mDB, aSQL)
-    if status == 'failed':
+    native_sql_response = utils.generate_native_sql(mDB, user_sql)
+
+    if native_sql_response['status'] == 'error':
         return JsonResponse({
-            'status': status,
-            'error': response
+            'status': native_sql_response['status'],
+            'error': native_sql_response['error'],
         })
-    status, data = utils.execute_native_sql(datasource, response)
-    if status == 'failed':
+
+    execute_sql_response = utils.execute_native_sql(
+        datasource, native_sql_response['native_sql'])
+
+    if execute_sql_response['status'] == 'error':
         return JsonResponse({
-            'status': status,
-            'error': response
+            'status': execute_sql_response['status'],
+            'error': execute_sql_response['error'],
         })
-    else:
-        return JsonResponse({
-            'status': status,
-            'table_data': data
-        })
+
+    return JsonResponse({
+        'status': execute_sql_response['status'],
+        'table_data': execute_sql_response['table_data']
+    })
 
 
 @login_required

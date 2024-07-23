@@ -124,36 +124,46 @@ def generate_mdb(datasource):
     return mDb
 
 
-def generate_native_sql(mDb, aSql):
+def generate_native_sql(mDb, user_sql):
     d = {'company': '\'Telus\''}
     sess = Session(mDb, d)
     try:
-        gSQL = sess.generateNativeSQL(aSql)
-        #print("Native SQL: ", gSQL)
-        status = 'success'
-        return status, gSQL
+        native_sql = sess.generateNativeSQL(user_sql)
+        return {
+            'status': 'success',
+            'native_sql': native_sql
+        }
     except Exception as e:
-        status = 'failed'
-        error = e.args[0]
-        return status, error
+        return {
+            'status': 'error',
+            'error': str(e)
+        }
 
 
-def execute_native_sql(datasource, gSQL):
+def execute_native_sql(datasource, native_sql):
     engine = sqlalchemy.create_engine(datasource.connection_str)
     with engine.connect() as con:
         try:
-            rs = con.execute(sqlalchemy.text(gSQL))
-            status = 'success'
+            execute_result = con.execute(sqlalchemy.text(native_sql))
+            table_data = prepare_table_data_from_execute(execute_result)
+            return {
+                'status': 'success',
+                'table_data': table_data
+            }
         except Exception as e:
-            status = 'failed'
-            error = e.args[0]
-            return status, error
-        table_data = {}
-        table_data['columns'] = list(rs.keys())
-        table_data['data'] = []
-        for row in rs:
-            data = {}
-            for i, column in enumerate(table_data['columns']):
-                data[column] = row[i]
-            table_data['data'].append(data)
-        return status, table_data
+            return {
+                'status': 'error',
+                'error': str(e)
+            }
+
+
+def prepare_table_data_from_execute(execute_result):
+    table_data = {}
+    table_data['columns'] = list(execute_result.keys())
+    table_data['data'] = []
+    for row in execute_result:
+        data = {}
+        for i, column in enumerate(table_data['columns']):
+            data[column] = row[i]
+        table_data['data'].append(data)
+    return table_data
