@@ -69,14 +69,18 @@ def update_filters(tables, datasource, roles):
 
 
 def get_all_group_tables(datasource, roles):
-    table_object = models.PrivateTableSelector.objects.filter(
-        data_source=datasource).first()
+    # Get all tables from datasource
     global_tables = models.Table.objects.filter(
         data_source=datasource)
+    # Get private tables in datasource
+    table_object = models.PrivateTableSelector.objects.filter(
+        data_source=datasource).first()
     if table_object:
         global_tables_ids = table_object.tables.all().values_list('id', flat=True)
+        # Get tables excluding private tables
         global_tables = global_tables.exclude(id__in=global_tables_ids)
 
+    # Add tables accessible by the user's group
     group_tables_object = models.GroupTableSelector.objects.filter(
         group__in=roles,
         tables__data_source=datasource).first()
@@ -88,14 +92,9 @@ def get_all_group_tables(datasource, roles):
     return all_group_tables
 
 
-# @cache_page(24*3600)
-def get_admin_config_object(datasource, roles):
-    """
-    Return Tables and columns accessible for user
-    """
-    all_group_tables = get_all_group_tables(datasource, roles)
-    all_group_tables_ids = list(all_group_tables.values_list('id', flat=True))
-    table_columns = models.TableColumn.objects.filter(table_id__in=all_group_tables_ids)
+def get_all_group_columns(tables, roles):
+    tables_ids = list(tables.values_list('id', flat=True))
+    table_columns = models.TableColumn.objects.filter(table_id__in=tables_ids)
     group_columns_object = models.GroupColumnSelector.objects.filter(
         group__in=roles,
         columns__in=table_columns).first()
@@ -103,6 +102,16 @@ def get_admin_config_object(datasource, roles):
         group_columns = group_columns_object.columns.all()
     else:
         group_columns = table_columns
+    return group_columns
+
+
+# @cache_page(24*3600)
+def get_admin_config_object(datasource, roles):
+    """
+    Return Tables and columns accessible for user
+    """
+    all_group_tables = get_all_group_tables(datasource, roles)
+    group_columns = get_all_group_columns(all_group_tables, roles)
     return all_group_tables, group_columns
 
 
