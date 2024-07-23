@@ -14,20 +14,51 @@ class LLMConfiguration(models.Model):
         # Add other LLM types here
     ]
 
-    llm_type = models.CharField(max_length=64, choices=LLM_TYPES, help_text="Select the type of LLM (e.g., OpenAI, Gemini, etc.).")
-    api_key = models.CharField(max_length=512, help_text="Enter the API key for accessing the LLM service.")
-    model_name = models.CharField(max_length=256, blank=True, null=True, help_text="Specify the model name to use (leave blank for default).")
-    temperature = models.FloatField(blank=True, null=True, help_text="Set the sampling temperature where higher values make output more random (leave blank for default).")
-    custom_system_message = models.TextField(blank=True, null=True, help_text="Optional system message to set the behavior of the assistant (leave blank for default)")
-    max_tokens = models.IntegerField(blank=True, null=True, help_text="Specify the maximum number of tokens to generate (leave blank for default).")
-    top_p = models.FloatField(blank=True, null=True, help_text="Set the top-p sampling value (controls diversity via nucleus sampling). Leave blank for default.")
-    top_k = models.FloatField(blank=True, null=True, help_text="Set the top-k parameter value (Limits the model to consider only the top k most probable next words). Leave blank for default.")
-    enabled = models.BooleanField(default=True, help_text="Make sure to enable only one LLM at a time.")
-    custom_parameters = models.JSONField(blank=True, null=True, help_text=(
-         "Enter parameters as a JSON object. Use this field if you want to pass additional paramters than the one defined above. These parameters will be passed when invoking the LLM. "
-         "Example: {\"param1\": value1, \"param2\": value2, ... and so on }. In case of string values, enclose it in either single or double quotes." 
-         "Note: Only include parameters that are supported by the LLM you are using, otherwise an error may occur."
-    ))
+    llm_type = models.CharField(
+        max_length=64, choices=LLM_TYPES,
+        help_text="Select the type of LLM (e.g., OpenAI, Gemini, etc.).")
+    api_key = models.CharField(
+        max_length=512,
+        help_text="Enter the API key for accessing the LLM service.")
+    model_name = models.CharField(
+        max_length=256, blank=True, null=True,
+        help_text="Specify the model name to use (leave blank for default).")
+    temperature = models.FloatField(
+        blank=True, null=True,
+        help_text="Set the sampling temperature where higher \
+            values make output more random (leave blank for default).")
+    custom_system_message = models.TextField(
+        blank=True, null=True,
+        help_text="Optional system message to set the behavior \
+            of the assistant (leave blank for default)")
+    max_tokens = models.IntegerField(
+        blank=True, null=True,
+        help_text="Specify the maximum number of tokens to \
+            generate (leave blank for default).")
+    top_p = models.FloatField(
+        blank=True, null=True,
+        help_text="Set the top-p sampling value (controls diversity \
+            via nucleus sampling). Leave blank for default.")
+    top_k = models.FloatField(
+        blank=True, null=True,
+        help_text="Set the top-k parameter value (Limits the model \
+            to consider only the top k most probable next words). \
+            Leave blank for default.")
+    enabled = models.BooleanField(
+        default=True,
+        help_text="Make sure to enable only one LLM at a time.")
+    custom_parameters = models.JSONField(
+        blank=True, null=True,
+        help_text=(
+            "Enter parameters as a JSON object. Use this field if you \
+            want to pass additional paramters than the one defined above. \
+            These parameters will be passed when invoking the LLM. "
+            "Example: {\"param1\": value1, \"param2\": value2, ... and \
+            so on }. In case of string values, enclose it in either \
+            single or double quotes."
+            "Note: Only include parameters that are supported by the LLM \
+            you are using, otherwise an error may occur."
+        ))
 
     def clean(self):
         super().clean()
