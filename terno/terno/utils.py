@@ -11,7 +11,7 @@ def prepare_mdb(datasource, roles):
 
     mDb = generate_mdb(datasource)
     mDb.keep_only_tables(allowed_tables.values_list('public_name', flat=True))
-    keep_only_columns(mDb, allowed_tables, allowed_columns)
+    mDb = keep_only_columns(mDb, allowed_tables, allowed_columns)
 
     tables = mDb.get_table_dict()
     update_filters(tables, datasource, roles)
@@ -20,13 +20,18 @@ def prepare_mdb(datasource, roles):
 
 
 def keep_only_columns(mDb, tables, columns):
+    '''
+    As there is no keep_only_columns method on mDb
+    we use the drop columns method on table
+    '''
     for table in mDb.tables:
-        t = tables.filter(name=table.name)
+        table_obj = tables.filter(name=table.name)
         keep_columns = columns.filter(table__name=table.name).values_list('name', flat=True)
-        table_columns = models.TableColumn.objects.filter(table__in=t).values_list('name', flat=True)
+        table_columns = models.TableColumn.objects.filter(
+            table__in=table_obj).values_list('name', flat=True)
         drop_columns = set(table_columns).difference(keep_columns)
-        print('drop columns', drop_columns)
-        table.drop_columns = drop_columns
+        table.drop_columns(drop_columns)
+    return mDb
 
 
 def _get_base_filters(datasource):
@@ -90,7 +95,7 @@ def get_all_group_tables(datasource, roles):
         # Get tables excluding private tables
         global_tables = global_tables.exclude(id__in=private_tables_ids)
 
-    # Add tables accessible by the user's group
+    # Add tables accessible by the user's groups
     group_tables_object = models.GroupTableSelector.objects.filter(
         group__in=roles,
         tables__data_source=datasource).first()
@@ -110,11 +115,13 @@ def get_all_group_columns(datasource, tables, roles):
     # Get all columns for the tables
     table_columns = models.TableColumn.objects.filter(table_id__in=tables_ids)
     # Get private columns for tables
-    private_columns_object = models.PrivateColumnSelector.objects.filter(data_source=datasource).first()
+    private_columns_object = models.PrivateColumnSelector.objects.filter(
+        data_source=datasource).first()
     if private_columns_object:
         private_columns_ids = private_columns_object.columns.all().values_list('id', flat=True)
         table_columns = table_columns.exclude(id__in=private_columns_ids)
 
+    # Add columns accessible by the user's groups
     group_columns_object = models.GroupColumnSelector.objects.filter(
         group__in=roles,
         columns__table__in=tables).first()
