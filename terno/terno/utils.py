@@ -10,8 +10,8 @@ def prepare_mdb(datasource, roles):
     allowed_tables, allowed_columns = get_admin_config_object(datasource, roles)
 
     mDb = generate_mdb(datasource)
-    mDb.keep_only_tables(allowed_tables.values_list('public_name', flat=True))
-    mDb = keep_only_columns(mDb, allowed_tables, allowed_columns)
+    mDb.keep_only_tables(allowed_tables.values_list('name', flat=True))
+    keep_only_columns(mDb, allowed_tables, allowed_columns)
 
     tables = mDb.get_table_dict()
     update_filters(tables, datasource, roles)
@@ -31,7 +31,6 @@ def keep_only_columns(mDb, tables, columns):
             table__in=table_obj).values_list('name', flat=True)
         drop_columns = set(table_columns).difference(keep_columns)
         table.drop_columns(drop_columns)
-    return mDb
 
 
 def _get_base_filters(datasource):

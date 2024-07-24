@@ -6,7 +6,7 @@ import {
 } from "./ui/react-accordian";
 
 interface ColumnData {
-  name: string,
+  public_name: string,
   data_type: string
 }
 
@@ -29,7 +29,7 @@ const TableColumnAccordian: React.FC<RenderTableColumnProps> = ({data}) => {
             {t_data.column_data.map((c_data: ColumnData, idx) => (
               <div key={idx.toString()} className="flex flex-row justify-between text-xs leading-5">
                 <div className="text-gray-800">
-                  {c_data['name']}
+                  {c_data['public_name']}
                 </div>
                 <div className="text-gray-400">
                   {c_data['data_type']}

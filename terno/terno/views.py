@@ -126,9 +126,9 @@ def get_tables(request, datasource_id):
     table_data = []
     for table in allowed_tables:
         column = allowed_columns.filter(table_id=table)
-        column_data = list(column.values('name', 'data_type'))
+        column_data = list(column.values('public_name', 'data_type'))
         result = {
-            'table_name': table.name,
+            'table_name': table.public_name,
             'column_data': column_data
         }
         table_data.append(result)
