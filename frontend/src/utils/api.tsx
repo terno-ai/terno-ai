@@ -29,7 +29,7 @@ export const sendMessage = async (prompt: string, datasourceId: string) => {
     body: JSON.stringify({ prompt: prompt, datasourceId: datasourceId }),
   });
   const result = await response.json();
-  return result["generated_sql"];
+  return result;
 };
 
 export const executeSQL = async (sql: string, datasourceId: string) => {

@@ -26,8 +26,13 @@ const Main = () => {
 
   const handleSendMessage = async () => {
     const response = await sendMessage(inputText, ds.id);
-    setGeneratedQueryText(String(response));
+    if (response["status"] == "success") {
+      setGeneratedQueryText(response["generated_sql"]);
+    } else {
+      setSqlError(response["error"]);
+    }
   };
+
   const handleQueryExecute = async () => {
     setSqlError("");
     setTableData({ columns: [], data: [] });
