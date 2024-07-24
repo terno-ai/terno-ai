@@ -44,7 +44,7 @@ class PrivateTableSelectorAdmin(admin.ModelAdmin):
 class TableColumnAdmin(admin.ModelAdmin):
     list_display = ['name', 'public_name', 'table', 'data_type']
     list_editable = ['public_name']
-    list_filter = ['table__data_source', 'table', ]
+    list_filter = ['table__data_source', 'table']
     search_fields = ['name', 'public_name', 'table__name', 'table__data_source']
 
 

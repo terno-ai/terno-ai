@@ -34,6 +34,11 @@ const DropDownMenu: React.FC<DropdownMenuProps> = ({onSelect}) => {
     const fetchDatasources = async () => {
       const response = await getDatasources();
       setDatasources(response);
+      if (response) {
+        onSelect(response[0]['id']);
+        setPosition(response[0]['id']);
+        setDs(response[0]);
+      }
     };
     fetchDatasources();
   }, []);
