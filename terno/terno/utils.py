@@ -35,7 +35,8 @@ def keep_only_columns(mDb, tables, columns):
             table.drop_columns(drop_columns)
             for col in table.columns:
                 allowed_column = columns.filter(table=table_obj.first(), name=col.name)
-                col.pub_name = allowed_column.first().public_name
+                if allowed_column:
+                    col.pub_name = allowed_column.first().public_name
 
 
 def _get_base_filters(datasource):

@@ -69,7 +69,6 @@ export const getTables = async (datasourceId: string) => {
     },
   });
   const result = await response.json();
-  console.log(result["table_data"]);
   return result["table_data"];
 };
 
