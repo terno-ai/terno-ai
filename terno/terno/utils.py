@@ -26,11 +26,16 @@ def keep_only_columns(mDb, tables, columns):
     '''
     for table in mDb.tables:
         table_obj = tables.filter(name=table.name)
-        keep_columns = columns.filter(table__name=table.name).values_list('name', flat=True)
-        table_columns = models.TableColumn.objects.filter(
-            table__in=table_obj).values_list('name', flat=True)
-        drop_columns = set(table_columns).difference(keep_columns)
-        table.drop_columns(drop_columns)
+        if table_obj:
+            table.pub_name = table_obj.first().public_name
+            keep_columns = columns.filter(table__name=table.name).values_list('name', flat=True)
+            table_columns = models.TableColumn.objects.filter(
+                table__in=table_obj).values_list('name', flat=True)
+            drop_columns = set(table_columns).difference(keep_columns)
+            table.drop_columns(drop_columns)
+            for col in table.columns:
+                allowed_column = columns.filter(table=table_obj.first(), name=col.name)
+                col.pub_name = allowed_column.first().public_name
 
 
 def _get_base_filters(datasource):
