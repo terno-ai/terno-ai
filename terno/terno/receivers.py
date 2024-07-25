@@ -28,7 +28,7 @@ def load_metadata(datasource):
                 if len(dbcol) > 0:
                     tabcol = dbcol[0]
                 else:
-                    tabcol = TableColumn(name=col['name'], table=mtable, data_type=col['type'])
+                    tabcol = TableColumn(name=col['name'], public_name=col['name'], table=mtable, data_type=col['type'])
                     tabcol.save()
                 current_tabcols.append(col)
     return current_tables

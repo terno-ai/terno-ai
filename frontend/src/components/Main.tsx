@@ -84,7 +84,7 @@ const Main = () => {
             className="flex-1 bg-transparent border-none outline-none p-2 text-lg focus:outline-none"
           />
           <button
-            className="p-2 border text-cyan-500 border-cyan-500 rounded-full items-center justify-center cursor-pointer hover:bg-gray-200"
+            className="p-2 border text-cyan-500 border-cyan-500 rounded-full items-center justify-center hover:bg-gray-200"
             onClick={handleSendMessage}
             disabled={loading}
           >
