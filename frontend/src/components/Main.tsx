@@ -23,17 +23,22 @@ const Main = () => {
   });
   const [sqlError, setSqlError] = useState("");
   const [user, setUser] = useState({id: '', username: ''});
+  const [loading, setLoading] = useState(false);
 
   const handleSendMessage = async () => {
+    setLoading(true);
+    setSqlError("");
     const response = await sendMessage(inputText, ds.id);
     if (response["status"] == "success") {
       setGeneratedQueryText(response["generated_sql"]);
     } else {
       setSqlError(response["error"]);
     }
+    setLoading(false);
   };
 
   const handleQueryExecute = async () => {
+    setLoading(true);
     setSqlError("");
     setTableData({ columns: [], data: [] });
     const response = await executeSQL(generatedQueryText, ds.id);
@@ -42,6 +47,7 @@ const Main = () => {
     } else {
       setSqlError(response["error"]);
     }
+    setLoading(false);
   };
   const handleKeyDownSend = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.code === 'Enter') {
@@ -77,9 +83,13 @@ const Main = () => {
             onKeyDown={handleKeyDownSend}
             className="flex-1 bg-transparent border-none outline-none p-2 text-lg focus:outline-none"
           />
-          <div onClick={handleSendMessage} className="p-2 border text-cyan-500 border-cyan-500 rounded-full items-center justify-center cursor-pointer hover:bg-gray-200">
-            <FaArrowRight />
-          </div>
+          <button
+            className="p-2 border text-cyan-500 border-cyan-500 rounded-full items-center justify-center cursor-pointer hover:bg-gray-200"
+            onClick={handleSendMessage}
+            disabled={loading}
+          >
+            {loading ? 'Wait': <FaArrowRight />}
+          </button>
         </div>
         <div className="mt-10">
           <div className="mt-4 mb-1 font-medium text-lg">Generated Query</div>
@@ -95,8 +105,9 @@ const Main = () => {
             <button
               className="text-right inline-flex h-10 items-center justify-center rounded-md border bg-cyan-500 hover:bg-cyan-600 mt-4 px-10 font-medium text-white transition-colors hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 focus:ring-offset-slate-50"
               onClick={handleQueryExecute}
+              disabled={loading}
             >
-              Execute
+              {loading ? 'Wait': 'Execute'}
               <FaPlay className="ml-1" />
             </button>
           </div>
