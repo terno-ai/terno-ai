@@ -57,4 +57,6 @@ class OpenAILLM(BaseLLM):
             top_p=self.top_p,
             **self.custom_parameters
         )
-        return response.choices[0].message.content
+        response = response.choices[0].message.content
+        response = response.text.strip().removeprefix("```sql").removesuffix("```")
+        return response
