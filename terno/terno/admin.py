@@ -6,6 +6,16 @@ import terno.models as models
 class LLMConfigurationAdmin(admin.ModelAdmin):
     list_display = ('llm_type', 'api_key', 'model_name', 'temperature', 'custom_system_message', 'max_tokens', 'top_p', 'top_k', 'enabled', 'custom_parameters')
     search_fields = ('llm_type', 'model_name')
+    fieldsets = (
+        ('Basic Configuration', {
+            'fields': ('llm_type', 'api_key', 'enabled'),
+        }),
+        ('Advanced Configuration (Optional)', {
+            'classes': ('collapse',),
+            'fields': ('model_name', 'temperature', 'custom_system_message', 'max_tokens', 'top_p', 'top_k', 'custom_parameters'),
+            'description': 'Optional Fields: These fields are optional.'
+        }),
+    )
 
     def save_model(self, request, obj, form, change):
         if obj.enabled:
