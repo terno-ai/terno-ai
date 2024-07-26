@@ -4,7 +4,7 @@ import terno.models as models
 
 @admin.register(models.LLMConfiguration)
 class LLMConfigurationAdmin(admin.ModelAdmin):
-    list_display = ('llm_type', 'api_key', 'model_name', 'temperature', 'custom_system_message', 'max_tokens', 'top_p', 'top_k', 'enabled', 'custom_parameters')
+    list_display = ('llm_type', 'api_key', 'model_name', 'enabled')
     search_fields = ('llm_type', 'model_name')
     fieldsets = (
         ('Basic Configuration', {
@@ -12,7 +12,8 @@ class LLMConfigurationAdmin(admin.ModelAdmin):
         }),
         ('Advanced Configuration (Optional)', {
             'classes': ('collapse',),
-            'fields': ('model_name', 'temperature', 'custom_system_message', 'max_tokens', 'top_p', 'top_k', 'custom_parameters'),
+            'fields': ('model_name', 'temperature', 'custom_system_message',
+                       'max_tokens', 'top_p', 'top_k', 'custom_parameters'),
             'description': 'Optional Fields: These fields are optional.'
         }),
     )
@@ -99,3 +100,8 @@ class GroupTableRowFilterSelectorAdmin(admin.ModelAdmin):
 @admin.register(models.TableRowFilter)
 class TableRowFilterAdmin(admin.ModelAdmin):
     list_display = ['table', 'filter_str']
+
+
+@admin.register(models.QueryHistory)
+class QueryHistoryAdmin(admin.ModelAdmin):
+    list_display = ['user', 'data_source', 'data_type', 'data', 'created_at']

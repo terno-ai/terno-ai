@@ -1,8 +1,9 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import User, Group
 import json
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 
 class LLMConfiguration(models.Model):
@@ -71,7 +72,7 @@ class LLMConfiguration(models.Model):
                 raise ValidationError(f"Invalid JSON format: {e}")
 
     def save(self, *args, **kwargs):
-        self.full_clean()  # This will call the clean method
+        self.full_clean()
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -126,7 +127,8 @@ class TableColumn(models.Model):
 class PrivateTableSelector(models.Model):
     """Model for user to select private tables."""
     data_source = models.ForeignKey(DataSource, on_delete=models.CASCADE)
-    tables = models.ManyToManyField(Table, blank=True, related_name='private_tables')
+    tables = models.ManyToManyField(Table, blank=True,
+                                    related_name='private_tables')
 
     def __str__(self):
         return f'{self.data_source}'
@@ -152,7 +154,8 @@ class GroupTableSelector(models.Model):
 class PrivateColumnSelector(models.Model):
     """Model for user to select private columns."""
     data_source = models.ForeignKey(DataSource, on_delete=models.CASCADE)
-    columns = models.ManyToManyField(TableColumn, blank=True, related_name='private_columns')
+    columns = models.ManyToManyField(TableColumn, blank=True,
+                                     related_name='private_columns')
 
     def __str__(self):
         return f'{self.data_source}'
@@ -188,3 +191,20 @@ class TableRowFilter(models.Model):
     data_source = models.ForeignKey(DataSource, on_delete=models.CASCADE)
     table = models.ForeignKey(Table, on_delete=models.CASCADE)
     filter_str = models.CharField(max_length=300)
+
+
+class QueryHistory(models.Model):
+    DATA_TYPES = [
+        ('user_prompt', 'User Prompt'),
+        ('generated_sql', 'Generated SQL'),
+        ('executed_sql', 'Executed SQL'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    data_source = models.ForeignKey(DataSource, on_delete=models.CASCADE)
+    data_type = models.CharField(
+        max_length=64, choices=DATA_TYPES,
+        help_text="Select the type of data you want to save")
+    data = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)

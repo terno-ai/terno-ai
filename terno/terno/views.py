@@ -68,6 +68,13 @@ def get_sql(request):
             'error': llm_response['error'],
         })
 
+    models.QueryHistory.objects.create(
+        user=request.user, data_source=datasource, data_type='user_prompt',
+        data=question)
+    models.QueryHistory.objects.create(
+        user=request.user, data_source=datasource, data_type='generated_sql',
+        data=llm_response['generated_sql'])
+
     return JsonResponse({
         'status': llm_response['status'],
         'generated_sql': llm_response['generated_sql'],
@@ -108,7 +115,9 @@ def execute_sql(request):
             'status': execute_sql_response['status'],
             'error': execute_sql_response['error'],
         })
-
+    models.QueryHistory.objects.create(
+        user=request.user, data_source=datasource, data_type='executed_sql',
+        data=user_sql)
     return JsonResponse({
         'status': execute_sql_response['status'],
         'table_data': execute_sql_response['table_data']
