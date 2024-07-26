@@ -37,9 +37,7 @@ def load_metadata(datasource):
 @receiver(post_save, sender=DataSource)
 def update_tables_on_datasource_change(sender, instance, created, **kwargs):
     """Fetches and saves table information when a data source is saved."""
-    print("SIGNAL is fired!! I will load the models here.")
     load_metadata(instance)
-    if created:
-        print("Created: SIGNAL is fired!! I will load the models here.")
-        # for table_name in retrieved_tables:
-        #   Table.objects.create(name=table_name, data_source=instance)
+    # if created:
+    #     for table_name in retrieved_tables:
+    #         Table.objects.create(name=table_name, data_source=instance)
