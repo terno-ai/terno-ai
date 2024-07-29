@@ -7,6 +7,7 @@ import SqlError from "./SqlError";
 import { FaArrowRight, FaPlay } from "react-icons/fa6";
 import terno from "../assets/terno.svg";
 import { DataSourceContext } from "./ui/datasource-context";
+import LimitSelector from "./LimitSelector";
 
 interface TableData {
   columns: string[];
@@ -24,6 +25,7 @@ const Main = () => {
   const [sqlError, setSqlError] = useState("");
   const [user, setUser] = useState({id: '', username: ''});
   const [loading, setLoading] = useState(false);
+  const [limit, setLimit]= useState('10');
 
   const handleSendMessage = async () => {
     setLoading(true);
@@ -41,7 +43,7 @@ const Main = () => {
     setLoading(true);
     setSqlError("");
     setTableData({ columns: [], data: [] });
-    const response = await executeSQL(generatedQueryText, ds.id);
+    const response = await executeSQL(generatedQueryText, ds.id, limit);
     if (response["status"] == "success") {
       setTableData(response["table_data"]);
     } else {
@@ -101,7 +103,8 @@ const Main = () => {
               />
             </Suspense>
           </div>
-          <div className="text-right">
+          <div className="flex flex-row align-center justify-between">
+            <LimitSelector limit={limit} setLimit={setLimit} />
             <button
               className="text-right inline-flex h-10 items-center justify-center rounded-md border bg-cyan-500 hover:bg-cyan-600 mt-4 px-10 font-medium text-white transition-colors hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 focus:ring-offset-slate-50"
               onClick={handleQueryExecute}

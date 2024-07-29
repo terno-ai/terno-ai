@@ -170,8 +170,7 @@ def generate_mdb(datasource):
 
 
 def generate_native_sql(mDb, user_sql):
-    d = {'company': '\'Telus\''}
-    sess = Session(mDb, d)
+    sess = Session(mDb, '')
     try:
         native_sql = sess.generateNativeSQL(user_sql)
         return {
@@ -185,8 +184,9 @@ def generate_native_sql(mDb, user_sql):
         }
 
 
-def execute_native_sql(datasource, native_sql):
+def execute_native_sql(datasource, native_sql, limit):
     engine = sqlalchemy.create_engine(datasource.connection_str)
+    native_sql += f' LIMIT {limit}'
     with engine.connect() as con:
         try:
             execute_result = con.execute(sqlalchemy.text(native_sql))

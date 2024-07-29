@@ -86,6 +86,7 @@ def execute_sql(request):
     data = json.loads(request.body)
     user_sql = data.get('sql')
     datasource_id = data.get('datasourceId')
+    limit = data.get('limit', 10)
 
     try:
         datasource = models.DataSource.objects.get(id=datasource_id,
@@ -108,7 +109,7 @@ def execute_sql(request):
         })
 
     execute_sql_response = utils.execute_native_sql(
-        datasource, native_sql_response['native_sql'])
+        datasource, native_sql_response['native_sql'], limit=limit)
 
     if execute_sql_response['status'] == 'error':
         return JsonResponse({
