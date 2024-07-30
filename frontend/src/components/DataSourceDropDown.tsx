@@ -12,11 +12,11 @@ import { FaAngleDown } from "react-icons/fa";
 import { getDatasources } from "../utils/api";
 import { DataSourceContext } from "./ui/datasource-context";
 
-interface DropdownMenuProps {
+interface DataSourceDropDownProps {
   onSelect: (value: string) => void;
 }
 
-const DropDownMenu: React.FC<DropdownMenuProps> = ({onSelect}) => {
+const DataSourceDropDown: React.FC<DataSourceDropDownProps> = ({onSelect}) => {
   const [position, setPosition] = useState("");
   const [datasources, setDatasources] = useState([]);
   const { setDs } = useContext(DataSourceContext);
@@ -77,4 +77,4 @@ const DropDownMenu: React.FC<DropdownMenuProps> = ({onSelect}) => {
   );
 };
 
-export default DropDownMenu;
+export default DataSourceDropDown;

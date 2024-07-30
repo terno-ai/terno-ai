@@ -28,9 +28,24 @@ const LimitSelector: React.FC<LimitProps> = ({limit, setLimit}) => {
       <DropdownMenuContent className="w-[100px] bg-slate-100">
         <DropdownMenuSeparator />
         <DropdownMenuRadioGroup value={limit} onValueChange={handleSelect}>
-          <DropdownMenuRadioItem value="10">10</DropdownMenuRadioItem>
-          <DropdownMenuRadioItem value="100">100</DropdownMenuRadioItem>
-          <DropdownMenuRadioItem value="1000">1000</DropdownMenuRadioItem>
+          <DropdownMenuRadioItem
+            value="10"
+            className="px-2 py-1 hover:bg-slate-200"
+          >
+            10
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem
+            value="100"
+            className="px-2 py-1 hover:bg-slate-200"
+          >
+            100
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem
+            value="1000"
+            className="px-2 py-1 hover:bg-slate-200"
+          >
+            1000
+          </DropdownMenuRadioItem>
         </DropdownMenuRadioGroup>
       </DropdownMenuContent>
     </DropdownMenu>

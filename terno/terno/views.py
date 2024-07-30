@@ -127,10 +127,14 @@ def execute_sql(request):
 
 @login_required
 def get_tables(request, datasource_id):
-    if datasource_id:
-        datasource = models.DataSource.objects.get(id=datasource_id)
-    else:
-        datasource = models.DataSource.objects.first()
+    try:
+        datasource = models.DataSource.objects.get(id=datasource_id,
+                                                   enabled=True)
+    except ObjectDoesNotExist:
+        return JsonResponse({
+            'status': 'error',
+            'error': 'No Datasource found.'
+        })
     role = request.user.groups.all()
     allowed_tables, allowed_columns = utils.get_admin_config_object(datasource, role)
     table_data = []
@@ -143,6 +147,7 @@ def get_tables(request, datasource_id):
         }
         table_data.append(result)
     return JsonResponse({
+        'status': 'success',
         'table_data': table_data
     })
 

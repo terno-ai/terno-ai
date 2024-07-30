@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { getTables } from "../utils/api";
-import DropDownMenu from "./DropDownMenu";
+import DataSourceDropDown from "./DataSourceDropDown";
 import TableColumnAccordian from "./TableColumnAccordian";
 
 const SchemaPane = () => {
@@ -8,12 +8,14 @@ const SchemaPane = () => {
 
   const handleSelect = async (value: string) => {
     const response = await getTables(value);
-    setTables(response);
+    if (response["status"] == "success") {
+      setTables(response["table_data"]);
+    }
   };
 
   return (
     <div className="mt-8">
-      <DropDownMenu onSelect={handleSelect} />
+      <DataSourceDropDown onSelect={handleSelect} />
       <div className="mt-4 font-bold text-lg">Allowed Tables</div>
       <TableColumnAccordian data={tables} />
     </div>
