@@ -5,3 +5,4 @@ db.sqlite3
 /terno/assets
 env.sh
 chinook.db
+/terno/logs
