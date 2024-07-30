@@ -15,20 +15,28 @@ interface RenderTableProps {
 
 const RenderTable: React.FC<RenderTableProps> = ({ columns, data }) => {
   return (
-    <Table>
+    <Table className="border border-slate-500">
       <TableCaption>A list of your result.</TableCaption>
       <TableHeader>
-        <TableRow>
           {columns.map((column) => (
-            <TableHead key={column}>{column}</TableHead>
+            <TableHead
+              key={column}
+              className="border border-slate-500"
+            >
+              {column}
+            </TableHead>
           ))}
-        </TableRow>
       </TableHeader>
       <TableBody>
         {data.map((row, rowIndex) => (
           <TableRow key={rowIndex}>
             {columns.map((column) => (
-              <TableCell key={`${rowIndex}-${column}`}>{row[column]}</TableCell>
+              <TableCell
+                key={`${rowIndex}-${column}`}
+                className="border"
+              >
+                {row[column]}
+              </TableCell>
             ))}
           </TableRow>
         ))}
