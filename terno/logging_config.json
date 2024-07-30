@@ -1,0 +1,38 @@
+{
+    "version": 1,
+    "disable_existing_loggers": false,
+    "formatters": {
+        "json": {
+            "class": "pythonjsonlogger.jsonlogger.JsonFormatter",
+            "format": "%(levelname)s %(asctime)s %(module)s %(clientip)s %(sessionid)s %(username)s %(hostname)s %(filename)s %(pathname)s %(lineno)s %(message)s %(exc_info)s"
+        }
+    },
+    "filters": {
+        "log_filters": {
+            "()": "logging_filters.LogFilter"
+        }
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "json"
+        },
+        "file": {
+            "class": "logging.FileHandler",
+            "filename": "logs/django.log",
+            "formatter": "json",
+            "filters": ["log_filters"]
+        }
+    },
+    "root": {
+        "handlers": ["console", "file"],
+        "level": "DEBUG"
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console", "file"],
+            "level": "DEBUG",
+            "propagate": false
+        }
+    }
+}

@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
+import json
+import logging.config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -140,3 +142,12 @@ STATIC_ROOT = 'assets/'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# logging
+with open(os.path.join(BASE_DIR, 'logging_config.json'), 'r') as f:
+    logging_config = json.load(f)
+
+logging_config['handlers']['file']['filename'] = os.path.join(BASE_DIR, logging_config['handlers']['file']['filename'])
+
+logging.config.dictConfig(logging_config)

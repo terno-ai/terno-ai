@@ -8,6 +8,8 @@ from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.core.exceptions import ObjectDoesNotExist
+import logging
+logger = logging.getLogger(__name__)
 
 
 @login_required
@@ -35,6 +37,7 @@ def settings(request):
 
 @login_required
 def get_datasources(request):
+    logger.warning("get datasources")
     datasources = models.DataSource.objects.filter(enabled=True)
     data = [{'name': d.display_name, 'id': d.id} for d in datasources]
     return JsonResponse({

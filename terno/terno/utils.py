@@ -4,6 +4,8 @@ from sqlshield.shield import Session
 from sqlshield.models import MDatabase
 import sqlalchemy
 from terno.llm.base import LLMFactory
+import logging
+logger = logging.getLogger(__name__)
 
 
 def prepare_mdb(datasource, roles):
@@ -156,6 +158,7 @@ def llm_response(question, schema_generated):
         llm = LLMFactory.create_llm()
         generated_sql = llm.get_response(question, schema_generated)
     except Exception as e:
+        logger.exception(e)
         return {'status': 'error', 'error': str(e)}
 
     return {'status': 'success', 'generated_sql': generated_sql}

@@ -1,0 +1,3 @@
+INFO 2024-07-29 08:38:44,994 autoreload Watching for file changes with StatReloader
+WARNING 2024-07-29 08:38:51,429 views get datasources
+INFO 2024-07-29 08:46:25,656 autoreload /Users/sachin/dev/terno-ai/terno/mysite/settings.py changed, reloading.
