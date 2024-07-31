@@ -106,3 +106,4 @@ class TableRowFilterAdmin(admin.ModelAdmin):
 class QueryHistoryAdmin(admin.ModelAdmin):
     list_display = ['user', 'data_source', 'data_type', 'data', 'created_at']
     list_filter = ['data_source', 'data_type', 'created_at']
+    search_fields = ['user__username', 'data_source__display_name', 'data']

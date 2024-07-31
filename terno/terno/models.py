@@ -197,7 +197,8 @@ class QueryHistory(models.Model):
     DATA_TYPES = [
         ('user_prompt', 'User Prompt'),
         ('generated_sql', 'Generated SQL'),
-        ('executed_sql', 'Executed SQL'),
+        ('user_executed_sql', 'User Executed SQL'),
+        ('actual_executed_sql', 'Actual Executed SQL')
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
