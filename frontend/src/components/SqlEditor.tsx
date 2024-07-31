@@ -19,7 +19,7 @@ const SqlEditor = ({ ...props }) => {
   };
 
   useEffect(() => {
-      addCompleter(customCompleter);
+    addCompleter(customCompleter);
   }, [ds]);
 
   return (

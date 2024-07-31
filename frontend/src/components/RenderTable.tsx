@@ -15,7 +15,7 @@ interface RenderTableProps {
 
 const RenderTable: React.FC<RenderTableProps> = ({ columns, data }) => {
   return (
-    <Table className="border border-slate-500">
+    <Table className="bg-slate-50 border border-slate-500">
       <TableCaption>A list of your result.</TableCaption>
       <TableHeader>
           {columns.map((column) => (
