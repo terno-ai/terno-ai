@@ -187,9 +187,8 @@ def generate_native_sql(mDb, user_sql):
         }
 
 
-def execute_native_sql(datasource, native_sql, limit):
+def execute_native_sql(datasource, native_sql):
     engine = sqlalchemy.create_engine(datasource.connection_str)
-    native_sql += f' LIMIT {limit}'
     with engine.connect() as con:
         try:
             execute_result = con.execute(sqlalchemy.text(native_sql))

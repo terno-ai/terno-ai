@@ -61,6 +61,10 @@ def get_sql(request):
         })
     roles = request.user.groups.all()
 
+    models.QueryHistory.objects.create(
+        user=request.user, data_source=datasource, data_type='user_prompt',
+        data=question)
+
     mDB = utils.prepare_mdb(datasource, roles)
     schema_generated = mDB.generate_schema()
     llm_response = utils.llm_response(question, schema_generated)
@@ -71,9 +75,6 @@ def get_sql(request):
             'error': llm_response['error'],
         })
 
-    models.QueryHistory.objects.create(
-        user=request.user, data_source=datasource, data_type='user_prompt',
-        data=question)
     models.QueryHistory.objects.create(
         user=request.user, data_source=datasource, data_type='generated_sql',
         data=llm_response['generated_sql'])
@@ -89,7 +90,6 @@ def execute_sql(request):
     data = json.loads(request.body)
     user_sql = data.get('sql')
     datasource_id = data.get('datasourceId')
-    limit = data.get('limit', 10)
 
     try:
         datasource = models.DataSource.objects.get(id=datasource_id,
@@ -112,7 +112,7 @@ def execute_sql(request):
         })
 
     execute_sql_response = utils.execute_native_sql(
-        datasource, native_sql_response['native_sql'], limit=limit)
+        datasource, native_sql_response['native_sql'])
 
     if execute_sql_response['status'] == 'error':
         return JsonResponse({
