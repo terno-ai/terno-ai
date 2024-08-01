@@ -32,7 +32,7 @@ export const sendMessage = async (prompt: string, datasourceId: string) => {
   return result;
 };
 
-export const executeSQL = async (sql: string, datasourceId: string, limit: string) => {
+export const executeSQL = async (sql: string, datasourceId: string) => {
   const csrfToken = getCsrfToken();
   const response = await fetch(endpoints.executeSQL(), {
     method: "POST",
@@ -40,7 +40,7 @@ export const executeSQL = async (sql: string, datasourceId: string, limit: strin
       "Content-Type": "application/json",
       "X-CSRFToken": csrfToken || "",
     },
-    body: JSON.stringify({ sql: sql, datasourceId: datasourceId, limit: limit }),
+    body: JSON.stringify({ sql: sql, datasourceId: datasourceId}),
   });
   const result = await response.json();
   return result;
