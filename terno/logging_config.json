@@ -19,7 +19,7 @@
         },
         "file": {
             "class": "logging.FileHandler",
-            "filename": "logs/django.log",
+            "filename": "logs/terno.log",
             "formatter": "json",
             "filters": ["log_filters"]
         }

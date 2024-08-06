@@ -148,6 +148,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 with open(os.path.join(BASE_DIR, 'logging_config.json'), 'r') as f:
     logging_config = json.load(f)
 
-logging_config['handlers']['file']['filename'] = os.path.join(BASE_DIR, logging_config['handlers']['file']['filename'])
+TERNO_LOG_FILE = os.getenv('TERNO_LOG_FILE')
+if TERNO_LOG_FILE:
+    logging_config['handlers']['file']['filename'] = \
+        os.path.join(BASE_DIR, TERNO_LOG_FILE)
 
 logging.config.dictConfig(logging_config)
