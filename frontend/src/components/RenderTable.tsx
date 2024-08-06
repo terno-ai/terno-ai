@@ -11,12 +11,13 @@ import {
 interface RenderTableProps {
   columns: string[];
   data: Record<string, string | number>[];
+  rowCount: number;
 }
 
-const RenderTable: React.FC<RenderTableProps> = ({ columns, data }) => {
+const RenderTable: React.FC<RenderTableProps> = ({ columns, data, rowCount }) => {
   return (
     <Table className="bg-slate-50 border border-slate-500">
-      <TableCaption>A list of your result.</TableCaption>
+      <TableCaption>{rowCount>0 && <>{rowCount} rows</>}</TableCaption>
       <TableHeader>
           {columns.map((column) => (
             <TableHead

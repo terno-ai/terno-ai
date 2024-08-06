@@ -5,7 +5,9 @@ from sqlshield.shield import Session
 from sqlshield.models import MDatabase
 import sqlalchemy
 from terno.llm.base import LLMFactory
+import math
 import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -214,7 +216,7 @@ def prepare_table_data_from_execute(execute_result, page, per_page):
     total_count = execute_result.rowcount
     if total_count <= 0:
         total_count = len(fetch_result)
-    total_pages = total_count // per_page + 1
+    total_pages = math.ceil(total_count // per_page)
     table_data['total_pages'] = total_pages
     table_data['row_count'] = total_count
     table_data['page'] = page

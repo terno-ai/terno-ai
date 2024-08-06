@@ -7,10 +7,12 @@ import SqlError from "./SqlError";
 import { FaArrowRight, FaPlay } from "react-icons/fa6";
 import terno from "../assets/terno.svg";
 import { DataSourceContext } from "./ui/datasource-context";
+import PaginatedList from "./TablePagination";
 
 interface TableData {
   columns: string[];
   data: Record<string, string | number>[];
+  row_count: number;
 }
 
 const Main = () => {
@@ -20,10 +22,12 @@ const Main = () => {
   const [tableData, setTableData] = useState<TableData>({
     columns: [],
     data: [],
+    row_count: 0,
   });
   const [sqlError, setSqlError] = useState("");
   const [user, setUser] = useState({id: '', username: ''});
   const [loading, setLoading] = useState(false);
+  const [totalPages, setTotalPages] = useState(1);
 
   const handleSendMessage = async () => {
     setLoading(true);
@@ -37,18 +41,22 @@ const Main = () => {
     setLoading(false);
   };
 
-  const handleQueryExecute = async () => {
+  const handleQueryExecute = async (page: number) => {
     setLoading(true);
     setSqlError("");
-    setTableData({ columns: [], data: [] });
-    const response = await executeSQL(generatedQueryText, ds.id);
+    setTableData({ columns: [], data: [], row_count: 0 });
+    const response = await executeSQL(generatedQueryText, ds.id, page);
     if (response["status"] == "success") {
       setTableData(response["table_data"]);
+      setTotalPages(response["table_data"]["total_pages"]);
     } else {
       setSqlError(response["error"]);
     }
     setLoading(false);
   };
+  const handleKeyDownExecute = () => {
+    handleQueryExecute(1);
+  }
   const handleKeyDownSend = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.code === 'Enter') {
       handleSendMessage();
@@ -104,7 +112,7 @@ const Main = () => {
           <div className="flex flex-row align-center justify-end">
             <button
               className="text-right inline-flex h-10 items-center justify-center rounded-md border bg-cyan-500 hover:bg-cyan-600 mt-4 px-10 font-medium text-white transition-colors hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 focus:ring-offset-slate-50"
-              onClick={handleQueryExecute}
+              onClick={handleKeyDownExecute}
               disabled={loading}
             >
               {loading ? 'Wait': 'Execute'}
@@ -116,7 +124,9 @@ const Main = () => {
           <div className="mt-10 font-medium text-lg">Result</div>
           <div className="max-h-[200px]">
             <SqlError error={sqlError} />
-            <RenderTable columns={tableData.columns} data={tableData.data} />
+            <RenderTable columns={tableData.columns} data={tableData.data} rowCount={tableData.row_count} />
+            {tableData.columns && tableData.columns.length > 0 &&
+              <PaginatedList totalPages={totalPages} onSelect={handleQueryExecute} />}
           </div>
         </div>
       </div>
