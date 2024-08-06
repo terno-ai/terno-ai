@@ -1,3 +1,4 @@
+import sqlglot
 import terno.models as models
 from django.views.decorators.cache import cache_page
 from sqlshield.shield import Session
@@ -187,12 +188,12 @@ def generate_native_sql(mDb, user_sql):
         }
 
 
-def execute_native_sql(datasource, native_sql):
+def execute_native_sql(datasource, native_sql, page, per_page):
     engine = sqlalchemy.create_engine(datasource.connection_str)
     with engine.connect() as con:
         try:
             execute_result = con.execute(sqlalchemy.text(native_sql))
-            table_data = prepare_table_data_from_execute(execute_result)
+            table_data = prepare_table_data_from_execute(execute_result, page, per_page)
             return {
                 'status': 'success',
                 'table_data': table_data
@@ -204,13 +205,47 @@ def execute_native_sql(datasource, native_sql):
             }
 
 
-def prepare_table_data_from_execute(execute_result):
+def prepare_table_data_from_execute(execute_result, page, per_page):
     table_data = {}
     table_data['columns'] = list(execute_result.keys())
+
+    fetch_result = execute_result.fetchall()
+
+    total_count = execute_result.rowcount
+    if total_count <= 0:
+        total_count = len(fetch_result)
+    total_pages = total_count // per_page + 1
+    table_data['total_pages'] = total_pages
+    table_data['row_count'] = total_count
+    table_data['page'] = page
+
+    offset = (page - 1) * per_page
+    paginated_results = fetch_result[offset:offset+per_page]
     table_data['data'] = []
-    for row in execute_result:
+
+    for row in paginated_results:
         data = {}
         for i, column in enumerate(table_data['columns']):
             data[column] = row[i]
         table_data['data'].append(data)
     return table_data
+
+
+def extract_limit_from_query(query):
+    expression = sqlglot.parse_one(query)
+    limit_expression = expression.args.get('limit')
+    offset_expression = expression.args.get('offset')
+
+    limit, offset = None, None
+    if limit_expression:
+        limit = int(limit_expression.expression.this)
+    if offset_expression:
+        offset = int(offset_expression.expression.this)
+
+    return limit, offset
+
+
+def add_limit_offset_to_query(query, set_limit, set_offset):
+    expression = sqlglot.parse_one(query)
+    query = expression.limit(set_limit).offset(set_offset).sql()
+    return query

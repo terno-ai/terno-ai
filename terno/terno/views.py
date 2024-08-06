@@ -90,6 +90,8 @@ def execute_sql(request):
     data = json.loads(request.body)
     user_sql = data.get('sql')
     datasource_id = data.get('datasourceId')
+    page = data.get('page', 1)
+    per_page = data.get('per_page', 25)
 
     try:
         datasource = models.DataSource.objects.get(id=datasource_id,
@@ -120,7 +122,7 @@ def execute_sql(request):
         data_type='actual_executed_sql', data=native_sql_response['native_sql'])
 
     execute_sql_response = utils.execute_native_sql(
-        datasource, native_sql_response['native_sql'])
+        datasource, native_sql_response['native_sql'], page=page, per_page=per_page)
 
     if execute_sql_response['status'] == 'error':
         return JsonResponse({
