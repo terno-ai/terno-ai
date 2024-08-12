@@ -209,3 +209,10 @@ class QueryHistory(models.Model):
     data = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+
+
+class PromptLog(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    llm_prompt = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)

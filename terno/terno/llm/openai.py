@@ -1,5 +1,6 @@
 from .base import BaseLLM
 from openai import OpenAI
+import terno.models as models
 
 
 class OpenAILLM(BaseLLM):
@@ -42,12 +43,13 @@ class OpenAILLM(BaseLLM):
         )
         return client
 
-    def get_response(self, query: str, db_schema) -> str:
+    def get_response(self, user, query: str, db_schema) -> str:
         messages = [
             {"role": "system", "content": self.system_message},
             {"role": "assistant", "content": "The database schema is as follows: " + db_schema},
             {"role": "user", "content": query},
         ]
+        models.PromptLog.objects.create(user=user, llm_prompt=messages)
         model = self.get_model_instance()
         response = model.chat.completions.create(
             model=self.model_name,

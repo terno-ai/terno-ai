@@ -107,3 +107,9 @@ class QueryHistoryAdmin(admin.ModelAdmin):
     list_display = ['user', 'data_source', 'data_type', 'data', 'created_at']
     list_filter = ['data_source', 'data_type', 'created_at']
     search_fields = ['user__username', 'data_source__display_name', 'data']
+
+@admin.register(models.PromptLog)
+class PromptLogAdmin(admin.ModelAdmin):
+    list_display = ['user', 'llm_prompt', 'created_at']
+    list_filter = ['created_at']
+    search_fields = ['user__username', 'llm_prompt']
