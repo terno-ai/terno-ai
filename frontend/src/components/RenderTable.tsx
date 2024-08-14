@@ -1,7 +1,6 @@
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -11,13 +10,11 @@ import {
 interface RenderTableProps {
   columns: string[];
   data: Record<string, string | number>[];
-  rowCount: number;
 }
 
-const RenderTable: React.FC<RenderTableProps> = ({ columns, data, rowCount }) => {
+const RenderTable: React.FC<RenderTableProps> = ({ columns, data }) => {
   return (
     <Table className="bg-slate-50 border border-slate-500">
-      <TableCaption>{rowCount>0 && <>{rowCount} rows</>}</TableCaption>
       <TableHeader>
           {columns.map((column) => (
             <TableHead

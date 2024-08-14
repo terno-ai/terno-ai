@@ -112,7 +112,7 @@ const Main = () => {
           <div className="mt-10 font-medium text-lg">Result</div>
           <div className="max-h-[200px]">
             <SqlError error={sqlError} />
-            <RenderTable columns={tableData.columns} data={tableData.data} rowCount={tableData.row_count} />
+            <RenderTable columns={tableData.columns} data={tableData.data} />
             {tableData.row_count > 0 &&
               <><PaginatedList totalPages={tableData.total_pages} onSelect={handleQueryExecute} />
               <div className="text-center m-2">{tableData.row_count} Rows</div></>}
