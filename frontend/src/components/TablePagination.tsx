@@ -11,7 +11,7 @@ const PaginatedList: React.FC<PaginatedListProps> = ({ totalPages, onSelect }) =
   };
 
   return (
-    <div className='w-full m-5 pb-10 flex flex-row justify-center items-center list-none'>
+    <div className='w-full m-2 pb-2 flex flex-row justify-center items-center list-none'>
       <ReactPaginate
         previousLabel={'Previous'}
         nextLabel={'Next'}

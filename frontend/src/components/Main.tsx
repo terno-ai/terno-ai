@@ -13,6 +13,7 @@ interface TableData {
   columns: string[];
   data: Record<string, string | number>[];
   row_count: number;
+  total_pages: number;
 }
 
 const Main = () => {
@@ -20,14 +21,10 @@ const Main = () => {
   const [inputText, setInputText] = useState("");
   const [generatedQueryText, setGeneratedQueryText] = useState("");
   const [tableData, setTableData] = useState<TableData>({
-    columns: [],
-    data: [],
-    row_count: 0,
-  });
+    columns: [], data: [], row_count: 0, total_pages: 0});
   const [sqlError, setSqlError] = useState("");
   const [user, setUser] = useState({id: '', username: ''});
   const [loading, setLoading] = useState(false);
-  const [totalPages, setTotalPages] = useState(1);
 
   const handleSendMessage = async () => {
     setLoading(true);
@@ -44,11 +41,10 @@ const Main = () => {
   const handleQueryExecute = async (page: number) => {
     setLoading(true);
     setSqlError("");
-    setTableData({ columns: [], data: [], row_count: 0 });
+    setTableData({ columns: [], data: [], row_count: 0, total_pages: 0 });
     const response = await executeSQL(generatedQueryText, ds.id, page);
     if (response["status"] == "success") {
       setTableData(response["table_data"]);
-      setTotalPages(response["table_data"]["total_pages"]);
     } else {
       setSqlError(response["error"]);
     }
@@ -117,8 +113,9 @@ const Main = () => {
           <div className="max-h-[200px]">
             <SqlError error={sqlError} />
             <RenderTable columns={tableData.columns} data={tableData.data} rowCount={tableData.row_count} />
-            {tableData.columns && tableData.columns.length > 0 &&
-              <PaginatedList totalPages={totalPages} onSelect={handleQueryExecute} />}
+            {tableData.row_count > 0 &&
+              <><PaginatedList totalPages={tableData.total_pages} onSelect={handleQueryExecute} />
+              <div className="text-center m-2">{tableData.row_count} Rows</div></>}
           </div>
         </div>
       </div>
