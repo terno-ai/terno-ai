@@ -1,6 +1,6 @@
 import "../index.css";
 import { executeSQL, getUserDetails, sendMessage } from "../utils/api";
-import { KeyboardEvent, lazy, Suspense, useContext, useEffect, useState } from "react";
+import { lazy, Suspense, useContext, useEffect, useState } from "react";
 import RenderTable from "./RenderTable";
 const SqlEditor = lazy(() => import("./SqlEditor"))
 import SqlError from "./SqlError";
@@ -54,14 +54,6 @@ const Main = () => {
     }
     setLoading(false);
   };
-  const handleKeyDownExecute = () => {
-    handleQueryExecute(1);
-  }
-  const handleKeyDownSend = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.code === 'Enter') {
-      handleSendMessage();
-    }
-  };
 
   useEffect(() => {
     const fetchUserDetails = async () => {
@@ -88,7 +80,7 @@ const Main = () => {
             placeholder="Enter a prompt here"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            onKeyDown={handleKeyDownSend}
+            onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
             className="flex-1 bg-transparent border-none outline-none p-2 text-lg focus:outline-none"
           />
           <button
@@ -112,7 +104,7 @@ const Main = () => {
           <div className="flex flex-row align-center justify-end">
             <button
               className="text-right inline-flex h-10 items-center justify-center rounded-md border bg-cyan-500 hover:bg-cyan-600 mt-4 px-10 font-medium text-white transition-colors hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 focus:ring-offset-slate-50"
-              onClick={handleKeyDownExecute}
+              onClick={() => handleQueryExecute(1)}
               disabled={loading}
             >
               {loading ? 'Wait': 'Execute'}
