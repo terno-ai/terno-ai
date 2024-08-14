@@ -90,6 +90,7 @@ class DataSource(models.Model):
                             default=DBType.default)
     connection_str = models.TextField(
         max_length=300, help_text="Connection string for the datasource")
+    db_info = models.CharField(max_length=50, null=True, blank=True, default='')
     enabled = models.BooleanField(default=True)
 
     def __str__(self):

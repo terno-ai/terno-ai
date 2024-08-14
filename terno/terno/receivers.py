@@ -1,16 +1,19 @@
-
 from terno.models import DataSource, Table, TableColumn
 from django.dispatch import receiver
 from django.db.models.signals import post_save
-
 import sqlalchemy
-from sqlalchemy import inspect
 
 
 # TODO: delete the extra tables and columns
 def load_metadata(datasource):
     engine = sqlalchemy.create_engine(datasource.connection_str)
-    inspector = inspect(engine)
+    if not datasource.db_info:
+        with engine.connect():
+            dialect_name = engine.dialect.name
+            version_info = engine.dialect.server_version_info
+            datasource.db_info = dialect_name + ' version ' + str(version_info)
+            datasource.save(update_fields=['db_info'])
+    inspector = sqlalchemy.inspect(engine)
     schemas = inspector.get_schema_names()
     current_tables = {}
     for schema in schemas[:1]:
