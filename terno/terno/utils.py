@@ -156,10 +156,10 @@ def get_admin_config_object(datasource, roles):
     return all_group_tables, group_columns
 
 
-def llm_response(user, question, schema_generated):
+def llm_response(user, question, schema_generated, db_info):
     try:
         llm = LLMFactory.create_llm()
-        generated_sql = llm.get_response(user, question, schema_generated)
+        generated_sql = llm.get_response(user, question, schema_generated, db_info)
     except Exception as e:
         logger.exception(e)
         return {'status': 'error', 'error': str(e)}

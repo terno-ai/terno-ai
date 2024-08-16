@@ -43,10 +43,10 @@ class OpenAILLM(BaseLLM):
         )
         return client
 
-    def get_response(self, user, query: str, db_schema) -> str:
+    def get_response(self, user, query: str, db_schema, db_info) -> str:
         messages = [
             {"role": "system", "content": self.system_message},
-            {"role": "assistant", "content": "The database schema is as follows: " + db_schema},
+            {"role": "assistant", "content": f"It's {db_info} database. The database schema is as follows: {db_schema}"},
             {"role": "user", "content": query},
         ]
         models.PromptLog.objects.create(user=user, llm_prompt=messages)

@@ -27,7 +27,7 @@ class LLMConfigurationAdmin(admin.ModelAdmin):
 
 @admin.register(models.DataSource)
 class DataSourceAdmin(admin.ModelAdmin):
-    list_display = ['display_name', 'type', 'connection_str', 'enabled']
+    list_display = ['display_name', 'type', 'enabled', 'db_info', 'connection_str']
     list_filter = ['enabled', 'type']
     search_fields = ['display_name', 'type']
 
@@ -107,6 +107,7 @@ class QueryHistoryAdmin(admin.ModelAdmin):
     list_display = ['user', 'data_source', 'data_type', 'data', 'created_at']
     list_filter = ['data_source', 'data_type', 'created_at']
     search_fields = ['user__username', 'data_source__display_name', 'data']
+
 
 @admin.register(models.PromptLog)
 class PromptLogAdmin(admin.ModelAdmin):
