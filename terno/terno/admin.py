@@ -27,7 +27,7 @@ class LLMConfigurationAdmin(admin.ModelAdmin):
 
 @admin.register(models.DataSource)
 class DataSourceAdmin(admin.ModelAdmin):
-    list_display = ['display_name', 'type', 'enabled', 'db_info', 'connection_str']
+    list_display = ['display_name', 'type', 'enabled', 'dialect_name', 'dialect_version', 'connection_str']
     list_filter = ['enabled', 'type']
     search_fields = ['display_name', 'type']
 

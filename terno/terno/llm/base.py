@@ -21,7 +21,7 @@ class BaseLLM(ABC):
         pass
 
     @abstractmethod
-    def get_response(self, query: str, db_schema, db_info) -> str:
+    def get_response(self, query: str, db_schema, datasource) -> str:
         pass
 
 

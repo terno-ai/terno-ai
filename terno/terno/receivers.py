@@ -7,12 +7,11 @@ import sqlalchemy
 # TODO: delete the extra tables and columns
 def load_metadata(datasource):
     engine = sqlalchemy.create_engine(datasource.connection_str)
-    if not datasource.db_info:
+    if not datasource.dialect_name:
         with engine.connect():
-            dialect_name = engine.dialect.name
-            version_info = engine.dialect.server_version_info
-            datasource.db_info = dialect_name + ' version ' + str(version_info)
-            datasource.save(update_fields=['db_info'])
+            datasource.dialect_name = engine.dialect.name
+            datasource.dialect_version = str(engine.dialect.server_version_info)
+            datasource.save(update_fields=['dialect_name', 'dialect_version'])
 
     inspector = sqlalchemy.inspect(engine)
     schemas = inspector.get_schema_names()

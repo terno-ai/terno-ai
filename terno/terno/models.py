@@ -3,7 +3,6 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import User, Group
 import json
 from django.core.exceptions import ValidationError
-from django.utils import timezone
 
 
 class LLMConfiguration(models.Model):
@@ -90,7 +89,8 @@ class DataSource(models.Model):
                             default=DBType.default)
     connection_str = models.TextField(
         max_length=300, help_text="Connection string for the datasource")
-    db_info = models.CharField(max_length=50, null=True, blank=True, default='')
+    dialect_name = models.CharField(max_length=20, null=True, blank=True, default='')
+    dialect_version = models.CharField(max_length=20, null=True, blank=True, default='')
     enabled = models.BooleanField(default=True)
 
     def __str__(self):

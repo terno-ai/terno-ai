@@ -67,7 +67,7 @@ def get_sql(request):
 
     mDB = utils.prepare_mdb(datasource, roles)
     schema_generated = mDB.generate_schema()
-    llm_response = utils.llm_response(request.user, question, schema_generated, datasource.db_info)
+    llm_response = utils.llm_response(request.user, question, schema_generated, datasource)
 
     if llm_response['status'] == 'error':
         return JsonResponse({
