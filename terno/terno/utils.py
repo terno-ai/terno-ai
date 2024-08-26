@@ -29,7 +29,7 @@ def keep_only_columns(mDb, tables, columns):
     As there is no keep_only_columns method on mDb
     we use the drop columns method on table
     '''
-    for table in mDb.tables:
+    for _, table in mDb.tables.items():
         table_obj = tables.filter(name=table.name)
         if table_obj:
             table.pub_name = table_obj.first().public_name
@@ -38,7 +38,7 @@ def keep_only_columns(mDb, tables, columns):
                 table__in=table_obj).values_list('name', flat=True)
             drop_columns = set(table_columns).difference(keep_columns)
             table.drop_columns(drop_columns)
-            for col in table.columns:
+            for _, col in table.columns.items():
                 allowed_column = columns.filter(table=table_obj.first(), name=col.name)
                 if allowed_column:
                     col.pub_name = allowed_column.first().public_name
