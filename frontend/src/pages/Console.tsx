@@ -4,7 +4,7 @@ import Sidebar from "../components/Sidebar";
 import { DataSourceProvider } from "../components/ui/datasource-context";
 import gutter from "../components/ui/gutter";
 
-const Home = () => {
+const Console = () => {
   return (
     <DataSourceProvider>
       <Split
@@ -24,7 +24,7 @@ const Home = () => {
           <Main />
       </Split>
     </DataSourceProvider>
-  );
-};
+  )
+}
 
-export default Home;
+export default Console

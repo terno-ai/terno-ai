@@ -8,6 +8,7 @@ import { FaArrowRight, FaPlay } from "react-icons/fa6";
 import terno from "../assets/terno.svg";
 import { DataSourceContext } from "./ui/datasource-context";
 import PaginatedList from "./TablePagination";
+import useUserDetails from "../hooks/useUserDetails";
 
 interface TableData {
   columns: string[];
@@ -23,7 +24,7 @@ const Main = () => {
   const [tableData, setTableData] = useState<TableData>({
     columns: [], data: [], row_count: 0, total_pages: 0});
   const [sqlError, setSqlError] = useState("");
-  const [user, setUser] = useState({id: '', username: ''});
+  const [user] = useUserDetails();
   const [loading, setLoading] = useState(false);
 
   const handleSendMessage = async () => {
@@ -50,14 +51,6 @@ const Main = () => {
     }
     setLoading(false);
   };
-
-  useEffect(() => {
-    const fetchUserDetails = async () => {
-      const response = await getUserDetails();
-      setUser(response);
-    };
-    fetchUserDetails();
-  }, []);
 
   return (
     <div className="flex-1 min-w-[800px] pb-36 px-4 relative overflow-scroll">

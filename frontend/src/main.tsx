@@ -5,7 +5,8 @@ import "./index.css";
 import Home from "./pages/HomePage";
 import Settings from "./pages/Settings";
 import { lazy } from "react";
-const Login = lazy(() => import("./pages/Login"))
+import Console from "./pages/Console";
+const Login = lazy(() => import("./pages/Login"));
 
 const router = createBrowserRouter([
   {
@@ -19,6 +20,10 @@ const router = createBrowserRouter([
   {
     path: "accounts/login",
     element: <Login />,
+  },
+  {
+    path: "console",
+    element: <Console />,
   },
 ]);
 
