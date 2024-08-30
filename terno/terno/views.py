@@ -9,6 +9,7 @@ from django.contrib import messages
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.core.exceptions import ObjectDoesNotExist
 import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -28,6 +29,56 @@ def login_page(request):
             return redirect('terno:index')
         else:
             messages.error(request, 'Invalid username or password')
+    return render(request, 'frontend/index.html')
+
+
+def console(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        datasource_id = data.get('datasourceId')
+        question = data.get('prompt')
+
+        try:
+            datasource = models.DataSource.objects.get(id=datasource_id,
+                                                       enabled=True)
+        except ObjectDoesNotExist:
+            return JsonResponse({
+                'status': 'error',
+                'error': 'No Datasource found.'
+            })
+        roles = request.user.groups.all()
+
+        models.QueryHistory.objects.create(
+            user=request.user, data_source=datasource,
+            data_type='user_prompt', data=question)
+
+        mDB = utils.prepare_mdb(datasource, roles)
+        schema_generated = mDB.generate_schema()
+        prompt = utils.get_prompt(
+            input_variables={'schema_generated': schema_generated},
+            template=question)
+
+        models.QueryHistory.objects.create(
+            user=request.user, data_source=datasource,
+            data_type='user_prompt', data=prompt)
+
+        llm_response = utils.llm_response(
+            request.user, prompt, '', datasource)
+
+        if llm_response['status'] == 'error':
+            return JsonResponse({
+                'status': llm_response['status'],
+                'error': llm_response['error'],
+            })
+
+        models.QueryHistory.objects.create(
+            user=request.user, data_source=datasource,
+            data_type='generated_sql', data=llm_response['generated_sql'])
+
+        return JsonResponse({
+            'status': llm_response['status'],
+            'generated_sql': llm_response['generated_sql'],
+        })
     return render(request, 'frontend/index.html')
 
 
@@ -67,7 +118,8 @@ def get_sql(request):
 
     mDB = utils.prepare_mdb(datasource, roles)
     schema_generated = mDB.generate_schema()
-    llm_response = utils.llm_response(request.user, question, schema_generated, datasource)
+    llm_response = utils.llm_response(
+        request.user, question, schema_generated, datasource)
 
     if llm_response['status'] == 'error':
         return JsonResponse({
@@ -118,11 +170,14 @@ def execute_sql(request):
         })
 
     models.QueryHistory.objects.create(
-        user=request.user, data_source=datasource,
-        data_type='actual_executed_sql', data=native_sql_response['native_sql'])
+        user=request.user,
+        data_source=datasource,
+        data_type='actual_executed_sql',
+        data=native_sql_response['native_sql'])
 
     execute_sql_response = utils.execute_native_sql(
-        datasource, native_sql_response['native_sql'], page=page, per_page=per_page)
+        datasource, native_sql_response['native_sql'],
+        page=page, per_page=per_page)
 
     if execute_sql_response['status'] == 'error':
         return JsonResponse({
@@ -147,7 +202,8 @@ def get_tables(request, datasource_id):
             'error': 'No Datasource found.'
         })
     role = request.user.groups.all()
-    allowed_tables, allowed_columns = utils.get_admin_config_object(datasource, role)
+    allowed_tables, allowed_columns = utils.get_admin_config_object(
+        datasource, role)
     table_data = []
     for table in allowed_tables:
         column = allowed_columns.filter(table_id=table)

@@ -1,6 +1,6 @@
 import "../index.css";
-import { executeSQL, getUserDetails, sendMessage } from "../utils/api";
-import { lazy, Suspense, useContext, useEffect, useState } from "react";
+import { executeSQL, sendMessage } from "../utils/api";
+import { lazy, Suspense, useContext, useState } from "react";
 import RenderTable from "./RenderTable";
 const SqlEditor = lazy(() => import("./SqlEditor"))
 import SqlError from "./SqlError";

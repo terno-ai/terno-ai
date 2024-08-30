@@ -6,6 +6,7 @@ from sqlshield.models import MDatabase
 import sqlalchemy
 from terno.llm.base import LLMFactory
 import math
+import re
 import logging
 
 logger = logging.getLogger(__name__)
@@ -251,3 +252,8 @@ def add_limit_offset_to_query(query, set_limit, set_offset):
     expression = sqlglot.parse_one(query)
     query = expression.limit(set_limit).offset(set_offset).sql()
     return query
+
+
+def get_prompt(input_variables, template):
+    formatted_string = template.format(**input_variables)
+    return formatted_string

@@ -12,7 +12,7 @@ const useUserDetails = () => {
     fetchUserDetails();
   }, []);
 
-  return [user, setUser];
+  return [user];
 }
 
 export default useUserDetails

@@ -15,7 +15,8 @@ export const endpoints = {
   executeSQL: () => `${API_BASE_URL}/execute-sql`,
   getDatasources: () => `${API_BASE_URL}/get-datasources`,
   getTables: (id: string) => `${API_BASE_URL}/get-tables/${id}`,
-  getUserDetails: () => `${API_BASE_URL}/get-user-details`
+  getUserDetails: () => `${API_BASE_URL}/get-user-details`,
+  getConsoleSQL: () => `${API_BASE_URL}/console/`,
 };
 
 export const sendMessage = async (prompt: string, datasourceId: string) => {
@@ -80,6 +81,21 @@ export const getUserDetails =  async () => {
       "Content-Type": "application/json",
       "X-CSRFToken": csrfToken || "",
     },
+  });
+  const result = await response.json();
+  return result;
+};
+
+
+export const sendConsoleMessage = async (prompt: string, datasourceId: string) => {
+  const csrfToken = getCsrfToken();
+  const response = await fetch(endpoints.getConsoleSQL(), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": csrfToken || "",
+    },
+    body: JSON.stringify({ prompt: prompt, datasourceId: datasourceId }),
   });
   const result = await response.json();
   return result;
