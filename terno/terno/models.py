@@ -217,3 +217,8 @@ class PromptLog(models.Model):
     llm_prompt = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+
+
+class SystemPrompts(models.Model):
+    data_source = models.ForeignKey(DataSource, on_delete=models.CASCADE)
+    system_prompt = models.TextField(blank=True, null=True)

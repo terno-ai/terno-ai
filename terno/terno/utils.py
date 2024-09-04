@@ -6,7 +6,6 @@ from sqlshield.models import MDatabase
 import sqlalchemy
 from terno.llm.base import LLMFactory
 import math
-import re
 import logging
 
 logger = logging.getLogger(__name__)

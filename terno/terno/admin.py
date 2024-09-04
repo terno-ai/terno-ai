@@ -114,3 +114,10 @@ class PromptLogAdmin(admin.ModelAdmin):
     list_display = ['user', 'llm_prompt', 'created_at']
     list_filter = ['created_at']
     search_fields = ['user__username', 'llm_prompt']
+
+
+@admin.register(models.SystemPrompts)
+class SystemPromptsAdmin(admin.ModelAdmin):
+    list_display = ['data_source', 'system_prompt']
+    list_filter = ['data_source']
+    search_fields = ['data_source__display_name', 'system_prompt']
