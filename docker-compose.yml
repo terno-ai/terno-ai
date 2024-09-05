@@ -10,12 +10,5 @@ services:
       - .:/code
     ports:
       - "8000:8000"
-    networks:
-      - app
     env_file:
-      - env.sh
-
-networks:
-  app:
-    external: true
-    name: app
+      - env-sample.sh
