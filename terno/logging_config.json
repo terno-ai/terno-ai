@@ -19,7 +19,7 @@
         },
         "file": {
             "class": "logging.FileHandler",
-            "filename": "logs/terno.log",
+            "filename": "terno.log",
             "formatter": "json",
             "filters": ["log_filters"]
         }
