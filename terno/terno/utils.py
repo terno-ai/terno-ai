@@ -7,6 +7,8 @@ import sqlalchemy
 from terno.llm.base import LLMFactory
 import math
 import logging
+from terno.pipeline.pipeline import Pipeline
+from terno.pipeline.step import Step
 
 logger = logging.getLogger(__name__)
 
@@ -156,15 +158,39 @@ def get_admin_config_object(datasource, roles):
     return all_group_tables, group_columns
 
 
-def llm_response(user, question, schema_generated, datasource):
+def llm_response(user, user_query, db_schema, datasource):
     try:
         llm = LLMFactory.create_llm()
-        generated_sql = llm.get_response(user, question, schema_generated, datasource)
+        messages = create_message_for_llm(llm.system_message, db_schema, user_query, datasource)
+        models.PromptLog.objects.create(user=user, llm_prompt=messages)
+        pipeline = create_pipeline(llm, messages)
+        response = get_response_from_pipeline(pipeline)
+        generated_sql = response[0][0]
     except Exception as e:
         logger.exception(e)
         return {'status': 'error', 'error': str(e)}
 
     return {'status': 'success', 'generated_sql': generated_sql}
+
+
+def create_message_for_llm(system_message, db_schema, user_query, datasource, **kwargs):
+    messages = [
+        {"role": "system", "content": system_message},
+        {"role": "assistant", "content": f"It's {datasource.dialect_name} database version {datasource.dialect_version}. The database schema is as follows: {db_schema}"},
+        {"role": "user", "content": user_query},
+    ]
+    return messages
+
+
+def create_pipeline(llm, messages):
+    pipeline = Pipeline()
+    step_1 = Step(llm, messages)
+    pipeline.add_step(step_1)
+    return pipeline
+
+
+def get_response_from_pipeline(pipeline):
+    return pipeline.run()
 
 
 # @cache_page(24*3600)

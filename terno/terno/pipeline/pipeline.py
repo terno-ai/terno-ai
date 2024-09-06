@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 class Pipeline(AbstractPipeline):
     _steps = []
 
-    def __init__(self, steps):
+    def __init__(self, steps=[]):
         self._steps = steps
 
     def add_step(self, step):
@@ -21,6 +21,7 @@ class Pipeline(AbstractPipeline):
                 start_time = time.time()
 
                 step_result = step.execute()
+                print('step_result', step_result)
 
                 execution_time = time.time() - start_time
                 result.append([step_result, execution_time])

@@ -55,7 +55,11 @@ def console(request):
         mDB = utils.prepare_mdb(datasource, roles)
         schema_generated = mDB.generate_schema()
         prompt = utils.get_prompt(
-            input_variables={'schema_generated': schema_generated},
+            input_variables={
+                'db_schema': schema_generated,
+                'dialect_name': datasource.dialect_name,
+                'dialect_version': datasource.dialect_version,
+            },
             template=question)
 
         models.QueryHistory.objects.create(
