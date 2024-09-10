@@ -36,7 +36,9 @@ def console(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         datasource_id = data.get('datasourceId')
-        question = data.get('prompt')
+        system_prompt = data.get('systemPrompt')
+        assistant_message = data.get('assistantMessage')
+        user_prompt = data.get('userPrompt')
 
         try:
             datasource = models.DataSource.objects.get(id=datasource_id,
@@ -50,20 +52,35 @@ def console(request):
 
         models.QueryHistory.objects.create(
             user=request.user, data_source=datasource,
-            data_type='user_prompt', data=question)
+            data_type='user_prompt', data=user_prompt)
 
         mDB = utils.prepare_mdb(datasource, roles)
         schema_generated = mDB.generate_schema()
-        prompt = utils.get_prompt(
-            input_variables={'schema_generated': schema_generated},
-            template=question)
+
+        context_dict = {
+            'db_schema': schema_generated,
+            'dialect_name': datasource.dialect_name,
+            'dialect_version': datasource.dialect_version,
+        }
+        system_prompt = utils.substitute_variables(template_str=system_prompt,
+                                                   context_dict=context_dict)
+        assistant_message = utils.substitute_variables(template_str=assistant_message,
+                                                       context_dict=context_dict)
+        user_prompt = utils.substitute_variables(template_str=user_prompt,
+                                                 context_dict=context_dict)
+
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "assistant", "content": assistant_message},
+            {"role": "user", "content": user_prompt},
+        ]
 
         models.QueryHistory.objects.create(
             user=request.user, data_source=datasource,
-            data_type='user_prompt', data=prompt)
+            data_type='user_prompt', data=user_prompt)
 
         llm_response = utils.llm_response(
-            request.user, prompt, '', datasource)
+            request.user, messages)
 
         if llm_response['status'] == 'error':
             return JsonResponse({
@@ -77,6 +94,7 @@ def console(request):
 
         return JsonResponse({
             'status': llm_response['status'],
+            'generated_prompt': str(messages),
             'generated_sql': llm_response['generated_sql'],
         })
     return render(request, 'frontend/index.html')
@@ -118,8 +136,13 @@ def get_sql(request):
 
     mDB = utils.prepare_mdb(datasource, roles)
     schema_generated = mDB.generate_schema()
+    messages = [
+        {"role": "system", "content": "You are an SQL Analyst. Generate the SQL given a question. Only generate SQL without markdown or any formatting and nothing else. The output you give will be directly executed on the database. So return the response accordingly."},
+        {"role": "assistant", "content": f"It's {datasource.dialect_name} database version {datasource.dialect_version}. The database schema is as follows: {schema_generated}"},
+        {"role": "user", "content": question},
+    ]
     llm_response = utils.llm_response(
-        request.user, question, schema_generated, datasource)
+        request.user, messages)
 
     if llm_response['status'] == 'error':
         return JsonResponse({

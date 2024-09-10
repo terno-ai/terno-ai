@@ -6,6 +6,7 @@ from sqlshield.models import MDatabase
 import sqlalchemy
 from terno.llm.base import LLMFactory
 import math
+from django.template import Template, Context
 import logging
 
 logger = logging.getLogger(__name__)
@@ -156,15 +157,25 @@ def get_admin_config_object(datasource, roles):
     return all_group_tables, group_columns
 
 
-def llm_response(user, question, schema_generated, datasource):
+def llm_response(user, messages):
     try:
+        models.PromptLog.objects.create(user=user, llm_prompt=messages)
         llm = LLMFactory.create_llm()
-        generated_sql = llm.get_response(user, question, schema_generated, datasource)
+        generated_sql = llm.get_response(messages)
     except Exception as e:
         logger.exception(e)
         return {'status': 'error', 'error': str(e)}
 
     return {'status': 'success', 'generated_sql': generated_sql}
+
+
+def create_message_for_llm(system_message, db_schema, user_query, datasource, **kwargs):
+    messages = [
+        {"role": "system", "content": system_message},
+        {"role": "assistant", "content": f"It's {datasource.dialect_name} database version {datasource.dialect_version}. The database schema is as follows: {db_schema}"},
+        {"role": "user", "content": user_query},
+    ]
+    return messages
 
 
 # @cache_page(24*3600)
@@ -253,6 +264,7 @@ def add_limit_offset_to_query(query, set_limit, set_offset):
     return query
 
 
-def get_prompt(input_variables, template):
-    formatted_string = template.format(**input_variables)
-    return formatted_string
+def substitute_variables(template_str, context_dict):
+    template = Template(template_str)
+    context = Context(context_dict)
+    return template.render(context)
