@@ -89,6 +89,9 @@ class DataSource(models.Model):
                             default=DBType.default)
     connection_str = models.TextField(
         max_length=300, help_text="Connection string for the datasource")
+    description = models.TextField(
+        max_length=1024, null=True, blank=True, default='',
+        help_text="Give description of your datasource/schema.")
     dialect_name = models.CharField(max_length=20, null=True, blank=True, default='')
     dialect_version = models.CharField(max_length=20, null=True, blank=True, default='')
     enabled = models.BooleanField(default=True)
