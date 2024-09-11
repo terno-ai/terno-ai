@@ -45,6 +45,9 @@ const Console = () => {
               setGeneratedQueryText={setGeneratedQueryText}
               setSqlError={setSqlError}
             />
+            <div className="mt-2 max-w-4xl mx-auto min-w-[800px] px-4">
+              Available variables are: dialect_name, dialect_version, db_schema. Use curly braces for variables.
+            </div>
             <div className="mt-10 max-w-4xl mx-auto min-w-[800px] pb-36 px-4">
             <div className="mt-4 mb-1 font-medium text-lg">Generated Query</div>
               <div className="flex align-center justify-center border focus-within:ring-1 focus-within:ring-sky-300">

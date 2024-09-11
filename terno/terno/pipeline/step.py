@@ -1,6 +1,7 @@
 class Step():
-    def __init__(self):
-        pass
+    def __init__(self, llm, messages):
+        self.llm = llm
+        self.messages = messages
 
-    def execute(self, llm, messages):
-        return llm.get_response(messages)
+    def execute(self):
+        return self.llm.get_response(self.messages)
