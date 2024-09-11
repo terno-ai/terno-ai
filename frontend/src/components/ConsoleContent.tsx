@@ -1,8 +1,8 @@
 import PromptTemplateInput from "../components/PromptTemplateInput";
-import { Suspense, useContext, useState } from "react";
+import { lazy, Suspense, useContext, useState } from "react";
 import SqlError from "../components/SqlError";
 import terno from "../assets/terno.svg";
-import SqlEditor from "../components/SqlEditor";
+const SqlEditor = lazy(() => import("./SqlEditor"))
 import PromptInput from "../components/PromptInput";
 import { sendConsoleMessage } from "../utils/api";
 import { DataSourceContext } from "./ui/datasource-context";
@@ -34,8 +34,8 @@ const ConsoleContent = () => {
   };
 
   return (
-    <div className="h-full flex relative overflow-scroll">
-      <div className="flex-1 min-w-[800px] pb-36 px-4 relative overflow-scroll">
+    <div className="min-w-[300px] h-screen inline-flex flex-col pb-10 px-[15px] overflow-y-auto">
+      <div className="flex-1 min-w-[800px]">
         <div className="flex items-center justify-between text-xl p-5">
           <div className="inline-flex items-center">
             <img src={terno} className="logo h-[40px]" alt="Terno logo" />
@@ -64,7 +64,7 @@ const ConsoleContent = () => {
           loading={loading}
           handleSendMessage={handleSendMessage}
         />
-        <div className="mt-10 max-w-4xl mx-auto min-w-[800px] pb-36 px-4">
+        <div className="mt-10 max-w-4xl mx-auto min-w-[800px] px-4">
           <div className="mt-4 mb-1 font-medium text-lg">Generated Prompt</div>
           <div>
             <p>{generatedPromptText}</p>

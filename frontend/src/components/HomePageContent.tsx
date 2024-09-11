@@ -53,7 +53,7 @@ const HomePageContent = () => {
   };
 
   return (
-    <div className="flex-1 min-w-[800px] pb-36 px-4 relative overflow-scroll">
+    <div className="min-w-[300px] h-screen inline-flex flex-col pb-10 px-[15px] overflow-y-auto">
       <div className="flex items-center justify-between text-xl p-5">
         <div className="inline-flex items-center">
           <img src={terno} className="logo h-[40px]" alt="Terno logo" />
