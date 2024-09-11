@@ -84,11 +84,14 @@ class DataSource(models.Model):
         Oracle = "oracle", _("Oracle")
         MSSQL = "mysql", _("MySQL")
         postgres = "postgres", _("Postgres")
+        bigquery = "bigquery", _("BigQuery")
     display_name = models.CharField(max_length=20, default='Datasource 1')
     type = models.CharField(max_length=20, choices=DBType,
                             default=DBType.default)
     connection_str = models.TextField(
         max_length=300, help_text="Connection string for the datasource")
+    connection_json = models.JSONField(
+        null=True, blank=True, help_text="JSON key file contents for authentication")
     dialect_name = models.CharField(max_length=20, null=True, blank=True, default='')
     dialect_version = models.CharField(max_length=20, null=True, blank=True, default='')
     enabled = models.BooleanField(default=True)

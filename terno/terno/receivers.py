@@ -6,7 +6,8 @@ import sqlalchemy
 
 # TODO: delete the extra tables and columns
 def load_metadata(datasource):
-    engine = sqlalchemy.create_engine(datasource.connection_str)
+    engine = sqlalchemy.create_engine(datasource.connection_str,
+                                      credentials_info=datasource.connection_json)
     if not datasource.dialect_name:
         with engine.connect():
             datasource.dialect_name = engine.dialect.name

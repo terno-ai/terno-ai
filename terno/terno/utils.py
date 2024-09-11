@@ -169,7 +169,8 @@ def llm_response(user, question, schema_generated, datasource):
 
 # @cache_page(24*3600)
 def generate_mdb(datasource):
-    engine = sqlalchemy.create_engine(datasource.connection_str)
+    engine = sqlalchemy.create_engine(datasource.connection_str,
+                                      credentials_info=datasource.connection_json)
     inspector = sqlalchemy.inspect(engine)
     mDb = MDatabase.from_inspector(inspector)
     return mDb
@@ -191,7 +192,8 @@ def generate_native_sql(mDb, user_sql):
 
 
 def execute_native_sql(datasource, native_sql, page, per_page):
-    engine = sqlalchemy.create_engine(datasource.connection_str)
+    engine = sqlalchemy.create_engine(datasource.connection_str,
+                                      credentials_info=datasource.connection_json)
     with engine.connect() as con:
         try:
             execute_result = con.execute(sqlalchemy.text(native_sql))

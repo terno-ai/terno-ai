@@ -12,3 +12,5 @@ google-generativeai==0.7.2
 anthropic==0.31.2
 mysqlclient==2.2.4
 python-json-logger==2.0.7
+sqlalchemy-bigquery==1.11.0
+google-cloud-bigquery-storage==2.26.0
