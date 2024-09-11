@@ -17,14 +17,14 @@ interface TableData {
   total_pages: number;
 }
 
-const Main = () => {
+const HomePageContent = () => {
   const { ds } = useContext(DataSourceContext);
+  const [user] = useUserDetails();
   const [inputText, setInputText] = useState("");
   const [generatedQueryText, setGeneratedQueryText] = useState("");
   const [tableData, setTableData] = useState<TableData>({
     columns: [], data: [], row_count: 0, total_pages: 0});
   const [sqlError, setSqlError] = useState("");
-  const [user] = useUserDetails();
   const [loading, setLoading] = useState(false);
 
   const handleSendMessage = async () => {
@@ -116,4 +116,4 @@ const Main = () => {
   );
 };
 
-export default Main;
+export default HomePageContent;

@@ -1,5 +1,5 @@
 import Split from "react-split";
-import Main from "../components/Main";
+import HomePageContent from "../components/HomePageContent";
 import Sidebar from "../components/Sidebar";
 import { DataSourceProvider } from "../components/ui/datasource-context";
 import gutter from "../components/ui/gutter";
@@ -20,8 +20,8 @@ const Home = () => {
         cursor="col-resize"
         gutter={gutter}
       >
-          <Sidebar />
-          <Main />
+        <Sidebar />
+        <HomePageContent />
       </Split>
     </DataSourceProvider>
   );

@@ -6,9 +6,11 @@ import SqlEditor from "../components/SqlEditor";
 import PromptInput from "../components/PromptInput";
 import { sendConsoleMessage } from "../utils/api";
 import { DataSourceContext } from "./ui/datasource-context";
+import useUserDetails from "../hooks/useUserDetails";
 
 const ConsoleContent = () => {
   const { ds } = useContext(DataSourceContext);
+  const [user] = useUserDetails();
   const [systemPrompt, setSystemPrompt] = useState("");
   const [assistantPrompt, setAssistantPrompt] = useState("");
   const [userPrompt, setUserPrompt] = useState("");
@@ -21,11 +23,7 @@ const ConsoleContent = () => {
     setLoading(true);
     setSqlError("");
     const response = await sendConsoleMessage(
-      ds.id,
-      systemPrompt,
-      assistantPrompt,
-      userPrompt
-    );
+      ds.id, systemPrompt, assistantPrompt,userPrompt);
     if (response["status"] == "success") {
       setGeneratedPromptText(response["generated_prompt"]);
       setGeneratedQueryText(response["generated_sql"]);
@@ -44,7 +42,7 @@ const ConsoleContent = () => {
             <p className="font-semibold">Terno AI</p>
           </div>
           <div className="font-semibold">Developer Console</div>
-          <div>{"user.username"}</div>
+          <div>{user.username}</div>
         </div>
         <PromptInput
           text="System"
