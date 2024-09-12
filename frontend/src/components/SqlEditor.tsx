@@ -1,6 +1,6 @@
 import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/mode-mysql";
-import "ace-builds/src-noconflict/theme-github";
+import "ace-builds/src-noconflict/theme-chrome";
 import "ace-builds/src-noconflict/ext-language_tools";
 import { useContext, useEffect } from "react";
 import { addCompleter } from 'ace-builds/src-noconflict/ext-language_tools';
@@ -26,7 +26,7 @@ const SqlEditor = ({ ...props }) => {
     <AceEditor
       className={props.className}
       mode="mysql"
-      theme="github"
+      theme="chrome"
       name="sql-editor"
       // onLoad={onLoad}
       onChange={props.onChange}
