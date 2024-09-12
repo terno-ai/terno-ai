@@ -2,12 +2,13 @@ from terno.models import DataSource, Table, TableColumn
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 import sqlalchemy
+import terno.utils as utils
 
 
 # TODO: delete the extra tables and columns
 def load_metadata(datasource):
-    engine = sqlalchemy.create_engine(datasource.connection_str,
-                                      credentials_info=datasource.connection_json)
+    engine = utils.create_db_engine(datasource.type, datasource.connection_str,
+                                    credentials_info=datasource.connection_json)
     if not datasource.dialect_name:
         with engine.connect():
             datasource.dialect_name = engine.dialect.name

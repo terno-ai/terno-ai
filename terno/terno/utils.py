@@ -11,6 +11,21 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def create_db_engine(db_type, connection_string, **kwargs):
+    # Initialize the engine with the common connection string
+    if db_type == 'bigquery':
+        # BigQuery-specific: credentials_info is expected
+        credentials_info = kwargs.get('credentials_info')
+        if not credentials_info:
+            raise ValueError("BigQuery requires credentials_info")
+        engine = sqlalchemy.create_engine(connection_string, credentials_info=credentials_info)
+    else:
+        # For other DB types, ignore credentials_info
+        engine = sqlalchemy.create_engine(connection_string)
+
+    return engine
+
+
 def prepare_mdb(datasource, roles):
     allowed_tables, allowed_columns = get_admin_config_object(datasource, roles)
 
@@ -169,8 +184,8 @@ def llm_response(user, question, schema_generated, datasource):
 
 # @cache_page(24*3600)
 def generate_mdb(datasource):
-    engine = sqlalchemy.create_engine(datasource.connection_str,
-                                      credentials_info=datasource.connection_json)
+    engine = create_db_engine(datasource.type, datasource.connection_str,
+                                    credentials_info=datasource.connection_json)
     inspector = sqlalchemy.inspect(engine)
     mDb = MDatabase.from_inspector(inspector)
     return mDb
@@ -192,8 +207,8 @@ def generate_native_sql(mDb, user_sql):
 
 
 def execute_native_sql(datasource, native_sql, page, per_page):
-    engine = sqlalchemy.create_engine(datasource.connection_str,
-                                      credentials_info=datasource.connection_json)
+    engine = create_db_engine(datasource.type, datasource.connection_str,
+                              credentials_info=datasource.connection_json)
     with engine.connect() as con:
         try:
             execute_result = con.execute(sqlalchemy.text(native_sql))
