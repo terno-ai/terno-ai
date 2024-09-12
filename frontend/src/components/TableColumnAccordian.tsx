@@ -12,6 +12,7 @@ interface ColumnData {
 
 interface TableData {
   table_name: string,
+  table_description: string,
   column_data: ColumnData[]
 }
 
@@ -26,6 +27,9 @@ const TableColumnAccordian: React.FC<RenderTableColumnProps> = ({data}) => {
         <AccordionItem value={index.toString()}>
           <AccordionTrigger className="text-cyan-500">{t_data['table_name']}</AccordionTrigger>
           <AccordionContent>
+            <div className="border-b-2 pb-2">
+              {t_data['table_description']}
+            </div>
             {t_data.column_data.map((c_data: ColumnData, idx) => (
               <div key={idx.toString()} className="flex flex-row justify-between text-xs leading-5">
                 <div className="text-gray-800">

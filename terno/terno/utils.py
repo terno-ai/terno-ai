@@ -34,6 +34,7 @@ def prepare_mdb(datasource, roles):
     keep_only_columns(mDb, allowed_tables, allowed_columns)
 
     tables = mDb.get_table_dict()
+    update_table_descriptions(tables)
     update_filters(tables, datasource, roles)
 
     return mDb
@@ -57,6 +58,13 @@ def keep_only_columns(mDb, tables, columns):
                 allowed_column = columns.filter(table=table_obj.first(), name=col.name)
                 if allowed_column:
                     col.pub_name = allowed_column.first().public_name
+
+
+def update_table_descriptions(tables):
+    for tbl_name, tbl_object in tables.items():
+        table_description = models.Table.objects.filter(
+            public_name=tbl_name).first().description
+        tbl_object.desc = table_description
 
 
 def _get_base_filters(datasource):

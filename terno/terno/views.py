@@ -210,6 +210,7 @@ def get_tables(request, datasource_id):
         column_data = list(column.values('public_name', 'data_type'))
         result = {
             'table_name': table.public_name,
+            'table_description': table.description,
             'column_data': column_data
         }
         table_data.append(result)
