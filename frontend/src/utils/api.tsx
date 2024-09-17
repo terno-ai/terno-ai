@@ -21,30 +21,44 @@ export const endpoints = {
 
 export const sendMessage = async (prompt: string, datasourceId: string) => {
   const csrfToken = getCsrfToken();
-  const response = await fetch(endpoints.getSQL(), {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-CSRFToken": csrfToken || "",
-    },
-    body: JSON.stringify({ prompt: prompt, datasourceId: datasourceId }),
-  });
-  const result = await response.json();
-  return result;
+  try {
+    const response = await fetch(endpoints.getSQL(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrfToken || "",
+      },
+      body: JSON.stringify({ prompt: prompt, datasourceId: datasourceId }),
+    });
+    if (!response.ok) {
+      return { status: 'error', error: `Error: ${response.status} - ${response.statusText}` };
+    }
+    const result = await response.json();
+    return result;
+  } catch (error: any) {
+    return { status: 'error', error: error.message };
+  }
 };
 
 export const executeSQL = async (sql: string, datasourceId: string, page: number) => {
   const csrfToken = getCsrfToken();
-  const response = await fetch(endpoints.executeSQL(), {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-CSRFToken": csrfToken || "",
-    },
-    body: JSON.stringify({ sql: sql, datasourceId: datasourceId, page:page}),
-  });
-  const result = await response.json();
-  return result;
+  try {
+    const response = await fetch(endpoints.executeSQL(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrfToken || "",
+      },
+      body: JSON.stringify({ sql: sql, datasourceId: datasourceId, page:page}),
+    });
+    if (!response.ok) {
+      return { status: 'error', error: `Error: ${response.status} - ${response.statusText}` };
+    }
+    const result = await response.json();
+    return result;
+  } catch (error: any) {
+    return { status: 'error', error: error.message };
+  }
 };
 
 export const getDatasources = async () => {
