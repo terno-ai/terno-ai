@@ -9,7 +9,7 @@ import terno.utils as utils
 def load_metadata(datasource):
     engine = utils.create_db_engine(datasource.type, datasource.connection_str,
                                     credentials_info=datasource.connection_json)
-    if not datasource.dialect_name:
+    if not datasource.dialect_name or not datasource.dialect_version:
         with engine.connect():
             datasource.dialect_name = engine.dialect.name
             datasource.dialect_version = str(engine.dialect.server_version_info)

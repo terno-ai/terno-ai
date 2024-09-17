@@ -91,9 +91,14 @@ class DataSource(models.Model):
     connection_str = models.TextField(
         max_length=300, help_text="Connection string for the datasource")
     connection_json = models.JSONField(
-        null=True, blank=True, help_text="JSON key file contents for authentication")
-    dialect_name = models.CharField(max_length=20, null=True, blank=True, default='')
-    dialect_version = models.CharField(max_length=20, null=True, blank=True, default='')
+        null=True, blank=True,
+        help_text="JSON key file contents for authentication")
+    dialect_name = models.CharField(
+        max_length=20, null=True, blank=True, default='',
+        help_text="Auto-generated on save")
+    dialect_version = models.CharField(
+        max_length=20, null=True, blank=True, default='',
+        help_text="Auto-generated on save")
     enabled = models.BooleanField(default=True)
 
     def __str__(self):
