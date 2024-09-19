@@ -13,6 +13,7 @@ const API_BASE_URL = "";
 export const endpoints = {
   getSQL: () => `${API_BASE_URL}/get-sql/`,
   executeSQL: () => `${API_BASE_URL}/execute-sql`,
+  exportSQLResult: () => `${API_BASE_URL}/export-sql-result`,
   getDatasources: () => `${API_BASE_URL}/get-datasources`,
   getTables: (id: string) => `${API_BASE_URL}/get-tables/${id}`,
   getUserDetails: () => `${API_BASE_URL}/get-user-details`,
@@ -46,6 +47,36 @@ export const executeSQL = async (sql: string, datasourceId: string, page: number
   const result = await response.json();
   return result;
 };
+
+export const exportSQLResult =async (sql:string, datasourceId: string) => {
+  const csrfToken = getCsrfToken();
+  const response = await fetch(endpoints.exportSQLResult(), {
+    method:"POST",
+    headers:{
+      "Content-Type": "application/json",
+      "X-CSRFToken": csrfToken || "",
+    },
+    body: JSON.stringify({ sql: sql, datasourceId: datasourceId}),
+  });
+
+  const contentDisposition = response.headers.get('Content-Disposition')
+  let fileName = 'Query_Results'
+  if (contentDisposition){
+    const match = contentDisposition.match(/filename="?(.+)"?/);
+    if (match && match[1]){
+      fileName = match[1].trim()
+    }
+  }
+
+  const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName!;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
 
 export const getDatasources = async () => {
   const csrfToken = getCsrfToken();
