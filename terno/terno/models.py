@@ -51,7 +51,7 @@ class LLMConfiguration(models.Model):
         blank=True, null=True,
         help_text=(
             "Enter parameters as a JSON object. Use this field if you \
-            want to pass additional paramters than the one defined above. \
+            want to pass additional parameters than the one defined above. \
             These parameters will be passed when invoking the LLM. "
             "Example: {\"param1\": value1, \"param2\": value2, ... and \
             so on }. In case of string values, enclose it in either \
