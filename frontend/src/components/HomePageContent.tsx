@@ -17,14 +17,14 @@ interface TableData {
   total_pages: number;
 }
 
-const Main = () => {
+const HomePageContent = () => {
   const { ds } = useContext(DataSourceContext);
+  const [user] = useUserDetails();
   const [inputText, setInputText] = useState("");
   const [generatedQueryText, setGeneratedQueryText] = useState("");
   const [tableData, setTableData] = useState<TableData>({
     columns: [], data: [], row_count: 0, total_pages: 0});
   const [sqlError, setSqlError] = useState("");
-  const [user] = useUserDetails();
   const [loading, setLoading] = useState(false);
 
   const handleSendMessage = async () => {
@@ -53,7 +53,7 @@ const Main = () => {
   };
 
   return (
-    <div className="flex-1 min-w-[800px] pb-36 px-4 relative overflow-scroll">
+    <div className="min-w-[300px] h-screen inline-flex flex-col pb-10 px-[15px] overflow-y-auto">
       <div className="flex items-center justify-between text-xl p-5">
         <div className="inline-flex items-center">
           <img src={terno} className="logo h-[40px]" alt="Terno logo" />
@@ -116,4 +116,4 @@ const Main = () => {
   );
 };
 
-export default Main;
+export default HomePageContent;

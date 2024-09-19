@@ -101,7 +101,7 @@ export const getUserDetails =  async () => {
 };
 
 
-export const sendConsoleMessage = async (prompt: string, datasourceId: string) => {
+export const sendConsoleMessage = async (datasourceId: string, systemPrompt: string, assistantMessage: string, userPrompt: string) => {
   const csrfToken = getCsrfToken();
   const response = await fetch(endpoints.getConsoleSQL(), {
     method: "POST",
@@ -109,7 +109,12 @@ export const sendConsoleMessage = async (prompt: string, datasourceId: string) =
       "Content-Type": "application/json",
       "X-CSRFToken": csrfToken || "",
     },
-    body: JSON.stringify({ prompt: prompt, datasourceId: datasourceId }),
+    body: JSON.stringify({
+      datasourceId: datasourceId,
+      systemPrompt: systemPrompt,
+      assistantMessage: assistantMessage,
+      userPrompt: userPrompt
+    }),
   });
   const result = await response.json();
   return result;
