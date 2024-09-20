@@ -11,7 +11,7 @@ class BaseLLM(ABC):
         self.custom_parameters = kwargs
 
     def get_system_prompt(self) -> str:
-        return "You are an SQL Analyst. Generate the SQL given a question. Only generate SQL without markdown or any formatting and nothing else. The output you give will be directly executed on the database. So return the response accordingly."
+        return "You are an SQL Analyst. Generate the SQL given a question.You have access to the schema of the database, along with descriptions of tables and relationships between them. Use this information to ensure the SQL you generate is accurate and aligns with the schema and descriptions. Only generate SQL without markdown or any formatting and nothing else. The output you give will be directly executed on the database. So return the response accordingly."
 
     def get_chat_history(self) -> str:
         pass

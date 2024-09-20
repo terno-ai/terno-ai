@@ -99,6 +99,11 @@ class DataSource(models.Model):
     dialect_version = models.CharField(
         max_length=20, null=True, blank=True, default='',
         help_text="Auto-generated on save")
+    description = models.TextField(
+        max_length=1024, null=True, blank=True, default='',
+        help_text="Give description of your datasource/schema.")
+    dialect_name = models.CharField(max_length=20, null=True, blank=True, default='')
+    dialect_version = models.CharField(max_length=20, null=True, blank=True, default='')
     enabled = models.BooleanField(default=True)
 
     def __str__(self):
