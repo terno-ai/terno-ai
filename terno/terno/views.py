@@ -215,6 +215,48 @@ def execute_sql(request):
 
 
 @login_required
+def export_sql_result(request):
+    data = json.loads(request.body)
+    user_sql = data.get('sql')
+    datasource_id = data.get('datasourceId')
+
+    try:
+        datasource = models.DataSource.objects.get(id=datasource_id,
+                                                   enabled=True)
+    except ObjectDoesNotExist:
+        return JsonResponse({
+            'status': 'error',
+            'error': 'No Datasource found.'
+        })
+    roles = request.user.groups.all()
+
+    models.QueryHistory.objects.create(
+        user=request.user, data_source=datasource,
+        data_type='user_executed_sql', data=user_sql)
+
+    mDB = utils.prepare_mdb(datasource, roles)
+
+    native_sql_response = utils.generate_native_sql(mDB, user_sql)
+
+    if native_sql_response['status'] == 'error':
+        return JsonResponse({
+            'status': native_sql_response['status'],
+            'error': native_sql_response['error'],
+        })
+
+    models.QueryHistory.objects.create(
+        user=request.user,
+        data_source=datasource,
+        data_type='actual_executed_sql',
+        data=native_sql_response['native_sql'])
+
+    execute_sql_response = utils.export_native_sql_result(
+        datasource, native_sql_response['native_sql'])
+
+    return execute_sql_response
+
+
+@login_required
 def get_tables(request, datasource_id):
     try:
         datasource = models.DataSource.objects.get(id=datasource_id,

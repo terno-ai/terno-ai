@@ -8,6 +8,9 @@ from terno.llm.base import LLMFactory
 import math
 from django.template import Template, Context
 import logging
+import csv
+from django.http import HttpResponse
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
@@ -241,6 +244,20 @@ def execute_native_sql(datasource, native_sql, page, per_page):
                 'status': 'error',
                 'error': str(e)
             }
+
+
+def export_native_sql_result(datasource, native_sql):
+    engine = sqlalchemy.create_engine(datasource.connection_str)
+    utc_time = timezone.now().strftime('%Y-%m-%d_%H-%M-%S')
+    file_name = f'terno_{datasource.display_name}_{utc_time}.csv'
+    with engine.connect() as con:
+        execute_result = con.execute(sqlalchemy.text(native_sql))
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename={file_name}'
+        writer = csv.writer(response)
+        writer.writerow(execute_result.keys())  # Write the headers (column names)
+        writer.writerows(execute_result)  # Write all rows of data
+        return response
 
 
 def prepare_table_data_from_execute(execute_result, page, per_page):
