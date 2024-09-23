@@ -29,7 +29,7 @@ query_generation_system_prompt = """You are a {dialect_name} expert. You are wri
 Very Important Note:- If any verification condition fails, start again from step 1 and repeat the process until all verification condition pass. If all veritification conditions pass, then output the query.
 
 Output:
-The output you provide will directly be executed on the database without any modification. So, make sure output text only contains the SQL query and nothing else.
+The response you provide will be executed directly on the database without any modification. So make sure the output consist solely of the query text, without including any surrounding elements like sql tags, quotation marks, any formatting, or any special characters such as triple quotes. The goal is to have a clean, executable SQL query without any additional content or formatting that might interfere with execution.
 """
 
 query_generation_ai_prompt = """You will be provided with the database schema and the human question. Use this information to generate the SQL query. Here is the database schema:
