@@ -188,7 +188,6 @@ def get_admin_config_object(datasource, roles):
 
 def llm_response(user, user_query, db_schema, datasource):
     try:
-        models.PromptLog.objects.create(user=user, llm_prompt=messages)
         llm = LLMFactory.create_llm()
         pipeline = create_pipeline(llm, 'one_step_pipeline', user, db_schema, datasource, user_query)
         response = get_response_from_pipeline(pipeline)
@@ -209,8 +208,8 @@ def create_pipeline(llm, name, user, db_schema, datasource, user_query):
         ai_message = query_generation.query_generation_ai_prompt.format(database_schema=db_schema)
         human_message = query_generation.query_generation_human_prompt.format(question=user_query, dialect_name=datasource.dialect_name)
         messages = llm.create_message_for_llm(system_message, ai_message, human_message)
-        step = Step(llm, messages)
-        steps.append(step)
+        step1 = Step(llm, messages)
+        steps.append(step1)
     else:
         raise Exception("Invalid Pipeline Name")
 
