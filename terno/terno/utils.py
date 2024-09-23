@@ -9,6 +9,7 @@ import math
 import logging
 from terno.pipeline.pipeline import Pipeline
 from terno.pipeline.step import Step
+from terno.prompt import query_generation, table_select
 
 logger = logging.getLogger(__name__)
 
@@ -161,9 +162,7 @@ def get_admin_config_object(datasource, roles):
 def llm_response(user, user_query, db_schema, datasource):
     try:
         llm = LLMFactory.create_llm()
-        messages = create_message_for_llm(llm.system_message, db_schema, user_query, datasource)
-        models.PromptLog.objects.create(user=user, llm_prompt=messages)
-        pipeline = create_pipeline(llm, messages)
+        pipeline = create_pipeline(llm, 'one_step_pipeline', user, db_schema, datasource, user_query)
         response = get_response_from_pipeline(pipeline)
         generated_sql = response[0][0]
     except Exception as e:
@@ -173,19 +172,23 @@ def llm_response(user, user_query, db_schema, datasource):
     return {'status': 'success', 'generated_sql': generated_sql}
 
 
-def create_message_for_llm(system_message, db_schema, user_query, datasource, **kwargs):
-    messages = [
-        {"role": "system", "content": system_message},
-        {"role": "assistant", "content": f"It's {datasource.dialect_name} database version {datasource.dialect_version}. The database schema is as follows: {db_schema}"},
-        {"role": "user", "content": user_query},
-    ]
-    return messages
+def create_pipeline(llm, name, user, db_schema, datasource, user_query):
+    steps = []
+    if name == 'one_step_pipeline':
+        pipeline = Pipeline()
+        system_message = query_generation.query_generation_system_prompt.format(dialect_name=datasource.dialect_name,
+                                                                                dialect_version=datasource.dialect_version)
+        ai_message = query_generation.query_generation_ai_prompt.format(database_schema=db_schema)
+        human_message = query_generation.query_generation_human_prompt.format(question=user_query, dialect_name=datasource.dialect_name)
+        messages = llm.create_message_for_llm(system_message, ai_message, human_message)
+        step = Step(llm, messages)
+        steps.append(step)
+    else:
+        raise Exception("Invalid Pipeline Name")
 
-
-def create_pipeline(llm, messages):
-    pipeline = Pipeline()
-    step_1 = Step(llm, messages)
-    pipeline.add_step(step_1)
+    for step in steps:
+        pipeline.add_step(step)
+        models.PromptLog.objects.create(user=user, llm_prompt=step.messages)
     return pipeline
 
 

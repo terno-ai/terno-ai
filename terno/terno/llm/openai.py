@@ -28,10 +28,9 @@ class OpenAILLM(BaseLLM):
                  model_name: str = None,
                  temperature: float = None,
                  max_tokens: int = None,
-                 system_message: str = None,
                  top_p: float = None,
                  **kwargs):
-        super().__init__(api_key, system_message, **kwargs)
+        super().__init__(api_key, **kwargs)
         self.model_name = model_name or self.model_name
         self.temperature = temperature if temperature is not None else self.temperature
         self.max_tokens = max_tokens if max_tokens is not None else self.max_tokens
@@ -42,6 +41,14 @@ class OpenAILLM(BaseLLM):
             api_key=self.api_key,
         )
         return client
+
+    def create_message_for_llm(self, system_prompt, ai_prompt, human_prompt):
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "assistant", "content": ai_prompt},
+            {"role": "user", "content": human_prompt},
+        ]
+        return messages
 
     def get_response(self, messages) -> str:
         model = self.get_model_instance()
