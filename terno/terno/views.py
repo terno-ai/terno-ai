@@ -58,15 +58,6 @@ def console(request):
 
         mDB = utils.prepare_mdb(datasource, roles)
         schema_generated = mDB.generate_schema()
-<<<<<<< HEAD
-        prompt = utils.get_prompt(
-            input_variables={
-                'db_schema': schema_generated,
-                'dialect_name': datasource.dialect_name,
-                'dialect_version': datasource.dialect_version,
-            },
-            template=question)
-=======
 
         context_dict = {
             'db_schema': schema_generated,
@@ -85,7 +76,6 @@ def console(request):
             {"role": "assistant", "content": assistant_message},
             {"role": "user", "content": user_prompt},
         ]
->>>>>>> b80840426b4b50ead46357f675eac3419f51341d
 
         models.QueryHistory.objects.create(
             user=request.user, data_source=datasource,
