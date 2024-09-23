@@ -5,6 +5,7 @@ import terno.utils as utils
 import json
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.core.exceptions import ObjectDoesNotExist
@@ -32,6 +33,7 @@ def login_page(request):
     return render(request, 'frontend/index.html')
 
 
+@staff_member_required
 def console(request):
     if request.method == 'POST':
         data = json.loads(request.body)
