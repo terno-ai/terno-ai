@@ -198,7 +198,7 @@ def llm_response(user, messages):
 def create_message_for_llm(system_message, db_schema, user_query, datasource, **kwargs):
     messages = [
         {"role": "system", "content": system_message},
-        {"role": "assistant", "content": f"It's {datasource.dialect_name} database version {datasource.dialect_version}. The database schema is as follows: {db_schema}"},
+        {"role": "assistant", "content": f"It's {datasource.dialect_name} database version {datasource.dialect_version}. The database description is as follows: {datasource.description}. The database schema is as follows: {db_schema}"},
         {"role": "user", "content": user_query},
     ]
     return messages

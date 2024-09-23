@@ -108,7 +108,6 @@ def settings(request):
 
 @login_required
 def get_datasources(request):
-    logger.warning("get datasources")
     datasources = models.DataSource.objects.filter(enabled=True)
     data = [{'name': d.display_name, 'id': d.id} for d in datasources]
     return JsonResponse({
@@ -139,8 +138,8 @@ def get_sql(request):
     mDB = utils.prepare_mdb(datasource, roles)
     schema_generated = mDB.generate_schema()
     messages = [
-        {"role": "system", "content": "You are an SQL Analyst. Generate the SQL given a question. Only generate SQL without markdown or any formatting and nothing else. The output you give will be directly executed on the database. So return the response accordingly."},
-        {"role": "assistant", "content": f"It's {datasource.dialect_name} database version {datasource.dialect_version}. The database schema is as follows: {schema_generated}"},
+        {"role": "system", "content": "You are an SQL Analyst. Generate the SQL given a question. You have access to the schema of the database, along with descriptions of tables and relationships between them. Use this information to ensure the SQL you generate is accurate and aligns with the schema and descriptions. Only generate SQL without markdown or any formatting and nothing else. The output you give will be directly executed on the database. So return the response accordingly."},
+        {"role": "assistant", "content": f"It's {datasource.dialect_name} database version {datasource.dialect_version}. The database description is as follows: {datasource.description}. The database schema is as follows: {schema_generated}"},
         {"role": "user", "content": question},
     ]
     llm_response = utils.llm_response(
