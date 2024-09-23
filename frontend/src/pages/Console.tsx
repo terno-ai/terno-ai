@@ -1,19 +1,10 @@
 import Split from "react-split";
 import Sidebar from "../components/Sidebar";
-import { DataSourceContext, DataSourceProvider } from "../components/ui/datasource-context";
+import { DataSourceProvider } from "../components/ui/datasource-context";
 import gutter from "../components/ui/gutter";
-import PromptTemplateInput from "../components/PromptTemplateInput";
-import { Suspense, useContext, useState } from "react";
-import SqlError from "../components/SqlError";
-import terno from "../assets/terno.svg";
-import SqlEditor from "../components/SqlEditor";
+import ConsoleContent from "../components/ConsoleContent";
 
 const Console = () => {
-  const { ds } = useContext(DataSourceContext);
-  const [inputPrompt, setInputPrompt] = useState("");
-  const [generatedQueryText, setGeneratedQueryText] = useState("");
-  const [sqlError, setSqlError] = useState("");
-
   return (
     <DataSourceProvider>
       <Split
@@ -29,6 +20,7 @@ const Console = () => {
         cursor="col-resize"
         gutter={gutter}
       >
+<<<<<<< HEAD
           <Sidebar />
             <div className="flex-1 min-w-[800px] pb-36 px-4 relative overflow-scroll">
               <div className="flex items-center justify-between text-xl p-5">
@@ -61,9 +53,13 @@ const Console = () => {
             </div>
             <SqlError error={sqlError} />
           </div>
+=======
+        <Sidebar />
+        <ConsoleContent />
+>>>>>>> b80840426b4b50ead46357f675eac3419f51341d
       </Split>
     </DataSourceProvider>
-  )
-}
+  );
+};
 
-export default Console
+export default Console;

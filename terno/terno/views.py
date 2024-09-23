@@ -5,6 +5,7 @@ import terno.utils as utils
 import json
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.core.exceptions import ObjectDoesNotExist
@@ -32,11 +33,14 @@ def login_page(request):
     return render(request, 'frontend/index.html')
 
 
+@staff_member_required
 def console(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         datasource_id = data.get('datasourceId')
-        question = data.get('prompt')
+        system_prompt = data.get('systemPrompt')
+        assistant_message = data.get('assistantMessage')
+        user_prompt = data.get('userPrompt')
 
         try:
             datasource = models.DataSource.objects.get(id=datasource_id,
@@ -50,10 +54,11 @@ def console(request):
 
         models.QueryHistory.objects.create(
             user=request.user, data_source=datasource,
-            data_type='user_prompt', data=question)
+            data_type='user_prompt', data=user_prompt)
 
         mDB = utils.prepare_mdb(datasource, roles)
         schema_generated = mDB.generate_schema()
+<<<<<<< HEAD
         prompt = utils.get_prompt(
             input_variables={
                 'db_schema': schema_generated,
@@ -61,13 +66,33 @@ def console(request):
                 'dialect_version': datasource.dialect_version,
             },
             template=question)
+=======
+
+        context_dict = {
+            'db_schema': schema_generated,
+            'dialect_name': datasource.dialect_name,
+            'dialect_version': datasource.dialect_version,
+        }
+        system_prompt = utils.substitute_variables(template_str=system_prompt,
+                                                   context_dict=context_dict)
+        assistant_message = utils.substitute_variables(template_str=assistant_message,
+                                                       context_dict=context_dict)
+        user_prompt = utils.substitute_variables(template_str=user_prompt,
+                                                 context_dict=context_dict)
+
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "assistant", "content": assistant_message},
+            {"role": "user", "content": user_prompt},
+        ]
+>>>>>>> b80840426b4b50ead46357f675eac3419f51341d
 
         models.QueryHistory.objects.create(
             user=request.user, data_source=datasource,
-            data_type='user_prompt', data=prompt)
+            data_type='user_prompt', data=user_prompt)
 
         llm_response = utils.llm_response(
-            request.user, prompt, '', datasource)
+            request.user, messages)
 
         if llm_response['status'] == 'error':
             return JsonResponse({
@@ -81,6 +106,7 @@ def console(request):
 
         return JsonResponse({
             'status': llm_response['status'],
+            'generated_prompt': str(messages),
             'generated_sql': llm_response['generated_sql'],
         })
     return render(request, 'frontend/index.html')
@@ -122,8 +148,13 @@ def get_sql(request):
 
     mDB = utils.prepare_mdb(datasource, roles)
     schema_generated = mDB.generate_schema()
+    messages = [
+        {"role": "system", "content": "You are an SQL Analyst. Generate the SQL given a question. Only generate SQL without markdown or any formatting and nothing else. The output you give will be directly executed on the database. So return the response accordingly."},
+        {"role": "assistant", "content": f"It's {datasource.dialect_name} database version {datasource.dialect_version}. The database schema is as follows: {schema_generated}"},
+        {"role": "user", "content": question},
+    ]
     llm_response = utils.llm_response(
-        request.user, question, schema_generated, datasource)
+        request.user, messages)
 
     if llm_response['status'] == 'error':
         return JsonResponse({
@@ -196,6 +227,48 @@ def execute_sql(request):
 
 
 @login_required
+def export_sql_result(request):
+    data = json.loads(request.body)
+    user_sql = data.get('sql')
+    datasource_id = data.get('datasourceId')
+
+    try:
+        datasource = models.DataSource.objects.get(id=datasource_id,
+                                                   enabled=True)
+    except ObjectDoesNotExist:
+        return JsonResponse({
+            'status': 'error',
+            'error': 'No Datasource found.'
+        })
+    roles = request.user.groups.all()
+
+    models.QueryHistory.objects.create(
+        user=request.user, data_source=datasource,
+        data_type='user_executed_sql', data=user_sql)
+
+    mDB = utils.prepare_mdb(datasource, roles)
+
+    native_sql_response = utils.generate_native_sql(mDB, user_sql)
+
+    if native_sql_response['status'] == 'error':
+        return JsonResponse({
+            'status': native_sql_response['status'],
+            'error': native_sql_response['error'],
+        })
+
+    models.QueryHistory.objects.create(
+        user=request.user,
+        data_source=datasource,
+        data_type='actual_executed_sql',
+        data=native_sql_response['native_sql'])
+
+    execute_sql_response = utils.export_native_sql_result(
+        datasource, native_sql_response['native_sql'])
+
+    return execute_sql_response
+
+
+@login_required
 def get_tables(request, datasource_id):
     try:
         datasource = models.DataSource.objects.get(id=datasource_id,
@@ -214,6 +287,7 @@ def get_tables(request, datasource_id):
         column_data = list(column.values('public_name', 'data_type'))
         result = {
             'table_name': table.public_name,
+            'table_description': table.description,
             'column_data': column_data
         }
         table_data.append(result)

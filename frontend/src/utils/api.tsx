@@ -13,6 +13,7 @@ const API_BASE_URL = "";
 export const endpoints = {
   getSQL: () => `${API_BASE_URL}/get-sql/`,
   executeSQL: () => `${API_BASE_URL}/execute-sql`,
+  exportSQLResult: () => `${API_BASE_URL}/export-sql-result`,
   getDatasources: () => `${API_BASE_URL}/get-datasources`,
   getTables: (id: string) => `${API_BASE_URL}/get-tables/${id}`,
   getUserDetails: () => `${API_BASE_URL}/get-user-details`,
@@ -21,31 +22,75 @@ export const endpoints = {
 
 export const sendMessage = async (prompt: string, datasourceId: string) => {
   const csrfToken = getCsrfToken();
-  const response = await fetch(endpoints.getSQL(), {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-CSRFToken": csrfToken || "",
-    },
-    body: JSON.stringify({ prompt: prompt, datasourceId: datasourceId }),
-  });
-  const result = await response.json();
-  return result;
+  try {
+    const response = await fetch(endpoints.getSQL(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrfToken || "",
+      },
+      body: JSON.stringify({ prompt: prompt, datasourceId: datasourceId }),
+    });
+    if (!response.ok) {
+      return { status: 'error', error: `Error: ${response.status} - ${response.statusText}` };
+    }
+    const result = await response.json();
+    return result;
+  } catch (error: any) {
+    return { status: 'error', error: error.message };
+  }
 };
 
 export const executeSQL = async (sql: string, datasourceId: string, page: number) => {
   const csrfToken = getCsrfToken();
-  const response = await fetch(endpoints.executeSQL(), {
-    method: "POST",
-    headers: {
+  try {
+    const response = await fetch(endpoints.executeSQL(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrfToken || "",
+      },
+      body: JSON.stringify({ sql: sql, datasourceId: datasourceId, page:page}),
+    });
+    if (!response.ok) {
+      return { status: 'error', error: `Error: ${response.status} - ${response.statusText}` };
+    }
+    const result = await response.json();
+    return result;
+  } catch (error: any) {
+    return { status: 'error', error: error.message };
+  }
+};
+
+export const exportSQLResult =async (sql:string, datasourceId: string) => {
+  const csrfToken = getCsrfToken();
+  const response = await fetch(endpoints.exportSQLResult(), {
+    method:"POST",
+    headers:{
       "Content-Type": "application/json",
       "X-CSRFToken": csrfToken || "",
     },
-    body: JSON.stringify({ sql: sql, datasourceId: datasourceId, page:page}),
+    body: JSON.stringify({ sql: sql, datasourceId: datasourceId}),
   });
-  const result = await response.json();
-  return result;
-};
+
+  const contentDisposition = response.headers.get('Content-Disposition')
+  let fileName = 'Query_Results'
+  if (contentDisposition){
+    const match = contentDisposition.match(/filename="?(.+)"?/);
+    if (match && match[1]){
+      fileName = match[1].trim()
+    }
+  }
+
+  const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName!;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
 
 export const getDatasources = async () => {
   const csrfToken = getCsrfToken();
@@ -87,7 +132,7 @@ export const getUserDetails =  async () => {
 };
 
 
-export const sendConsoleMessage = async (prompt: string, datasourceId: string) => {
+export const sendConsoleMessage = async (datasourceId: string, systemPrompt: string, assistantMessage: string, userPrompt: string) => {
   const csrfToken = getCsrfToken();
   const response = await fetch(endpoints.getConsoleSQL(), {
     method: "POST",
@@ -95,7 +140,12 @@ export const sendConsoleMessage = async (prompt: string, datasourceId: string) =
       "Content-Type": "application/json",
       "X-CSRFToken": csrfToken || "",
     },
-    body: JSON.stringify({ prompt: prompt, datasourceId: datasourceId }),
+    body: JSON.stringify({
+      datasourceId: datasourceId,
+      systemPrompt: systemPrompt,
+      assistantMessage: assistantMessage,
+      userPrompt: userPrompt
+    }),
   });
   const result = await response.json();
   return result;

@@ -51,7 +51,7 @@ class LLMConfiguration(models.Model):
         blank=True, null=True,
         help_text=(
             "Enter parameters as a JSON object. Use this field if you \
-            want to pass additional paramters than the one defined above. \
+            want to pass additional parameters than the one defined above. \
             These parameters will be passed when invoking the LLM. "
             "Example: {\"param1\": value1, \"param2\": value2, ... and \
             so on }. In case of string values, enclose it in either \
@@ -84,11 +84,24 @@ class DataSource(models.Model):
         Oracle = "oracle", _("Oracle")
         MSSQL = "mysql", _("MySQL")
         postgres = "postgres", _("Postgres")
+        bigquery = "bigquery", _("BigQuery")
     display_name = models.CharField(max_length=20, default='Datasource 1')
     type = models.CharField(max_length=20, choices=DBType,
                             default=DBType.default)
     connection_str = models.TextField(
         max_length=300, help_text="Connection string for the datasource")
+    connection_json = models.JSONField(
+        null=True, blank=True,
+        help_text="JSON key file contents for authentication")
+    dialect_name = models.CharField(
+        max_length=20, null=True, blank=True, default='',
+        help_text="Auto-generated on save")
+    dialect_version = models.CharField(
+        max_length=20, null=True, blank=True, default='',
+        help_text="Auto-generated on save")
+    description = models.TextField(
+        max_length=1024, null=True, blank=True, default='',
+        help_text="Give description of your datasource/schema.")
     dialect_name = models.CharField(max_length=20, null=True, blank=True, default='')
     dialect_version = models.CharField(max_length=20, null=True, blank=True, default='')
     enabled = models.BooleanField(default=True)

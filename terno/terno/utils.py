@@ -6,12 +6,31 @@ from sqlshield.models import MDatabase
 import sqlalchemy
 from terno.llm.base import LLMFactory
 import math
+from django.template import Template, Context
 import logging
 from terno.pipeline.pipeline import Pipeline
 from terno.pipeline.step import Step
 from terno.prompt import query_generation, table_select
+import csv
+from django.http import HttpResponse
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
+
+
+def create_db_engine(db_type, connection_string, **kwargs):
+    # Initialize the engine with the common connection string
+    if db_type == 'bigquery':
+        # BigQuery-specific: credentials_info is expected
+        credentials_info = kwargs.get('credentials_info')
+        if not credentials_info:
+            raise ValueError("BigQuery requires credentials_info")
+        engine = sqlalchemy.create_engine(connection_string, credentials_info=credentials_info)
+    else:
+        # For other DB types, ignore credentials_info
+        engine = sqlalchemy.create_engine(connection_string)
+
+    return engine
 
 
 def prepare_mdb(datasource, roles):
@@ -22,6 +41,7 @@ def prepare_mdb(datasource, roles):
     keep_only_columns(mDb, allowed_tables, allowed_columns)
 
     tables = mDb.get_table_dict()
+    update_table_descriptions(tables)
     update_filters(tables, datasource, roles)
 
     return mDb
@@ -45,6 +65,13 @@ def keep_only_columns(mDb, tables, columns):
                 allowed_column = columns.filter(table=table_obj.first(), name=col.name)
                 if allowed_column:
                     col.pub_name = allowed_column.first().public_name
+
+
+def update_table_descriptions(tables):
+    for tbl_name, tbl_object in tables.items():
+        table_description = models.Table.objects.filter(
+            public_name=tbl_name).first().description
+        tbl_object.desc = table_description
 
 
 def _get_base_filters(datasource):
@@ -161,6 +188,7 @@ def get_admin_config_object(datasource, roles):
 
 def llm_response(user, user_query, db_schema, datasource):
     try:
+        models.PromptLog.objects.create(user=user, llm_prompt=messages)
         llm = LLMFactory.create_llm()
         pipeline = create_pipeline(llm, 'one_step_pipeline', user, db_schema, datasource, user_query)
         response = get_response_from_pipeline(pipeline)
@@ -198,7 +226,8 @@ def get_response_from_pipeline(pipeline):
 
 # @cache_page(24*3600)
 def generate_mdb(datasource):
-    engine = sqlalchemy.create_engine(datasource.connection_str)
+    engine = create_db_engine(datasource.type, datasource.connection_str,
+                                    credentials_info=datasource.connection_json)
     inspector = sqlalchemy.inspect(engine)
     mDb = MDatabase.from_inspector(inspector)
     return mDb
@@ -220,7 +249,8 @@ def generate_native_sql(mDb, user_sql):
 
 
 def execute_native_sql(datasource, native_sql, page, per_page):
-    engine = sqlalchemy.create_engine(datasource.connection_str)
+    engine = create_db_engine(datasource.type, datasource.connection_str,
+                              credentials_info=datasource.connection_json)
     with engine.connect() as con:
         try:
             execute_result = con.execute(sqlalchemy.text(native_sql))
@@ -234,6 +264,20 @@ def execute_native_sql(datasource, native_sql, page, per_page):
                 'status': 'error',
                 'error': str(e)
             }
+
+
+def export_native_sql_result(datasource, native_sql):
+    engine = sqlalchemy.create_engine(datasource.connection_str)
+    utc_time = timezone.now().strftime('%Y-%m-%d_%H-%M-%S')
+    file_name = f'terno_{datasource.display_name}_{utc_time}.csv'
+    with engine.connect() as con:
+        execute_result = con.execute(sqlalchemy.text(native_sql))
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename={file_name}'
+        writer = csv.writer(response)
+        writer.writerow(execute_result.keys())  # Write the headers (column names)
+        writer.writerows(execute_result)  # Write all rows of data
+        return response
 
 
 def prepare_table_data_from_execute(execute_result, page, per_page):
@@ -282,6 +326,7 @@ def add_limit_offset_to_query(query, set_limit, set_offset):
     return query
 
 
-def get_prompt(input_variables, template):
-    formatted_string = template.format(**input_variables)
-    return formatted_string
+def substitute_variables(template_str, context_dict):
+    template = Template(template_str)
+    context = Context(context_dict)
+    return template.render(context)
