@@ -5,23 +5,20 @@ from ..models import LLMConfiguration
 
 class BaseLLM(ABC):
     @abstractmethod
-    def __init__(self, api_key: str, system_message: str = None, **kwargs):
+    def __init__(self, api_key: str, **kwargs):
         self.api_key = api_key
-        self.system_message = system_message or self.get_system_prompt()
         self.custom_parameters = kwargs
-
-    def get_system_prompt(self) -> str:
-        return "You are an SQL Analyst. Generate the SQL given a question.You have access to the schema of the database, along with descriptions of tables and relationships between them. Use this information to ensure the SQL you generate is accurate and aligns with the schema and descriptions. Only generate SQL without markdown or any formatting and nothing else. The output you give will be directly executed on the database. So return the response accordingly."
-
-    def get_chat_history(self) -> str:
-        pass
 
     @abstractmethod
     def get_model_instance(self):
         pass
 
     @abstractmethod
-    def get_response(self, query: str, db_schema, datasource) -> str:
+    def create_message_for_llm(self, system_prompt, ai_prompt, human_prompt):
+        pass
+
+    @abstractmethod
+    def get_response(self, query: str) -> str:
         pass
 
 
@@ -37,7 +34,6 @@ class LLMFactory:
                 'model_name': config.model_name,
                 'temperature': config.temperature,
                 'max_tokens': config.max_tokens,
-                'system_message': config.custom_system_message,
                 'top_p': config.top_p,
             }
 
@@ -56,7 +52,6 @@ class LLMFactory:
             from .custom_llm import CustomLLM
             return CustomLLM(
                 api_key=config.api_key,
-                system_message=config.custom_system_message,
                 **custom_params,
                 # Custom parameters to pass
                 )

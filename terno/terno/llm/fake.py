@@ -1,17 +1,17 @@
 from .base import BaseLLM
 
 
-class CustomLLM(BaseLLM):
+class FakeLLM(BaseLLM):
 
-    def __init__(self, api_key: str,
-                 **kwargs):
-        super().__init__(api_key, **kwargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     def get_model_instance(self):
         pass
 
     def create_message_for_llm(self, system_prompt, ai_prompt, human_prompt):
-        pass
+        return []
 
     def get_response(self, messages) -> str:
-        pass
+        self.get_model_instance()
+        return "SELECT 1"

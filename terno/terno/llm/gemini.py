@@ -26,24 +26,23 @@ class GeminiLLM(BaseLLM):
                  model_name: str = None,
                  temperature: float = None,
                  max_tokens: int = None,
-                 system_message: str = None,
                  top_p: float = None,
                  top_k: int = None,
                  **kwargs):
-        super().__init__(api_key, system_message, **kwargs)
+        super().__init__(api_key, **kwargs)
         self.model_name = model_name or self.model_name
         self.temperature = temperature if temperature is not None else self.temperature
         self.max_tokens = max_tokens if max_tokens is not None else self.max_tokens
         self.top_p = top_p if top_p is not None else self.top_p
         self.top_k = top_k if top_k is not None else self.top_k
 
-    def get_model_instance(self):
+    def get_model_instance(self, system_prompt):
         # models = genai.list_models()
         # supported_models_generativeModel = [m.name[7:] for m in models]
         if self.model_name in self.supported_system_instructions_model:
             model = genai.GenerativeModel(
                 model_name=self.model_name,
-                system_instruction=self.system_message,
+                system_instruction=system_prompt,
             )
         # elif self.model_name in supported_models_generativeModel:
         #     model = genai.GenerativeModel(
@@ -54,16 +53,19 @@ class GeminiLLM(BaseLLM):
 
         return model
 
-    def get_response(self, query: str, db_schema) -> str:
+    def create_message_for_llm(self, system_prompt, ai_prompt, human_prompt):
+        messages = [{'role': 'system', 'parts': [system_prompt]},
+                    {'role': 'model', 'parts': [ai_prompt]},
+                    {'role': 'user', 'parts': [human_prompt]}]
+        return messages
 
+    def get_response(self, messages) -> str:
+        system_prompt = messages[0]['parts'][0]
+        messages = messages[1:]
         genai.configure(api_key=self.api_key)
-        model = self.get_model_instance()
-        contents = [
-            {'role': 'model', 'parts': [db_schema]},
-            {'role': 'user', 'parts': [query]}
-        ]
+        model = self.get_model_instance(system_prompt)
         response = model.generate_content(
-            contents=contents,
+            contents=messages,
             generation_config=dict(
                 {
                     "temperature": self.temperature,
