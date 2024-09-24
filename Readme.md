@@ -44,3 +44,20 @@ Django server is running on http://127.0.0.1:8000 by default and admin url is ht
 2. All popular databases are supported. ex. MySQL, Postgresql, sqlite, etc
 3. Use RBAC (Role based access control) to control access to particular table, column and rows
 4. Use LLM of your choice without leaking data in your database to them
+
+
+## Testing and Code Coverage
+
+### To only run the test
+`python manage.py test terno`
+
+### To run the tests and collect coverage data
+`coverage run --source='terno' --omit='terno/migrations/*' manage.py test terno`
+
+### To see a report of this data
+`coverage report -m`
+
+### To get annotated HTML
+`coverage html`
+
+Open the `htmlcov/index.html` file in browser
