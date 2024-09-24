@@ -5,9 +5,6 @@ import terno.utils as utils
 
 
 class BaseTestCase(TestCase):
-    def setUp(self):
-        super().setUp()
-
     def create_datasource(self, display_name='test_db'):
         datasource = models.DataSource.objects.create(
             display_name=display_name, type='default',
@@ -59,6 +56,9 @@ class BaseTestCase(TestCase):
 class DataSourceTestCase(BaseTestCase):
     def setUp(self) -> None:
         self.datasource = super().create_datasource()
+
+    def test_datasource_created(self):
+        self.assertEqual(str(self.datasource), 'test_db')
 
     def test_tables_are_created(self):
         tables = models.Table.objects.all()

@@ -1,0 +1,11 @@
+[run]
+source = terno
+omit =
+    terno/migrations/*
+    terno/admin.py
+    terno/views.py
+
+[report]
+exclude_lines =
+    pragma: no cover
+    if __name__ == .__main__.:

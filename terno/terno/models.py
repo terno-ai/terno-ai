@@ -120,9 +120,6 @@ class Table(models.Model):
     def __str__(self):
         return f"{self.data_source.display_name} - {self.name}"
 
-    def get_table_name(self):
-        return self.public_name if self.public_name else self.name
-
 
 class TableColumn(models.Model):
     """Model to represent a column in a table."""
@@ -133,9 +130,6 @@ class TableColumn(models.Model):
 
     def __str__(self):
         return f"{self.table} - {self.name}"
-
-    def get_column_name(self):
-        return self.public_name if self.public_name else self.name
 
 
 class PrivateTableSelector(models.Model):
@@ -158,12 +152,6 @@ class GroupTableSelector(models.Model):
     def __str__(self) -> str:
         return f'{self.group.name}'
 
-    def get_pub_table(self):
-        tables_items = self.tables.all()
-        exclude_tables_items = self.exclude_tables.all()
-        diff = tables_items.difference(exclude_tables_items)
-        return diff
-
 
 class PrivateColumnSelector(models.Model):
     """Model for user to select private columns."""
@@ -184,12 +172,6 @@ class GroupColumnSelector(models.Model):
 
     def __str__(self) -> str:
         return f'{self.group.name}'
-
-    def get_pub_column(self):
-        columns_items = self.columns.all()
-        exclude_columns_items = self.exclude_columns.all()
-        diff = columns_items.difference(exclude_columns_items)
-        return diff
 
 
 class GroupTableRowFilter(models.Model):
