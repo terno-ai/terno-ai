@@ -1,6 +1,5 @@
 from .base import BaseLLM
 from openai import OpenAI
-import terno.models as models
 
 
 class OpenAILLM(BaseLLM):
@@ -63,4 +62,3 @@ class OpenAILLM(BaseLLM):
         response = response.choices[0].message.content
         response = response.strip().removeprefix("```sql").removesuffix("```")
         return response
-
