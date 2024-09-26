@@ -1,10 +1,17 @@
 from django.test import TestCase
-from django.contrib.auth.models import Group
+from unittest.mock import patch, MagicMock
+from django.contrib.auth.models import User, Group
 import terno.models as models
 import terno.utils as utils
+from terno.llm.base import BaseLLM
+from terno.pipeline.pipeline import Pipeline
+from terno.pipeline.step import Step
 
 
 class BaseTestCase(TestCase):
+    def create_user(self):
+        return User.objects.create_user(username='testuser', password='12345')
+
     def create_datasource(self, display_name='test_db'):
         datasource = models.DataSource.objects.create(
             display_name=display_name, type='default',
@@ -21,7 +28,8 @@ class BaseTestCase(TestCase):
         global_private_table_names = ['Invoice', 'Customer', 'Employee']
         global_private_tables = models.Table.objects.filter(
             name__in=global_private_table_names)
-        private_table_selector = models.PrivateTableSelector.objects.create(data_source=ds)
+        private_table_selector = models.PrivateTableSelector.objects.create(
+            data_source=ds)
         for table in global_private_tables:
             private_table_selector.tables.add(table)
 
@@ -29,7 +37,8 @@ class BaseTestCase(TestCase):
         group_allowed_table_names = ['Invoice']
         group_allowed_tables = models.Table.objects.filter(
             name__in=group_allowed_table_names)
-        group_table_selector = models.GroupTableSelector.objects.create(group=roles)
+        group_table_selector = models.GroupTableSelector.objects.create(
+            group=roles)
         for table in group_allowed_tables:
             group_table_selector.tables.add(table)
         '''
@@ -37,7 +46,8 @@ class BaseTestCase(TestCase):
         global_private_column_names = ['Invoice', 'Customer', 'Employee']
         global_private_tables = models.TableColumn.objects.filter(
             name__in=global_private_column_names)
-        private_table_selector = models.PrivateTableSelector.objects.create(data_source=ds)
+        private_table_selector = models.PrivateTableSelector.objects.create(
+            data_source=ds)
         for table in global_private_tables:
             private_table_selector.tables.add(table)
 
@@ -45,12 +55,57 @@ class BaseTestCase(TestCase):
         group_allowed_column_names = ['Invoice']
         group_allowed_tables = models.TableColumn.objects.filter(
             name__in=group_allowed_column_names)
-        group_table_selector = models.GroupTableSelector.objects.create(group=roles)
+        group_table_selector = models.GroupTableSelector.objects.create(
+            group=roles)
         for table in group_allowed_tables:
             group_table_selector.tables.add(table)
         '''
         mdb = utils.prepare_mdb(ds, [roles])
         return mdb
+
+
+class DBEngineTestCase(TestCase):
+    def setUp(self):
+        self.connection_string = "sqlite:///test.db"
+        self.bigquery_connection_string = "bigquery://project/dataset"
+        self.credentials_info = {
+            "type": "service_account",
+            "project_id": "your-project-id"
+        }
+
+    @patch('terno.utils.sqlalchemy.create_engine')
+    def test_create_db_engine(self, mock_create_engine):
+        mock_engine = MagicMock()
+        mock_create_engine.return_value = mock_engine
+
+        engine = utils.create_db_engine('sqlite', self.connection_string)
+
+        mock_create_engine.assert_called_once_with(self.connection_string)
+        self.assertEqual(engine, mock_engine)
+
+    @patch('terno.utils.sqlalchemy.create_engine')
+    def test_create_db_engine_bigquery(self, mock_create_engine):
+        mock_engine = MagicMock()
+        mock_create_engine.return_value = mock_engine
+
+        engine = utils.create_db_engine('bigquery',
+                                        self.bigquery_connection_string,
+                                        credentials_info=self.credentials_info)
+
+        mock_create_engine.assert_called_once_with(
+            self.bigquery_connection_string,
+            credentials_info=self.credentials_info)
+        self.assertEqual(engine, mock_engine)
+
+    @patch('terno.utils.sqlalchemy.create_engine')
+    def test_create_db_engine_bigquery_missing_credentials(self,
+                                                           mock_create_engine):
+        with self.assertRaises(ValueError) as context:
+            utils.create_db_engine('bigquery', self.bigquery_connection_string)
+
+        self.assertEqual(str(context.exception),
+                         "BigQuery requires credentials_info")
+        mock_create_engine.assert_not_called()
 
 
 class DataSourceTestCase(BaseTestCase):
@@ -104,9 +159,86 @@ class MDBTestCase(BaseTestCase):
         self.assertIn('FOREIGN KEY ([PlaylistId]) REFERENCES [Playlist] ([PlaylistId])', schema)
 
 
-class LLMTestCase(BaseTestCase):
-    def setUp(self) -> None:
-        self.mdb = super().create_mdb()
+class LLMResponseTestCase(BaseTestCase):
+    def setUp(self):
+        self.user = super().create_user()
+        self.datasource = super().create_datasource()
+        self.user_query = "Show me all albums"
+        self.db_schema = "CREATE TABLE Album (AlbumId INTEGER, Title NVARCHAR(160), ArtistId INTEGER)"
 
-    def test_get_sql(self):
-        pass
+    @patch('terno.utils.LLMFactory.create_llm')
+    @patch('terno.utils.create_pipeline')
+    @patch('terno.utils.get_response_from_pipeline')
+    def test_llm_response_success(self, mock_get_response,
+                                  mock_create_pipeline, mock_create_llm):
+        mock_llm = MagicMock(spec=BaseLLM)
+        mock_create_llm.return_value = mock_llm
+
+        mock_pipeline = MagicMock(spec=Pipeline)
+        mock_create_pipeline.return_value = mock_pipeline
+
+        mock_get_response.return_value = [["SELECT * FROM Album"]]
+
+        response = utils.llm_response(self.user, self.user_query,
+                                      self.db_schema, self.datasource)
+
+        self.assertEqual(response['status'], 'success')
+        self.assertEqual(response['generated_sql'], "SELECT * FROM Album")
+        mock_create_llm.assert_called_once()
+        mock_create_pipeline.assert_called_once_with(
+            mock_llm, 'one_step_pipeline', self.user,
+            self.db_schema, self.datasource, self.user_query)
+        mock_get_response.assert_called_once_with(mock_pipeline)
+
+    @patch('terno.utils.LLMFactory.create_llm')
+    def test_llm_response_error(self, mock_create_llm):
+        mock_create_llm.side_effect = Exception("LLM Error")
+
+        response = utils.llm_response(self.user, self.user_query, self.db_schema, self.datasource)
+
+        self.assertEqual(response['status'], 'error')
+        self.assertIn('LLM Error', response['error'])
+
+
+class CreatePipelineTestCase(BaseTestCase):
+    def setUp(self):
+        self.user = super().create_user()
+        self.datasource = super().create_datasource()
+        self.user_query = "Show me all albums"
+        self.db_schema = "CREATE TABLE Album (AlbumId INTEGER, Title NVARCHAR(160), ArtistId INTEGER)"
+        self.llm = MagicMock(spec=BaseLLM)
+
+    @patch('terno.utils.query_generation')
+    def test_create_pipeline_one_step(self, mock_query_generation):
+        mock_query_generation.query_generation_system_prompt = "System prompt"
+        mock_query_generation.query_generation_ai_prompt = "AI prompt"
+        mock_query_generation.query_generation_human_prompt = "Human prompt"
+
+        self.llm.create_message_for_llm.return_value = ["Mocked message"]
+
+        pipeline = utils.create_pipeline(self.llm, 'one_step_pipeline',
+                                         self.user, self.db_schema,
+                                         self.datasource, self.user_query)
+
+        self.assertIsInstance(pipeline, Pipeline)
+        self.assertEqual(len(pipeline._steps), 1)
+        self.assertIsInstance(pipeline._steps[0], Step)
+
+        self.llm.create_message_for_llm.assert_called_once_with(
+            "System prompt",
+            "AI prompt",
+            "Human prompt"
+        )
+
+        self.assertEqual(models.PromptLog.objects.count(), 1)
+        prompt_log = models.PromptLog.objects.first()
+        self.assertEqual(prompt_log.user, self.user)
+        self.assertEqual(prompt_log.llm_prompt, "['Mocked message']")
+
+    def test_create_pipeline_invalid_name(self):
+        with self.assertRaises(Exception) as context:
+            utils.create_pipeline(self.llm, 'invalid_pipeline',
+                                  self.user, self.db_schema,
+                                  self.datasource, self.user_query)
+
+        self.assertEqual(str(context.exception), "Invalid Pipeline Name")

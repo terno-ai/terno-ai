@@ -19,15 +19,12 @@ logger = logging.getLogger(__name__)
 
 
 def create_db_engine(db_type, connection_string, **kwargs):
-    # Initialize the engine with the common connection string
     if db_type == 'bigquery':
-        # BigQuery-specific: credentials_info is expected
         credentials_info = kwargs.get('credentials_info')
         if not credentials_info:
             raise ValueError("BigQuery requires credentials_info")
         engine = sqlalchemy.create_engine(connection_string, credentials_info=credentials_info)
     else:
-        # For other DB types, ignore credentials_info
         engine = sqlalchemy.create_engine(connection_string)
 
     return engine
@@ -203,11 +200,15 @@ def create_pipeline(llm, name, user, db_schema, datasource, user_query):
     steps = []
     if name == 'one_step_pipeline':
         pipeline = Pipeline()
-        system_message = query_generation.query_generation_system_prompt.format(dialect_name=datasource.dialect_name,
-                                                                                dialect_version=datasource.dialect_version)
-        ai_message = query_generation.query_generation_ai_prompt.format(database_schema=db_schema)
-        human_message = query_generation.query_generation_human_prompt.format(question=user_query, dialect_name=datasource.dialect_name)
-        messages = llm.create_message_for_llm(system_message, ai_message, human_message)
+        system_message = query_generation.query_generation_system_prompt\
+            .format(dialect_name=datasource.dialect_name,
+                    dialect_version=datasource.dialect_version)
+        ai_message = query_generation.query_generation_ai_prompt\
+            .format(database_schema=db_schema)
+        human_message = query_generation.query_generation_human_prompt\
+            .format(question=user_query, dialect_name=datasource.dialect_name)
+        messages = llm.create_message_for_llm(system_message, ai_message,
+                                              human_message)
         step1 = Step(llm, messages)
         steps.append(step1)
     else:
