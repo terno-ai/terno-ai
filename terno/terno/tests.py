@@ -160,8 +160,12 @@ class LLMTestCase(BaseTestCase):
         self.fake_llm = llms.FakeLLM(api_key="test_key")
         self.openai_llm = llms.OpenAILLM(api_key="")
 
-    def test_fake_llm(self):
-        response = self.fake_llm.get_response('messages')
+    @patch('terno.llm.LLMFactory.create_llm')
+    def test_fake_llm(self, mock_create_llm):
+        mock_create_llm.return_value = self.fake_llm
+
+        llm = llms.LLMFactory().create_llm()
+        response = llm.get_response(messages='messages')
         self.assertEqual(response, "SELECT 1")
 
 
