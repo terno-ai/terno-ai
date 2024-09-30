@@ -306,6 +306,7 @@ def prepare_table_data_from_execute(execute_result, page, per_page):
     return table_data
 
 
+'''
 def extract_limit_from_query(query):
     expression = sqlglot.parse_one(query)
     limit_expression = expression.args.get('limit')
@@ -324,6 +325,7 @@ def add_limit_offset_to_query(query, set_limit, set_offset):
     expression = sqlglot.parse_one(query)
     query = expression.limit(set_limit).offset(set_offset).sql()
     return query
+'''
 
 
 def substitute_variables(template_str, context_dict):

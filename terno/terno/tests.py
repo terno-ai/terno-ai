@@ -3,7 +3,7 @@ from unittest.mock import patch, MagicMock
 from django.contrib.auth.models import User, Group
 import terno.models as models
 import terno.utils as utils
-from terno.llm.base import BaseLLM
+import terno.llm as llms
 from terno.pipeline.pipeline import Pipeline
 from terno.pipeline.step import Step
 
@@ -41,7 +41,7 @@ class BaseTestCase(TestCase):
             group=roles)
         for table in group_allowed_tables:
             group_table_selector.tables.add(table)
-        '''
+
         # Setting private columns for all
         global_private_column_names = ['Invoice', 'Customer', 'Employee']
         global_private_tables = models.TableColumn.objects.filter(
@@ -59,29 +59,25 @@ class BaseTestCase(TestCase):
             group=roles)
         for table in group_allowed_tables:
             group_table_selector.tables.add(table)
-        '''
+
         mdb = utils.prepare_mdb(ds, [roles])
         return mdb
 
 
 class DBEngineTestCase(TestCase):
     def setUp(self):
-        self.connection_string = "sqlite:///test.db"
+        self.connection_string = "sqlite:///../chinook.db"
         self.bigquery_connection_string = "bigquery://project/dataset"
         self.credentials_info = {
             "type": "service_account",
             "project_id": "your-project-id"
         }
 
-    @patch('terno.utils.sqlalchemy.create_engine')
-    def test_create_db_engine(self, mock_create_engine):
-        mock_engine = MagicMock()
-        mock_create_engine.return_value = mock_engine
-
+    def test_create_db_engine(self):
         engine = utils.create_db_engine('sqlite', self.connection_string)
-
-        mock_create_engine.assert_called_once_with(self.connection_string)
-        self.assertEqual(engine, mock_engine)
+        with engine.connect():
+            self.assertEqual(engine.dialect.name, 'sqlite')
+            self.assertEqual(str(engine.dialect.server_version_info), '(3, 46, 1)')
 
     @patch('terno.utils.sqlalchemy.create_engine')
     def test_create_db_engine_bigquery(self, mock_create_engine):
@@ -159,6 +155,16 @@ class MDBTestCase(BaseTestCase):
         self.assertIn('FOREIGN KEY ([PlaylistId]) REFERENCES [Playlist] ([PlaylistId])', schema)
 
 
+class LLMTestCase(BaseTestCase):
+    def setUp(self) -> None:
+        self.fake_llm = llms.FakeLLM(api_key="test_key")
+        self.openai_llm = llms.OpenAILLM(api_key="")
+
+    def test_fake_llm(self):
+        response = self.fake_llm.get_response('messages')
+        self.assertEqual(response, "SELECT 1")
+
+
 class LLMResponseTestCase(BaseTestCase):
     def setUp(self):
         self.user = super().create_user()
@@ -171,7 +177,7 @@ class LLMResponseTestCase(BaseTestCase):
     @patch('terno.utils.get_response_from_pipeline')
     def test_llm_response_success(self, mock_get_response,
                                   mock_create_pipeline, mock_create_llm):
-        mock_llm = MagicMock(spec=BaseLLM)
+        mock_llm = MagicMock(spec=llms.BaseLLM)
         mock_create_llm.return_value = mock_llm
 
         mock_pipeline = MagicMock(spec=Pipeline)
@@ -206,7 +212,7 @@ class CreatePipelineTestCase(BaseTestCase):
         self.datasource = super().create_datasource()
         self.user_query = "Show me all albums"
         self.db_schema = "CREATE TABLE Album (AlbumId INTEGER, Title NVARCHAR(160), ArtistId INTEGER)"
-        self.llm = MagicMock(spec=BaseLLM)
+        self.llm = MagicMock(spec=llms.BaseLLM)
 
     @patch('terno.utils.query_generation')
     def test_create_pipeline_one_step(self, mock_query_generation):
@@ -242,3 +248,55 @@ class CreatePipelineTestCase(BaseTestCase):
                                   self.datasource, self.user_query)
 
         self.assertEqual(str(context.exception), "Invalid Pipeline Name")
+
+
+class GenerateExecuteNativeSQLTestCase(BaseTestCase):
+    def setUp(self) -> None:
+        self.mdb = super().create_mdb()
+
+    def test_generate_native_sql(self):
+        response = utils.generate_native_sql(self.mdb, 'SELECT * from Album;')
+        expected_sql = 'SELECT * FROM (SELECT AlbumId AS AlbumId, Title AS Title, ArtistId AS ArtistId FROM Album) AS Album'
+
+        self.assertEqual(response['status'], 'success')
+        self.assertEqual(response['native_sql'],
+                         expected_sql)
+
+    def test_generate_native_sql_error(self):
+        response = utils.generate_native_sql(self.mdb, 'SELECT * from InvalidTable;')
+
+        self.assertEqual(response['status'], 'error')
+        self.assertEqual(response['error'],
+                         "('No such table found.', 'InvalidTable')")
+
+    def test_execute_native_sql(self):
+        datasource = models.DataSource.objects.get(display_name='test_db')
+        native_sql = 'SELECT * FROM (SELECT AlbumId AS AlbumId, Title AS Title, ArtistId AS ArtistId FROM Album);'
+        result = utils.execute_native_sql(datasource, native_sql, 1, 25)
+
+        self.assertListEqual(list(result['table_data'].keys()),
+                             ['columns', 'total_pages', 'row_count', 'page', 'data'])
+        self.assertEqual(result['table_data']['columns'],
+                         ['AlbumId', 'Title', 'ArtistId'])
+        self.assertEqual(result['table_data']['total_pages'], 13)
+        self.assertEqual(result['table_data']['row_count'], 347)
+        self.assertEqual(result['table_data']['page'], 1)
+
+
+class SubstituteTestCase(BaseTestCase):
+    def setUp(self) -> None:
+        self.mdb = super().create_mdb()
+
+    def test_extract_limit_from_query(self):
+        datasource = models.DataSource.objects.get(display_name='test_db')
+        template_str = "{{db_schema}} {{dialect_name}} {{dialect_version}}"
+        context_dict = {
+            'db_schema': self.mdb.generate_schema(),
+            'dialect_name': datasource.dialect_name,
+            'dialect_version': datasource.dialect_version,
+        }
+
+        response = utils.substitute_variables(template_str, context_dict)
+        expected_response = f"{context_dict['db_schema']} {context_dict['dialect_name']} {context_dict['dialect_version']}"
+
+        self.assertEqual(response, expected_response)

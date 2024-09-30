@@ -52,7 +52,7 @@ Django server is running on http://127.0.0.1:8000 by default and admin url is ht
 `python manage.py test terno`
 
 ### To run the tests and collect coverage data
-`coverage run manage.py test terno`
+`coverage run manage.py test`
 
 ### To see a report of this data
 `coverage report -m`
