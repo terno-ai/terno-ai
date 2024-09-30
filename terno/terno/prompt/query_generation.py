@@ -38,7 +38,7 @@ query_generation_ai_prompt = """You will be provided with the database schema an
 <<SCHEMA END>>
 """
 
-query_generation_human_prompt = """Here is the user's natural language query. Based on this question, create a sql query that correctly answers the user's question:
+query_generation_human_prompt = """Here is the user's natural language query. Based on this question, create a sql query that correctly answers the user's question. Make sure to return the sql query and nothing else:
 Human Question: {question}
 {dialect_name} Query:
 """

@@ -10,6 +10,7 @@ openai==1.35.3
 sqlglot==25.3.0
 google-generativeai==0.7.2
 anthropic==0.31.2
+ollama==0.3.3
 mysqlclient==2.2.4
 python-json-logger==2.0.7
 sqlalchemy-bigquery==1.11.0

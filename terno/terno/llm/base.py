@@ -48,6 +48,9 @@ class LLMFactory:
         elif config.llm_type == "anthropic":
             from .anthropic import AnthropicLLM
             return AnthropicLLM(**common_params, top_k=config.top_k, **custom_params)
+        elif config.llm_type == "ollama":
+            from .ollama import OllamaLLM
+            return OllamaLLM(**custom_params)
         elif config.llm_type == "custom":
             from .custom_llm import CustomLLM
             return CustomLLM(

@@ -12,5 +12,6 @@ __all__ = [
     "CustomLLM",
     "FakeLLM",
     "GeminiLLM",
+    "OllamaLLM",
     "OpenAILLM",
 ]

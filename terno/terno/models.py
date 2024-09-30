@@ -10,6 +10,7 @@ class LLMConfiguration(models.Model):
         ('openai', 'OpenAI'),
         ('gemini', 'Gemini'),
         ('anthropic', 'Anthropic'),
+        ('ollama', 'Ollama'),
         ('custom', 'CustomLLM')
         # Add other LLM types here
     ]
