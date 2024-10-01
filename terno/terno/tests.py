@@ -1,11 +1,14 @@
 from django.test import TestCase
 from unittest.mock import patch, MagicMock
 from django.contrib.auth.models import User, Group
+from django.http import HttpResponse
 import terno.models as models
 import terno.utils as utils
 import terno.llm as llms
 from terno.pipeline.pipeline import Pipeline
 from terno.pipeline.step import Step
+import csv
+import io
 
 
 class BaseTestCase(TestCase):
@@ -43,23 +46,37 @@ class BaseTestCase(TestCase):
             group_table_selector.tables.add(table)
 
         # Setting private columns for all
-        global_private_column_names = ['Invoice', 'Customer', 'Employee']
-        global_private_tables = models.TableColumn.objects.filter(
+        global_private_column_names = ['AlbumId', 'MediaTypeId', 'Composer']
+        global_private_columns = models.TableColumn.objects.filter(
+            table__name='Track',
             name__in=global_private_column_names)
-        private_table_selector = models.PrivateTableSelector.objects.create(
+        private_column_selector = models.PrivateColumnSelector.objects.create(
             data_source=ds)
-        for table in global_private_tables:
-            private_table_selector.tables.add(table)
+        for column in global_private_columns:
+            private_column_selector.columns.add(column)
 
         # Setting private columns for roles
-        group_allowed_column_names = ['Invoice']
-        group_allowed_tables = models.TableColumn.objects.filter(
+        group_allowed_column_names = ['Composer']
+        group_allowed_columns = models.TableColumn.objects.filter(
+            table__name='Track',
             name__in=group_allowed_column_names)
-        group_table_selector = models.GroupTableSelector.objects.create(
+        group_column_selector = models.GroupColumnSelector.objects.create(
             group=roles)
-        for table in group_allowed_tables:
-            group_table_selector.tables.add(table)
+        for column in group_allowed_columns:
+            group_column_selector.columns.add(column)
 
+        # Setting table row filter
+        global_private_row = "GenreId=1"
+        filter_table = models.Table.objects.get(name='Track')
+        global_private_row_filter = models.TableRowFilter.objects.create(
+            data_source=ds, table=filter_table, filter_str=global_private_row
+        )
+
+        #  Setting private table row filter
+        group_private_row = "Name='Balls to the Wall'"
+        group_private_row_filter = models.GroupTableRowFilter.objects.create(
+            data_source=ds, group=roles, table=filter_table, filter_str=group_private_row
+        )
         mdb = utils.prepare_mdb(ds, [roles])
         return mdb
 
@@ -253,6 +270,13 @@ class CreatePipelineTestCase(BaseTestCase):
 
         self.assertEqual(str(context.exception), "Invalid Pipeline Name")
 
+    def test_run_pipeline(self):
+        pipeline = Pipeline()
+        step = Step(self.llm, ['messages'])
+        pipeline.add_step(step)
+        response = utils.get_response_from_pipeline(pipeline)
+        print(response)
+
 
 class GenerateExecuteNativeSQLTestCase(BaseTestCase):
     def setUp(self) -> None:
@@ -285,6 +309,26 @@ class GenerateExecuteNativeSQLTestCase(BaseTestCase):
         self.assertEqual(result['table_data']['total_pages'], 13)
         self.assertEqual(result['table_data']['row_count'], 347)
         self.assertEqual(result['table_data']['page'], 1)
+
+
+class ExportResultTestCase(BaseTestCase):
+    def setUp(self) -> None:
+        self.ds = super().create_datasource()
+
+    def test_export_native_sql_result(self):
+        native_sql = 'SELECT * FROM Album;'
+        response = utils.export_native_sql_result(self.ds, native_sql)
+        self.assertIsInstance(response, HttpResponse)
+        self.assertEqual(response['Content-Type'], 'text/csv')
+
+        # Check CSV content
+        content = response.content.decode('utf-8')
+        csv_reader = csv.reader(io.StringIO(content))
+        rows = list(csv_reader)
+
+        self.assertEqual(rows[0], ['AlbumId', 'Title', 'ArtistId'])
+        self.assertEqual(rows[1], ['1', 'For Those About To Rock We Salute You', '1'])
+        self.assertEqual(rows[2], ['2', 'Balls to the Wall', '2'])
 
 
 class SubstituteTestCase(BaseTestCase):
