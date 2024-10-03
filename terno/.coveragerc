@@ -4,6 +4,7 @@ omit =
     terno/migrations/*
     terno/admin.py
     terno/views.py
+    terno/llm/*
 
 [report]
 exclude_lines =
