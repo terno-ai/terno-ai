@@ -16,32 +16,33 @@ def load_metadata(datasource):
             datasource.save(update_fields=['dialect_name', 'dialect_version'])
 
     inspector = sqlalchemy.inspect(engine)
-    if inspector.engine.url.drivername == 'bigquery':
-        schema = inspector.engine.url.database
+    if inspector.engine.url.database:
+        schemas = [inspector.engine.url.database]
     else:
         schemas = inspector.get_schema_names()
-        schema = schemas[0]
-    current_tables = {}
-    for table_name in inspector.get_table_names(schema=schema):
-        existing_tables = Table.objects.filter(
-            name=table_name, data_source=datasource)
-        if existing_tables:
-            mtable = existing_tables.first()
-        else:
-            mtable = Table.objects.create(
-                name=table_name, public_name=table_name,
-                data_source=datasource)
-        current_tabcols = []
-        current_tables[table_name] = current_tabcols
-        for col in inspector.get_columns(table_name, schema=schema):
-            dbcol = TableColumn.objects.filter(
-                name=col['name'], table=mtable)
-            if not dbcol:
-                TableColumn.objects.create(
-                    name=col['name'], public_name=col['name'],
-                    table=mtable, data_type=col['type'])
-            current_tabcols.append(col)
-    return current_tables
+
+    for schema in schemas:
+        current_tables = {}
+        for table_name in inspector.get_table_names(schema=schema):
+            existing_tables = Table.objects.filter(
+                name=table_name, data_source=datasource)
+            if existing_tables:
+                mtable = existing_tables.first()
+            else:
+                mtable = Table.objects.create(
+                    name=table_name, public_name=table_name,
+                    data_source=datasource)
+            current_tabcols = []
+            current_tables[table_name] = current_tabcols
+            for col in inspector.get_columns(table_name, schema=schema):
+                dbcol = TableColumn.objects.filter(
+                    name=col['name'], table=mtable)
+                if not dbcol:
+                    TableColumn.objects.create(
+                        name=col['name'], public_name=col['name'],
+                        table=mtable, data_type=col['type'])
+                current_tabcols.append(col)
+    # return current_tables
 
 
 @receiver(post_save, sender=DataSource)
