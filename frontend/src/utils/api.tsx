@@ -62,7 +62,7 @@ export const executeSQL = async (sql: string, datasourceId: string, page: number
   }
 };
 
-export const exportSQLResult =async (sql:string, datasourceId: string) => {
+export const exportSQLResult = async (sql:string, datasourceId: string) => {
   const csrfToken = getCsrfToken();
   const response = await fetch(endpoints.exportSQLResult(), {
     method:"POST",
