@@ -34,7 +34,8 @@ def load_metadata(datasource):
                     data_source=datasource)
             current_tabcols = []
             current_tables[table_name] = current_tabcols
-            for col in inspector.get_columns(table_name, schema=schema):
+            columns = inspector.get_columns(table_name) if schemas == ['bigquery'] else inspector.get_columns(table_name, schema=schema)
+            for col in columns:
                 dbcol = TableColumn.objects.filter(
                     name=col['name'], table=mtable)
                 if not dbcol:
