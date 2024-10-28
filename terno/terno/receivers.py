@@ -3,7 +3,8 @@ from django.dispatch import receiver
 from django.db.models.signals import post_save
 import sqlalchemy
 import terno.utils as utils
-
+import sqlshield
+from sqlshield.models import MDatabase
 
 # TODO: delete the extra tables and columns
 def load_metadata(datasource):
@@ -16,33 +17,33 @@ def load_metadata(datasource):
             datasource.save(update_fields=['dialect_name', 'dialect_version'])
 
     inspector = sqlalchemy.inspect(engine)
-    if inspector.engine.url.database:
-        schemas = [inspector.engine.url.database]
-    else:
-        schemas = inspector.get_schema_names()
 
-    for schema in schemas:
-        current_tables = {}
-        for table_name in inspector.get_table_names(schema=schema):
-            existing_tables = Table.objects.filter(
-                name=table_name, data_source=datasource)
-            if existing_tables:
-                mtable = existing_tables.first()
-            else:
-                mtable = Table.objects.create(
-                    name=table_name, public_name=table_name,
-                    data_source=datasource)
-            current_tabcols = []
-            current_tables[table_name] = current_tabcols
-            columns = inspector.get_columns(table_name) if schemas == ['bigquery'] else inspector.get_columns(table_name, schema=schema)
-            for col in columns:
-                dbcol = TableColumn.objects.filter(
-                    name=col['name'], table=mtable)
-                if not dbcol:
-                    TableColumn.objects.create(
-                        name=col['name'], public_name=col['name'],
-                        table=mtable, data_type=col['type'])
-                current_tabcols.append(col)
+    mdb = MDatabase.from_inspector(inspector)
+    
+    for tbl_name, tbl in mdb.tables.items():
+        existing_tables = Table.objects.filter(
+            name=tbl_name, data_source=datasource)
+        if existing_tables:
+            mtable = existing_tables.first()
+        else:
+            mtable = Table.objects.create(
+                name=tbl_name, public_name=tbl_name,
+                data_source=datasource)
+        current_tabcols = []
+        #current_tables[tbl_name] = current_tabcols
+        for col_name, col in tbl.columns.items():
+            print(tbl_name, col_name)
+            print("col: ", col)
+            print("\tTYPE: ", col.type)
+            print("----")
+            dbcol = TableColumn.objects.filter(
+                name=col_name, table=mtable)
+            if not dbcol:
+                TableColumn.objects.create(
+                    name=col_name, public_name=col_name,
+                    table=mtable, data_type=str(col.type))
+            current_tabcols.append(col)
+    print("Finished building the tables!!")
     # return current_tables
 
 
