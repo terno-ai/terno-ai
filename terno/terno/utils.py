@@ -183,6 +183,18 @@ def get_admin_config_object(datasource, roles):
     return all_group_tables, group_columns
 
 
+def console_llm_response(user, messages):
+    try:
+        llm = LLMFactory.create_llm()
+        response = llm.get_response(messages)
+        generated_sql = response
+    except Exception as e:
+        logger.exception(e)
+        return {'status': 'error', 'error': str(e)}
+
+    return {'status': 'success', 'generated_sql': generated_sql}
+
+
 def llm_response(user, user_query, db_schema, datasource):
     try:
         llm = LLMFactory.create_llm()

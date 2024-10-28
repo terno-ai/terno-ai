@@ -1,4 +1,4 @@
-export const system_prompt = `You are a {dialect_name} expert. You are writing queries for version {dialect_version}. You are provided with a database schema and a user's question. Your task is to analyze the database schema and user's question, and write a SQL query for it. You need to do this in a step-by-step process to ensure nothing is missed out:
+export const system_prompt = `You are a {{dialect_name}} expert. You are writing queries for version {{dialect_version}}. You are provided with a database schema and a user's question. Your task is to analyze the database schema and user's question, and write a SQL query for it. You need to do this in a step-by-step process to ensure nothing is missed out:
 
 #### Step 1: Understand the Database Schema
   - Carefully read and comprehend the database schema provided. Pay attention to the table names, column names, data types, and any relationships or constraints such as primary keys and foreign keys.
@@ -34,13 +34,13 @@ The response you provide will be executed directly on the database without any m
 
 export const ai_prompt = `You will be provided with the database schema and the human question. Use this information to generate the SQL query. Here is the database schema:
 <<SCHEMA START>>
-{database_schema}
+{{db_schema}}
 <<SCHEMA END>>
 `;
 
 export const human_prompt = `Here is the user's natural language query. Based on this question, create a sql query that correctly answers the user's question. Make sure to return the sql query and nothing else:
-Human Question: {question}
-{dialect_name} Query:
+Human Question: {{question}}
+{{dialect_name}} Query:
 `
 
 export const available_vars = "db_schema, dialect_name, dialect_version"

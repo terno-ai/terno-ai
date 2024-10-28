@@ -71,12 +71,12 @@ const ConsoleContent = () => {
         />
         <div className="mt-10 max-w-4xl mx-auto min-w-[800px] px-4">
           <div className="mt-4 mb-1 font-medium text-lg">Generated Prompt</div>
-          <div className="flex overflow-scroll max-h-[200px] border px-4 rounded">
+          <div className="flex overflow-scroll max-h-[200px] border px-4 rounded-md">
             <p>{generatedPromptText}</p>
           </div>
           <div className="mt-4 mb-1 font-medium text-lg">LLM Response</div>
           <div className="flex align-center justify-center border focus-within:ring-1 focus-within:ring-sky-300">
-            <div className="flex overflow-scroll max-h-[200px] border px-4 rounded">
+            <div className="flex overflow-scroll max-h-[200px] border px-4 rounded-md">
               <p>{generatedQueryText}</p>
             </div>
           </div>
