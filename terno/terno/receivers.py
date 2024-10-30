@@ -3,8 +3,8 @@ from django.dispatch import receiver
 from django.db.models.signals import post_save
 import sqlalchemy
 import terno.utils as utils
-import sqlshield
 from sqlshield.models import MDatabase
+
 
 # TODO: delete the extra tables and columns
 def load_metadata(datasource):
@@ -19,7 +19,7 @@ def load_metadata(datasource):
     inspector = sqlalchemy.inspect(engine)
 
     mdb = MDatabase.from_inspector(inspector)
-    
+
     for tbl_name, tbl in mdb.tables.items():
         existing_tables = Table.objects.filter(
             name=tbl_name, data_source=datasource)
@@ -29,13 +29,9 @@ def load_metadata(datasource):
             mtable = Table.objects.create(
                 name=tbl_name, public_name=tbl_name,
                 data_source=datasource)
+
         current_tabcols = []
-        #current_tables[tbl_name] = current_tabcols
         for col_name, col in tbl.columns.items():
-            print(tbl_name, col_name)
-            print("col: ", col)
-            print("\tTYPE: ", col.type)
-            print("----")
             dbcol = TableColumn.objects.filter(
                 name=col_name, table=mtable)
             if not dbcol:
@@ -44,7 +40,6 @@ def load_metadata(datasource):
                     table=mtable, data_type=str(col.type))
             current_tabcols.append(col)
     print("Finished building the tables!!")
-    # return current_tables
 
 
 @receiver(post_save, sender=DataSource)
