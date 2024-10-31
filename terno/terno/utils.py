@@ -6,7 +6,7 @@ from sqlshield.models import MDatabase
 import sqlalchemy
 from terno.llm.base import LLMFactory
 import math
-from django.template import Template, Context
+from django.template import Template, Context, Engine
 import logging
 from terno.pipeline.pipeline import Pipeline
 from terno.pipeline.step import Step
@@ -341,6 +341,11 @@ def add_limit_offset_to_query(query, set_limit, set_offset):
 
 
 def substitute_variables(template_str, context_dict):
-    template = Template(template_str)
+    engine = Engine(
+        debug=True,
+        libraries={'terno_extras': 'terno.templatetags.terno_extras'}
+    )
+    template_str = "{% load terno_extras %}" + template_str
+    template = Template(template_str, engine=engine)
     context = Context(context_dict)
     return template.render(context)

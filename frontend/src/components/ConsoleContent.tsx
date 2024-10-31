@@ -7,6 +7,7 @@ import { sendConsoleMessage } from "../utils/api";
 import { DataSourceContext } from "./ui/datasource-context";
 import useUserDetails from "../hooks/useUserDetails";
 import { system_prompt, ai_prompt, human_prompt, available_vars } from "../utils/prompt_constants";
+import { Link } from "react-router-dom";
 
 const ConsoleContent = () => {
   const { ds } = useContext(DataSourceContext);
@@ -39,14 +40,15 @@ const ConsoleContent = () => {
         <div className="flex items-center justify-between text-xl p-5">
           <div className="inline-flex items-center">
             <img src={terno} className="logo h-[40px]" alt="Terno logo" />
-            <p className="font-semibold">Terno AI</p>
+            <p className="font-semibold">Terno AI - </p>
+            <Link to={'/'} >Homepage</Link>
           </div>
           <div className="font-semibold">Developer Console</div>
           <div>{user.username}</div>
         </div>
         <div className="mt-10 max-w-4xl mx-auto">
           <div className="p-4 border rounded-md focus-within:ring-1 focus-within:ring-sky-500 focus-within:hover:drop-shadow-none">
-            List of variables available: <b>{available_vars}</b>
+            List of variables available: {available_vars}
           </div>
         </div>
         <PromptInput
@@ -75,10 +77,8 @@ const ConsoleContent = () => {
             <p>{generatedPromptText}</p>
           </div>
           <div className="mt-4 mb-1 font-medium text-lg">LLM Response</div>
-          <div className="flex align-center justify-center border focus-within:ring-1 focus-within:ring-sky-300">
-            <div className="flex overflow-scroll max-h-[200px] border px-4 rounded-md">
+          <div className="flex overflow-scroll max-h-[200px] border px-4 rounded-md">
               <p>{generatedQueryText}</p>
-            </div>
           </div>
         </div>
         <SqlError error={sqlError} />

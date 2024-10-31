@@ -43,4 +43,6 @@ Human Question: {{question}}
 {{dialect_name}} Query:
 `
 
-export const available_vars = "db_schema, dialect_name, dialect_version"
+export const available_vars = `db_schema, dialect_name, dialect_version.
+You can get table schema like this {{mdb|table_schema:'table_name'}}
+`

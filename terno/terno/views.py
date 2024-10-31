@@ -63,6 +63,7 @@ def console(request):
             'db_schema': schema_generated,
             'dialect_name': datasource.dialect_name,
             'dialect_version': datasource.dialect_version,
+            'mdb': mDB,
         }
         system_prompt = utils.substitute_variables(template_str=system_prompt,
                                                    context_dict=context_dict)
