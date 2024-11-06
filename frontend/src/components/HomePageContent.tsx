@@ -1,6 +1,6 @@
 import "../index.css";
 import { executeSQL, exportSQLResult, sendMessage } from "../utils/api";
-import { lazy, Suspense, useContext, useState } from "react";
+import { lazy, Suspense, useContext, useRef, useState } from "react";
 import RenderTable from "./RenderTable";
 const SqlEditor = lazy(() => import("./SqlEditor"))
 import SqlError from "./SqlError";
@@ -58,7 +58,14 @@ const HomePageContent = () => {
     await exportSQLResult(generatedQueryText, ds.id);
     setExporting(false);
   };
-
+  const textareaRef = useRef(null);
+  const handleInput = () => {
+  const textarea = textareaRef.current as HTMLTextAreaElement | null;
+      if (textarea) {
+          textarea.style.height = 'auto';
+          textarea.style.height = `${textarea.scrollHeight}px`;
+        }
+      };
   return (
     <div className="min-w-[300px] h-screen inline-flex flex-col pb-10 px-[15px] overflow-y-auto">
       <div className="flex items-center justify-between text-xl p-5">
@@ -71,21 +78,28 @@ const HomePageContent = () => {
       </div>
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between gap-5 p-2.5 px-5 rounded-full bg-slate-100  hover:drop-shadow-sm focus-within:ring-1 focus-within:ring-sky-500 focus-within:hover:drop-shadow-none">
-          <input
-            type="text"
+          <textarea
+            onInput={handleInput}
+            ref={textareaRef}
             placeholder="Enter a prompt here"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-            className="flex-1 bg-transparent border-none outline-none p-2 text-lg focus:outline-none"
-          />
+            className="flex-1 p-2 border rounded bg-transparent border-none outline-none p-2 text-lg focus:outline-none resize-none"
+            style={{
+              width: '100%',
+              height: '50px',
+              maxHeight: '100px',
+              overflowY: 'scroll',
+               }}
+             />
           <button
             className="p-2 border text-cyan-500 border-cyan-500 rounded-full items-center justify-center hover:bg-gray-200"
             onClick={handleSendMessage}
             disabled={loading}
           >
             {loading ? 'Wait': <FaArrowRight />}
-          </button>
+            </button>
         </div>
         <div className="mt-10">
           <div className="mt-4 mb-1 font-medium text-lg">Generated Query</div>
