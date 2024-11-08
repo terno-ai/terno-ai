@@ -8,3 +8,4 @@ chinook.db
 *.log
 .coverage
 docs/build
+.DS_Store

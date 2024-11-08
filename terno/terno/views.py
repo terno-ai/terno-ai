@@ -63,6 +63,7 @@ def console(request):
             'db_schema': schema_generated,
             'dialect_name': datasource.dialect_name,
             'dialect_version': datasource.dialect_version,
+            'mdb': mDB,
         }
         system_prompt = utils.substitute_variables(template_str=system_prompt,
                                                    context_dict=context_dict)
@@ -81,7 +82,7 @@ def console(request):
             user=request.user, data_source=datasource,
             data_type='user_prompt', data=user_prompt)
 
-        llm_response = utils.llm_response(
+        llm_response = utils.console_llm_response(
             request.user, messages)
 
         if llm_response['status'] == 'error':

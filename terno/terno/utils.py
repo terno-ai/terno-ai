@@ -6,7 +6,7 @@ from sqlshield.models import MDatabase
 import sqlalchemy
 from terno.llm.base import LLMFactory
 import math
-from django.template import Template, Context
+from django.template import Template, Context, Engine
 import logging
 from terno.pipeline.pipeline import Pipeline
 from terno.pipeline.step import Step
@@ -183,6 +183,18 @@ def get_admin_config_object(datasource, roles):
     return all_group_tables, group_columns
 
 
+def console_llm_response(user, messages):
+    try:
+        llm = LLMFactory.create_llm()
+        response = llm.get_response(messages)
+        generated_sql = response
+    except Exception as e:
+        logger.exception(e)
+        return {'status': 'error', 'error': str(e)}
+
+    return {'status': 'success', 'generated_sql': generated_sql}
+
+
 def llm_response(user, user_query, db_schema, datasource):
     try:
         llm = LLMFactory.create_llm()
@@ -329,6 +341,11 @@ def add_limit_offset_to_query(query, set_limit, set_offset):
 
 
 def substitute_variables(template_str, context_dict):
-    template = Template(template_str)
+    engine = Engine(
+        debug=True,
+        libraries={'terno_extras': 'terno.templatetags.terno_extras'}
+    )
+    template_str = "{% load terno_extras %}" + template_str
+    template = Template(template_str, engine=engine)
     context = Context(context_dict)
     return template.render(context)
