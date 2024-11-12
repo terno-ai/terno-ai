@@ -1,4 +1,4 @@
-from terno.models import DataSource, Table, TableColumn
+from terno.models import DataSource, Table, TableColumn, ForeignKey
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 import sqlalchemy
@@ -39,6 +39,35 @@ def load_metadata(datasource):
                     name=col_name, public_name=col_name,
                     table=mtable, data_type=str(col.type))
             current_tabcols.append(col)
+
+    for tbl_name, tbl in mdb.tables.items():
+        foreign_keys = tbl.Foreign_Keys
+        table = Table.objects.filter(
+            name=tbl_name, data_source=datasource
+        ).first()
+        for fk in foreign_keys:
+            constrained_columns = TableColumn.objects.filter(
+                name=fk.constrained_columns[0].name,
+                table__data_source=datasource).first()
+            referred_table = Table.objects.filter(
+                name=fk.referred_table.name, data_source=datasource).first()
+            referred_columns = TableColumn.objects.filter(
+                name=fk.referred_columns[0].name,
+                table__data_source=datasource).first()
+            dbfk = ForeignKey.objects.filter(
+                constrained_table=table,
+                constrained_columns=constrained_columns,
+                referred_table=referred_table,
+                referred_columns=referred_columns
+            )
+            if not dbfk:
+                ForeignKey.objects.create(
+                    constrained_table=table,
+                    constrained_columns=constrained_columns,
+                    referred_table=referred_table,
+                    referred_columns=referred_columns
+                )
+
     print("Finished building the tables!!")
 
 

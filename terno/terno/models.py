@@ -136,10 +136,15 @@ class TableColumn(models.Model):
 
 
 class ForeignKey(models.Model):
+    constrained_table = models.ForeignKey(Table,
+                                          on_delete=models.CASCADE,
+                                          related_name='contrained_table',
+                                          null=True, blank=True)
     constrained_columns = models.ForeignKey(TableColumn,
                                             on_delete=models.CASCADE,
                                             related_name='contrained_columns')
-    referred_table = models.ForeignKey(Table, on_delete=models.CASCADE)
+    referred_table = models.ForeignKey(Table, on_delete=models.CASCADE,
+                                       related_name='referred_table')
     referred_columns = models.ForeignKey(TableColumn, on_delete=models.CASCADE,
                                          related_name='referred_columns')
     referred_schema = models.ForeignKey(DataSource, on_delete=models.CASCADE,

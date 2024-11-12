@@ -238,11 +238,33 @@ def get_response_from_pipeline(pipeline):
 
 # @cache_page(24*3600)
 def generate_mdb(datasource):
-    engine = create_db_engine(datasource.type, datasource.connection_str,
-                                    credentials_info=datasource.connection_json)
-    inspector = sqlalchemy.inspect(engine)
-    mDb = MDatabase.from_inspector(inspector)
-    return mDb
+    tables = {}
+    dbtables = models.Table.objects.filter(data_source=datasource)
+    columns = {}
+    for dbt in dbtables:
+        tables[dbt.name] = {
+            'name': dbt.name,
+            'public_name': dbt.public_name,
+            'description': dbt.description
+        }
+        dbcolumns = models.TableColumn.objects.filter(table=dbt)
+        column_data = []
+        for dbc in dbcolumns:
+            column_data.append({
+                'name': dbc.name,
+                'public_name': dbc.public_name,
+                'type': dbc.data_type
+            })
+        columns[dbt.name] = column_data
+
+    foreign_keys = {}
+    mdb = MDatabase.from_data(tables, columns, foreign_keys)
+    return mdb
+    # engine = create_db_engine(datasource.type, datasource.connection_str,
+    #                                 credentials_info=datasource.connection_json)
+    # inspector = sqlalchemy.inspect(engine)
+    # mDb = MDatabase.from_inspector(inspector)
+    # return mDb
 
 
 def generate_native_sql(mDb, user_sql):

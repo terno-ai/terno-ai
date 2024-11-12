@@ -59,6 +59,15 @@ class TableColumnAdmin(admin.ModelAdmin):
     search_fields = ['name', 'public_name', 'table__name', 'table__data_source']
 
 
+@admin.register(models.ForeignKey)
+class ForeignKeyAdmin(admin.ModelAdmin):
+    list_display = ['constrained_table', 'constrained_columns',
+                    'referred_table', 'referred_columns']
+    # list_editable = ['public_name']
+    list_filter = ['referred_table__data_source']
+    # search_fields = ['name', 'public_name', 'table__name', 'table__data_source']
+
+
 @admin.register(models.GroupTableSelector)
 class GroupTableSelectorAdmin(admin.ModelAdmin):
     list_display = ['group']
