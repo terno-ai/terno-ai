@@ -103,8 +103,10 @@ class DataSource(models.Model):
     description = models.TextField(
         max_length=1024, null=True, blank=True, default='',
         help_text="Give description of your datasource/schema.")
-    dialect_name = models.CharField(max_length=20, null=True, blank=True, default='')
-    dialect_version = models.CharField(max_length=20, null=True, blank=True, default='')
+    dialect_name = models.CharField(max_length=20, default='',
+                                    null=True, blank=True)
+    dialect_version = models.CharField(max_length=20, default='',
+                                       null=True, blank=True)
     enabled = models.BooleanField(default=True)
 
     def __str__(self):
@@ -131,6 +133,17 @@ class TableColumn(models.Model):
 
     def __str__(self):
         return f"{self.table} - {self.name}"
+
+
+class ForeignKey(models.Model):
+    constrained_columns = models.ForeignKey(TableColumn,
+                                            on_delete=models.CASCADE,
+                                            related_name='contrained_columns')
+    referred_table = models.ForeignKey(Table, on_delete=models.CASCADE)
+    referred_columns = models.ForeignKey(TableColumn, on_delete=models.CASCADE,
+                                         related_name='referred_columns')
+    referred_schema = models.ForeignKey(DataSource, on_delete=models.CASCADE,
+                                        null=True, blank=True)
 
 
 class PrivateTableSelector(models.Model):
