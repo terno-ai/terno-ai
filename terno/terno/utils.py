@@ -252,19 +252,29 @@ def generate_mdb(datasource):
         for dbc in dbcolumns:
             column_data.append({
                 'name': dbc.name,
-                'public_name': dbc.public_name,
-                'type': dbc.data_type
+                'pub_name': dbc.public_name,
+                'type': dbc.data_type,
+                'primary_key': '',
+                'nullable': '',
+                'desc': ''
             })
         columns[dbt.name] = column_data
 
     foreign_keys = {}
+    for dbt in dbtables:
+        dbfks = models.ForeignKey.objects.filter(constrained_table=dbt)
+        fk_data = []
+        for dbfk in dbfks:
+            fk_data.append({
+                'constrained_columns': [dbfk.constrained_columns.name],
+                'referred_table': dbfk.referred_table.name,
+                'referred_columns': [dbfk.referred_columns.name],
+                'referred_schema': '',
+            })
+        foreign_keys[dbt.name] = fk_data
+
     mdb = MDatabase.from_data(tables, columns, foreign_keys)
     return mdb
-    # engine = create_db_engine(datasource.type, datasource.connection_str,
-    #                                 credentials_info=datasource.connection_json)
-    # inspector = sqlalchemy.inspect(engine)
-    # mDb = MDatabase.from_inspector(inspector)
-    # return mDb
 
 
 def generate_native_sql(mDb, user_sql):
