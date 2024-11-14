@@ -78,6 +78,22 @@ const HomePageContent = () => {
       }
     }
   };
+  const [isCopied, setIsCopied] = useState(false);
+    const handleCopy = async () => {
+    const tableString = `${tableData.columns.join("\t")}
+      ${tableData.data
+        .map((row) =>
+        tableData.columns
+        .map((col) => `${row[col]}`).join("\t"))
+        .join("\n")}`;
+      try {
+        await navigator.clipboard.writeText(tableString);
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+          } catch (error) {
+          console.error("Failed to copy text: ", error);
+          }
+      };
 
   return (
     <div className="min-w-[300px] h-screen inline-flex flex-col pb-10 px-[15px] overflow-y-auto">
@@ -98,7 +114,7 @@ const HomePageContent = () => {
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-            rows={1} // Start with 1 row
+            rows={1}
             className="w-full p-1 bg-transparent border-none outline-none rounded-md resize-none overflow-y-auto"
             style={{ height }}
             
@@ -135,6 +151,13 @@ const HomePageContent = () => {
               disabled={loading}
             >
               {loading ? 'Wait': 'Execute'}
+              <FaPlay className="ml-1" />
+            </button>
+            <button
+              className="disabled text-right inline-flex h-10 items-center justify-center rounded-md border bg-cyan-500 hover:bg-cyan-600 mt-4 px-10 font-medium text-white transition-colors hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 focus:ring-offset-slate-50"
+              onClick={() => handleCopy()}
+            >
+              {isCopied ? 'Copied': 'Copy'}
               <FaPlay className="ml-1" />
             </button>
           </div>
