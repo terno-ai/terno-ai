@@ -27,6 +27,8 @@ const HomePageContent = () => {
   const [sqlError, setSqlError] = useState("");
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [height, setHeight] = useState('auto');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSendMessage = async () => {
     setLoading(true);
@@ -58,14 +60,25 @@ const HomePageContent = () => {
     await exportSQLResult(generatedQueryText, ds.id);
     setExporting(false);
   };
-  const textareaRef = useRef(null);
+
   const handleInput = () => {
-  const textarea = textareaRef.current as HTMLTextAreaElement | null;
-      if (textarea) {
-          textarea.style.height = 'auto';
-          textarea.style.height = `${textarea.scrollHeight}px`;
-        }
-      };
+    if (textareaRef.current) {
+      const content = textareaRef.current.value;
+
+    if (content.length === 0) {
+        setHeight('auto');
+        
+      }
+    const currentScrollHeight = textareaRef.current.scrollHeight;
+    const maxHeight = 5 * parseFloat(getComputedStyle(textareaRef.current).lineHeight || '1.5');
+    const newHeight = Math.min(currentScrollHeight, maxHeight); 
+
+    if (`${newHeight}px` !== height) {
+        setHeight(`${newHeight}px`);
+      }
+    }
+  };
+
   return (
     <div className="min-w-[300px] h-screen inline-flex flex-col pb-10 px-[15px] overflow-y-auto">
       <div className="flex items-center justify-between text-xl p-5">
@@ -77,7 +90,7 @@ const HomePageContent = () => {
         <div>{user.username}</div>
       </div>
       <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between gap-5 p-2.5 px-5 rounded-full bg-slate-100  hover:drop-shadow-sm focus-within:ring-1 focus-within:ring-sky-500 focus-within:hover:drop-shadow-none">
+        <div className="flex items-center justify-between gap-5 p-2.5 px-5 rounded-md bg-slate-100 hover:drop-shadow-sm focus-within:ring-1 focus-within:ring-sky-500 focus-within:hover:drop-shadow-none">
           <textarea
             onInput={handleInput}
             ref={textareaRef}
@@ -85,14 +98,11 @@ const HomePageContent = () => {
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-            className="flex-1 p-2 border rounded bg-transparent border-none outline-none p-2 text-lg focus:outline-none resize-none"
-            style={{
-              width: '100%',
-              height: '50px',
-              maxHeight: '100px',
-              overflowY: 'scroll',
-               }}
-             />
+            rows={1} // Start with 1 row
+            className="w-full p-1 bg-transparent border-none outline-none rounded-md resize-none overflow-y-auto"
+            style={{ height }}
+            
+            />
           <button
             className="p-2 border text-cyan-500 border-cyan-500 rounded-full items-center justify-center hover:bg-gray-200"
             onClick={handleSendMessage}
