@@ -1,6 +1,6 @@
 import "../index.css";
 import { executeSQL, exportSQLResult, sendMessage } from "../utils/api";
-import { lazy, Suspense, useContext, useRef, useState } from "react";
+import { lazy, Suspense, useContext, useEffect, useRef, useState } from "react";
 import RenderTable from "./RenderTable";
 const SqlEditor = lazy(() => import("./SqlEditor"))
 import SqlError from "./SqlError";
@@ -79,6 +79,17 @@ const HomePageContent = () => {
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
+    if (e.key === 'Enter') {
+      if (e.shiftKey) { 
+        setInputText((prev) => prev + '\n');
+      } else {
+        e.preventDefault();
+        handleSendMessage();
+      }
+    }
+  };
+
   return (
     <div className="min-w-[300px] h-screen inline-flex flex-col pb-10 px-[15px] overflow-y-auto">
       <div className="flex items-center justify-between text-xl p-5">
@@ -97,8 +108,8 @@ const HomePageContent = () => {
             placeholder="Enter a prompt here"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-            rows={1} // Start with 1 row
+            onKeyDown={handleKeyDown}
+            rows={3}
             className="w-full p-1 bg-transparent border-none outline-none rounded-md resize-none overflow-y-auto"
             style={{ height }}
             
