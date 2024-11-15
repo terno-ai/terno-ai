@@ -79,44 +79,6 @@ class LLMConfiguration(models.Model):
         return f"{self.llm_type} - {self.model_name or 'default-model'}"
 
 
-class Organisation(models.Model):
-    name = models.CharField(max_length=255)
-    subdomain = models.CharField(max_length=100, unique=True)
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='organisation')
-    logo = models.URLField(null=True, blank=True)
-    is_active = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
-    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
-
-
-class OrganisationLLM(models.Model):
-    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
-    llm = models.ForeignKey(LLMConfiguration, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
-    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
-
-
-class OrganisationUser(models.Model):
-    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
-    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
-
-
-class OrganisationGroup(models.Model):
-    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
-    group = models.ForeignKey(Group, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
-    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
-
-
-class OrganisationDataSource(models.Model):
-    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
-    datasource = models.ForeignKey('DataSource', on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
-    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
-
-
 class DataSource(models.Model):
     class DBType(models.TextChoices):
         default = "generic", _("Generic")
@@ -226,6 +188,44 @@ class TableRowFilter(models.Model):
     data_source = models.ForeignKey(DataSource, on_delete=models.CASCADE)
     table = models.ForeignKey(Table, on_delete=models.CASCADE)
     filter_str = models.CharField(max_length=300)
+
+
+class Organisation(models.Model):
+    name = models.CharField(max_length=255)
+    subdomain = models.CharField(max_length=100, unique=True)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='organisation')
+    logo = models.URLField(null=True, blank=True)
+    is_active = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+
+
+class OrganisationLLM(models.Model):
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
+    llm = models.ForeignKey(LLMConfiguration, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+
+
+class OrganisationUser(models.Model):
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+
+
+class OrganisationGroup(models.Model):
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+
+
+class OrganisationDataSource(models.Model):
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
+    datasource = models.ForeignKey(DataSource, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
 
 
 class QueryHistory(models.Model):
