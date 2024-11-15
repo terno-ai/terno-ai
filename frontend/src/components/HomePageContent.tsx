@@ -67,8 +67,7 @@ const HomePageContent = () => {
 
     if (content.length === 0) {
         setHeight('auto');
-        
-      }
+        }
     const currentScrollHeight = textareaRef.current.scrollHeight;
     const maxHeight = 5 * parseFloat(getComputedStyle(textareaRef.current).lineHeight || '1.5');
     const newHeight = Math.min(currentScrollHeight, maxHeight); 
@@ -78,8 +77,14 @@ const HomePageContent = () => {
       }
     }
   };
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        handleSendMessage();
+        e.preventDefault();
+    }
+};
 
-  return (
+return (
     <div className="min-w-[300px] h-screen inline-flex flex-col pb-10 px-[15px] overflow-y-auto">
       <div className="flex items-center justify-between text-xl p-5">
         <div className="inline-flex items-center">
@@ -97,11 +102,10 @@ const HomePageContent = () => {
             placeholder="Enter a prompt here"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-            rows={1} // Start with 1 row
+            onKeyDown={handleKeyDown}
+            rows={3}
             className="w-full p-1 bg-transparent border-none outline-none rounded-md resize-none overflow-y-auto"
             style={{ height }}
-            
             />
           <button
             className="p-2 border text-cyan-500 border-cyan-500 rounded-full items-center justify-center hover:bg-gray-200"
