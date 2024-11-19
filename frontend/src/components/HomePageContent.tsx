@@ -4,7 +4,7 @@ import { lazy, Suspense, useContext, useRef, useState } from "react";
 import RenderTable from "./RenderTable";
 const SqlEditor = lazy(() => import("./SqlEditor"))
 import SqlError from "./SqlError";
-import { FaArrowRight, FaPlay } from "react-icons/fa6";
+import { FaArrowRight, FaCopy, FaDownload, FaPlay } from "react-icons/fa6";
 import terno from "../assets/terno.svg";
 import { DataSourceContext } from "./ui/datasource-context";
 import PaginatedList from "./TablePagination";
@@ -117,7 +117,6 @@ const HomePageContent = () => {
             rows={1}
             className="w-full p-1 bg-transparent border-none outline-none rounded-md resize-none overflow-y-auto"
             style={{ height }}
-            
             />
           <button
             className="p-2 border text-cyan-500 border-cyan-500 rounded-full items-center justify-center hover:bg-gray-200"
@@ -139,13 +138,6 @@ const HomePageContent = () => {
           </div>
           <div className="flex flex-row align-center justify-end">
             <button
-              className="disabled text-right inline-flex h-10 items-center justify-center rounded-md border bg-cyan-500 hover:bg-cyan-600 mt-4 px-10 font-medium text-white transition-colors hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 focus:ring-offset-slate-50"
-              onClick={() => handleQueryResultExport()}
-            >
-              {exporting ? 'Exporting': 'Export'}
-              <FaPlay className="ml-1" />
-            </button>
-            <button
               className="text-right inline-flex h-10 items-center justify-center rounded-md border bg-cyan-500 hover:bg-cyan-600 mt-4 px-10 font-medium text-white transition-colors hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 focus:ring-offset-slate-50"
               onClick={() => handleQueryExecute(1)}
               disabled={loading}
@@ -153,17 +145,29 @@ const HomePageContent = () => {
               {loading ? 'Wait': 'Execute'}
               <FaPlay className="ml-1" />
             </button>
+          </div>
+        </div>
+      <div>
+      <div className="flex items-center justify-between">
+    <div className=" mt-6 font-medium text-lg text-left">Result</div>
+    <div className=" mb-1 flex space-x-2 items-center justify-end">
+      <button
+              className="inline-flex h-9 items-center rounded-md bg-sky-50 hover:bg-cyan-100 mt-4 px-10 font-medium text-cyan-600 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-sky-50 focus:ring-offset-2 focus:ring-offset-slate-50"
+              onClick={() => handleQueryResultExport()}
+            >
+              {exporting ? 'Exporting': 'Export'}
+              <FaDownload className="ml-1" />
+            </button>
             <button
-              className="disabled text-right inline-flex h-10 items-center justify-center rounded-md border bg-cyan-500 hover:bg-cyan-600 mt-4 px-10 font-medium text-white transition-colors hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 focus:ring-offset-slate-50"
+            className="inline-flex h-9 items-center rounded-md bg-sky-50 hover:bg-cyan-100 mt-4 px-10 font-medium text-cyan-600 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-sky-50 focus:ring-offset-2 focus:ring-offset-slate-50"
               onClick={() => handleCopy()}
             >
               {isCopied ? 'Copied': 'Copy'}
-              <FaPlay className="ml-1" />
+              <FaCopy className="ml-1"/>
             </button>
           </div>
         </div>
-        <div>
-          <div className="mt-10 font-medium text-lg">Result</div>
+        </div>
           <div className="max-h-[200px]">
             <SqlError error={sqlError} />
             <RenderTable columns={tableData.columns} data={tableData.data} />
@@ -173,7 +177,6 @@ const HomePageContent = () => {
           </div>
         </div>
       </div>
-    </div>
   );
 };
 
