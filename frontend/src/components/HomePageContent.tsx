@@ -157,6 +157,7 @@ return (
         <div>
           <div className="flex items-center justify-between">
             <div className=" mt-6 font-medium text-lg text-left">Result</div>
+            {tableData.row_count > 0 &&
             <div className=" mb-1 flex space-x-2 items-center justify-end">
               <button
                 className="inline-flex h-9 items-center rounded-md bg-sky-50 hover:bg-sky-200 mt-4 px-10 font-medium text-cyan-600 hover:opacity-100"
@@ -173,6 +174,7 @@ return (
                 <FaCopy className="ml-1" />
               </button>
             </div>
+            }
           </div>
         </div>
           <div className="max-h-[200px]">
