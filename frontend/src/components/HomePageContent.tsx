@@ -181,11 +181,7 @@ return (
             {tableData.row_count > 0 &&
               <><PaginatedList totalPages={tableData.total_pages} onSelect={handleQueryExecute} />
               <div className="text-center m-2">{tableData.row_count} Rows</div>
-              <div className="text-center m-2">
-                <button onClick={handleCopy}>Copy</button>
-                <button onClick={handleQueryResultExport}>Export</button>
-              </div>
-             </>}
+              </>}
           </div>
         </div>
       </div>
