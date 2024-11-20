@@ -14,6 +14,11 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def create_org(request):
+    print('create org, give perm and rest of the things and return data to provisioner')
+    return JsonResponse({'status': 'success', 'msg': 'created org'})
+
+
 @login_required
 def index(request):
     return render(request, 'frontend/index.html')
