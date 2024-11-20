@@ -4,7 +4,7 @@ import { lazy, Suspense, useContext, useRef, useState } from "react";
 import RenderTable from "./RenderTable";
 const SqlEditor = lazy(() => import("./SqlEditor"))
 import SqlError from "./SqlError";
-import { FaArrowRight, FaPlay } from "react-icons/fa6";
+import { FaArrowRight, FaCopy, FaDownload, FaPlay } from "react-icons/fa6";
 import terno from "../assets/terno.svg";
 import { DataSourceContext } from "./ui/datasource-context";
 import PaginatedList from "./TablePagination";
@@ -77,12 +77,30 @@ const HomePageContent = () => {
       }
     }
   };
+
+  const [isCopied, setIsCopied] = useState(false);
+    const handleCopy = async () => {
+    const tableString = `${tableData.columns.join("\t")}
+      ${tableData.data
+        .map((row) =>
+        tableData.columns
+        .map((col) => `${row[col]}`).join("\t"))
+        .join("\n")}`;
+      try {
+        await navigator.clipboard.writeText(tableString);
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+          } catch (error) {
+          console.error("Failed to copy text: ", error);
+          }
+      };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
         handleSendMessage();
         e.preventDefault();
     }
-};
+  };
 
 return (
     <div className="min-w-[300px] h-screen inline-flex flex-col pb-10 px-[15px] overflow-y-auto">
@@ -106,14 +124,14 @@ return (
             rows={3}
             className="w-full p-1 bg-transparent border-none outline-none rounded-md resize-none overflow-y-auto"
             style={{ height }}
-            />
+          />
           <button
             className="p-2 border text-cyan-500 border-cyan-500 rounded-full items-center justify-center hover:bg-gray-200"
             onClick={handleSendMessage}
             disabled={loading}
           >
             {loading ? 'Wait': <FaArrowRight />}
-            </button>
+          </button>
         </div>
         <div className="mt-10">
           <div className="mt-4 mb-1 font-medium text-lg">Generated Query</div>
@@ -127,13 +145,6 @@ return (
           </div>
           <div className="flex flex-row align-center justify-end">
             <button
-              className="disabled text-right inline-flex h-10 items-center justify-center rounded-md border bg-cyan-500 hover:bg-cyan-600 mt-4 px-10 font-medium text-white transition-colors hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 focus:ring-offset-slate-50"
-              onClick={() => handleQueryResultExport()}
-            >
-              {exporting ? 'Exporting': 'Export'}
-              <FaPlay className="ml-1" />
-            </button>
-            <button
               className="text-right inline-flex h-10 items-center justify-center rounded-md border bg-cyan-500 hover:bg-cyan-600 mt-4 px-10 font-medium text-white transition-colors hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 focus:ring-offset-slate-50"
               onClick={() => handleQueryExecute(1)}
               disabled={loading}
@@ -144,17 +155,40 @@ return (
           </div>
         </div>
         <div>
-          <div className="mt-10 font-medium text-lg">Result</div>
+          <div className="flex items-center justify-between">
+            <div className=" mt-6 font-medium text-lg text-left">Result</div>
+            <div className=" mb-1 flex space-x-2 items-center justify-end">
+              <button
+                className="inline-flex h-9 items-center rounded-md bg-sky-50 hover:bg-sky-200 mt-4 px-10 font-medium text-cyan-600 hover:opacity-100"
+                onClick={() => handleQueryResultExport()}
+              >
+                {exporting ? 'Exporting' : 'Export'}
+                <FaDownload className="ml-1" />
+              </button>
+              <button
+                className="inline-flex h-9 items-center rounded-md bg-sky-50 hover:bg-sky-200 mt-4 px-10 font-medium text-cyan-600 hover:opacity-100"
+                onClick={() => handleCopy()}
+              >
+                {isCopied ? 'Copied' : 'Copy'}
+                <FaCopy className="ml-1" />
+              </button>
+            </div>
+          </div>
+        </div>
           <div className="max-h-[200px]">
             <SqlError error={sqlError} />
             <RenderTable columns={tableData.columns} data={tableData.data} />
             {tableData.row_count > 0 &&
               <><PaginatedList totalPages={tableData.total_pages} onSelect={handleQueryExecute} />
-              <div className="text-center m-2">{tableData.row_count} Rows</div></>}
+              <div className="text-center m-2">{tableData.row_count} Rows</div>
+              <div className="text-center m-2">
+                <button onClick={handleCopy}>Copy</button>
+                <button onClick={handleQueryResultExport}>Export</button>
+              </div>
+             </>}
           </div>
         </div>
       </div>
-    </div>
   );
 };
 
