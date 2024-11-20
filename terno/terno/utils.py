@@ -67,7 +67,7 @@ def keep_only_columns(mDb, tables, columns):
 def update_table_descriptions(tables):
     for tbl_name, tbl_object in tables.items():
         table_description = models.Table.objects.filter(
-            public_name=tbl_name).first().description
+            name=tbl_name).first().description
         tbl_object.desc = table_description
 
 
