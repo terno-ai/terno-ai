@@ -29,6 +29,7 @@ const HomePageContent = () => {
   const [exporting, setExporting] = useState(false);
   const [height, setHeight] = useState('auto');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [loadPaginate, setLoadPaginate] = useState(false);
 
   const handleSendMessage = async () => {
     setLoading(true);
@@ -49,6 +50,7 @@ const HomePageContent = () => {
     const response = await executeSQL(generatedQueryText, ds.id, page);
     if (response["status"] == "success") {
       setTableData(response["table_data"]);
+      setLoadPaginate(true);
     } else {
       setSqlError(response["error"]);
     }
@@ -177,11 +179,11 @@ return (
             }
           </div>
         </div>
-          <div className="max-h-[200px]">
-            <SqlError error={sqlError} />
-            <RenderTable columns={tableData.columns} data={tableData.data} />
-            {tableData.row_count > 0 &&
-              <><PaginatedList totalPages={tableData.total_pages} onSelect={handleQueryExecute} />
+        <div className="max-h-[200px]">
+          <SqlError error={sqlError} />
+          <RenderTable columns={tableData.columns} data={tableData.data}/>
+          {loadPaginate &&
+            <><PaginatedList totalPages={tableData.total_pages} onSelect={handleQueryExecute} />
               <div className="text-center m-2">{tableData.row_count} Rows</div>
               </>}
           </div>
