@@ -15,5 +15,5 @@ urlpatterns = [
     path('export-sql-result', views.export_sql_result, name='export_sql_result'),
     path('get-tables/<int:datasource_id>', views.get_tables, name='get_tables'),
     path('get-user-details', views.get_user_details, name='get_user_details'),
-    path('create-org', views.create_org, name='create_org'),  # only for demo remove before commit
+    path('api/', views.create_org, name='create_org'),  # only for demo remove before commit
 ]
