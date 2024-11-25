@@ -3,6 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import User, Group
 import json
 from django.core.exceptions import ValidationError
+from django.contrib.auth.models import Permission
 
 
 class LLMConfiguration(models.Model):
@@ -199,6 +200,23 @@ class Organisation(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        # Automatically create OrganisationUser for the owner
+        if not OrganisationUser.objects.filter(
+                organisation=self, user=self.owner).exists():
+            OrganisationUser.objects.create(organisation=self, user=self.owner)
+
+        # Grant staff status to the owner user if not already staff
+        if not self.owner.is_staff:
+            self.owner.is_staff = True
+            self.owner.save()
+
+        # Assign org_owner group to org owner
+        org_owner_group = Group.objects.filter(name='org_owner').first()
+        self.owner.groups.add(org_owner_group)
+        self.owner.save()
 
 class OrganisationLLM(models.Model):
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
