@@ -6,5 +6,5 @@ set MYSQL_USER=''
 set MYSQL_PASS=''
 set CSRF_TRUSTED_ORIGINS=['http://127.0.0.1:8000']
 set SECRET_KEY='xxxxx'
-set TERNO_LOG_FILE=''
+set TERNO_LOG_FILE=terno.log
 set DEBUG='True'
