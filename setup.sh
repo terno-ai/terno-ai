@@ -12,7 +12,7 @@ python /code/terno/manage.py migrate
 echo "Collecting static files..."
 python /code/terno/manage.py collectstatic --noinput
 
-Check if superuser exists
+# Check if superuser exists
 export DJANGO_SUPERUSER_PASSWORD=Superadmin@123
 echo -e "Your username: ${CYAN}admin${NC} password:" ${CYAN}$DJANGO_SUPERUSER_PASSWORD${NC}
 
