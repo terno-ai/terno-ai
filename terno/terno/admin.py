@@ -61,6 +61,7 @@ class UserAdmin(DefaultUserAdmin):
 
 class OrganisationFilterMixin:
     organisation_related_field_names = []
+    organisation_foreignkey_field_names = {}
 
     def get_user_organisation(self, request):
         return models.OrganisationUser.objects.filter(
@@ -79,10 +80,22 @@ class OrganisationFilterMixin:
                 qs = qs.none()
         return qs
 
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if not request.user.is_superuser:
+            user_organisation = self.get_user_organisation(request)
+            if user_organisation and db_field.name in self.organisation_foreignkey_field_names:
+                field_filter = self.organisation_foreignkey_field_names.get(db_field.name)
+                if field_filter:
+                    kwargs["queryset"] = db_field.related_model.objects.filter(
+                        **{field_filter: user_organisation})
+            else:
+                kwargs["queryset"] = db_field.related_model.objects.none()
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 @admin.register(models.LLMConfiguration)
-class LLMConfigurationAdmin(admin.ModelAdmin):
+class LLMConfigurationAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     list_display = ('llm_type', 'api_key', 'model_name', 'enabled')
+    organisation_related_field_names = ['organisationllm__organisation']
     search_fields = ('llm_type', 'model_name')
     fieldsets = (
         ('Basic Configuration', {
@@ -109,18 +122,6 @@ class LLMConfigurationAdmin(admin.ModelAdmin):
 
         super().save_model(request, obj, form, change)
 
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-
-        if not request.user.is_superuser:
-            user_organisation = models.OrganisationUser.objects.filter(user=request.user).values_list('organisation', flat=True).first()
-
-            if user_organisation:
-                qs = qs.filter(organisationllm__organisation=user_organisation)
-            else:
-                qs = qs.none()
-        return qs
-
 
 @admin.register(models.DataSource)
 class DataSourceAdmin(OrganisationFilterMixin, admin.ModelAdmin):
@@ -146,24 +147,9 @@ class TableAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     list_filter = ['data_source']
     search_fields = ['name', 'public_name', 'data_source__display_name']
     organisation_related_field_names = ['data_source__organisationdatasource__organisation']
-
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        """
-        Restrict foreign key fields (e.g., data_source) based on the user's organisation.
-        """
-        if db_field.name == 'data_source':
-            user_organisation = models.OrganisationUser.objects.filter(
-                user=request.user
-            ).values_list('organisation', flat=True).first()
-
-            if user_organisation:
-                kwargs["queryset"] = models.DataSource.objects.filter(
-                    organisationdatasource__organisation=user_organisation
-                )
-            else:
-                kwargs["queryset"] = models.DataSource.objects.none()
-
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+    organisation_foreignkey_field_names = {
+        'data_source' : 'organisationdatasource__organisation'
+    }
 
     def get_list_filter(self, request):
         """
@@ -187,6 +173,9 @@ class PrivateTableSelectorAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     list_filter = ['data_source']
     search_fields = ['data_source__display_name']
     organisation_related_field_names = ['data_source__organisationdatasource__organisation']
+    organisation_foreignkey_field_names = {
+        'data_source' : 'organisationdatasource__organisation'
+    }
 
     def private_tables_count(self, obj):
         return obj.tables.count()
@@ -205,24 +194,6 @@ class PrivateTableSelectorAdmin(OrganisationFilterMixin, admin.ModelAdmin):
             kwargs["queryset"] = models.Table.objects.none()
 
         return super().formfield_for_manytomany(db_field, request, **kwargs)
-
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        """
-        Restrict foreign key fields (e.g., data_source) based on the user's organisation.
-        """
-        if db_field.name == 'data_source':
-            user_organisation = models.OrganisationUser.objects.filter(
-                user=request.user
-            ).values_list('organisation', flat=True).first()
-
-            if user_organisation:
-                kwargs["queryset"] = models.DataSource.objects.filter(
-                    organisationdatasource__organisation=user_organisation
-                )
-            else:
-                kwargs["queryset"] = models.DataSource.objects.none()
-
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def get_list_filter(self, request):
         """
@@ -247,24 +218,9 @@ class TableColumnAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     list_filter = ['table__data_source', 'table']
     search_fields = ['name', 'public_name', 'table__name', 'table__data_source']
     organisation_related_field_names = ['table__data_source__organisationdatasource__organisation']
-
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        """
-        Restrict foreign key fields (e.g., data_source) based on the user's organisation.
-        """
-        if db_field.name == 'table':
-            user_organisation = models.OrganisationUser.objects.filter(
-                user=request.user
-            ).values_list('organisation', flat=True).first()
-
-            if user_organisation:
-                kwargs["queryset"] = models.Table.objects.filter(
-                    data_source__organisationdatasource__organisation=user_organisation
-                )
-            else:
-                kwargs["queryset"] = models.Table.objects.none()
-
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+    organisation_foreignkey_field_names = {
+        'table': 'data_source__organisationdatasource__organisation'
+    }
 
     def get_list_filter(self, request):
         """
@@ -289,6 +245,9 @@ class GroupTableSelectorAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     exclude = ['exclude_tables']
     filter_horizontal = ['tables']
     organisation_related_field_names = ['group__organisationgroup__organisation']
+    organisation_foreignkey_field_names = {
+        'group' : 'organisationgroup__organisation'
+    }
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if not request.user.is_superuser:
@@ -303,25 +262,6 @@ class GroupTableSelectorAdmin(OrganisationFilterMixin, admin.ModelAdmin):
                 kwargs["queryset"] = tables
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        """
-        Restrict foreign key fields (e.g., data_source) based on the user's organisation.
-        """
-        if not request.user.is_superuser:
-            if db_field.name == 'group':
-                user_organisation = models.OrganisationUser.objects.filter(
-                    user=request.user
-                ).values_list('organisation', flat=True).first()
-
-                if user_organisation:
-                    kwargs["queryset"] = models.Group.objects.filter(
-                        organisationgroup__organisation=user_organisation
-                    )
-                else:
-                    kwargs["queryset"] = models.Group.objects.none()
-
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
-
 
 @admin.register(models.PrivateColumnSelector)
 class PrivateColumnSelectorAdmin(OrganisationFilterMixin, admin.ModelAdmin):
@@ -330,6 +270,9 @@ class PrivateColumnSelectorAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     list_filter = ['data_source']
     search_fields = ['data_source__display_name']
     organisation_related_field_names = ['data_source__organisationdatasource__organisation']
+    organisation_foreignkey_field_names = {
+        'data_source': 'organisationdatasource__organisation'
+    }
 
     def private_columns_count(self, obj):
         return obj.columns.count()
@@ -350,26 +293,6 @@ class PrivateColumnSelectorAdmin(OrganisationFilterMixin, admin.ModelAdmin):
 
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        """
-        Restrict foreign key fields (e.g., data_source) based on the user's organisation.
-        """
-        if not request.user.is_superuser:
-            if db_field.name == 'data_source':
-                user_organisation = models.OrganisationUser.objects.filter(
-                    user=request.user
-                ).values_list('organisation', flat=True).first()
-
-                print("User Organisation:", user_organisation)  # Debug print
-
-                if user_organisation:
-                    kwargs["queryset"] = models.DataSource.objects.filter(
-                        organisationdatasource__organisation=user_organisation
-                    )
-                else:
-                    kwargs["queryset"] = models.DataSource.objects.none()
-
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 @admin.register(models.GroupColumnSelector)
 class GroupColumnSelectorAdmin(OrganisationFilterMixin, admin.ModelAdmin):
@@ -378,6 +301,9 @@ class GroupColumnSelectorAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     search_fields = ['group__name']
     exclude = ['exclude_columns']
     filter_horizontal = ['columns', 'exclude_columns']
+    organisation_foreignkey_field_names = {
+        'group': 'organisationgroup__organisation'
+    }
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         """
@@ -394,79 +320,27 @@ class GroupColumnSelectorAdmin(OrganisationFilterMixin, admin.ModelAdmin):
 
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        """
-        Restrict foreign key fields (e.g., data_source) based on the user's organisation.
-        """
-        if not request.user.is_superuser:
-            if db_field.name == 'group':
-                user_organisation = models.OrganisationUser.objects.filter(
-                    user=request.user
-                ).values_list('organisation', flat=True).first()
-
-                if user_organisation:
-                    kwargs["queryset"] = models.Group.objects.filter(
-                        organisationgroup__organisation=user_organisation
-                    )
-                else:
-                    kwargs["queryset"] = models.Group.objects.none()
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 @admin.register(models.GroupTableRowFilter)
 class GroupTableRowFilterSelectorAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     list_display = ['table', 'group', 'filter_str']
     organisation_related_field_names = ['table__data_source__organisationdatasource__organisation', 'group__organisationgroup__organisation']
+    organisation_foreignkey_field_names = {
+        'data_source': 'organisationdatasource__organisation',
+        'table': 'data_source__organisationdatasource__organisation',
+        'group': 'organisationgroup__organisation'
+    }
 
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        """
-        Restrict foreign key fields (e.g., data_source) based on the user's organisation.
-        """
-        if not request.user.is_superuser:
-            user_organisation = models.OrganisationUser.objects.filter(
-                    user=request.user
-                ).values_list('organisation', flat=True).first()
-            if user_organisation:
-                if db_field.name == 'group':
-                    kwargs["queryset"] = models.Group.objects.filter(
-                        organisationgroup__organisation=user_organisation
-                    )
-                if db_field.name == 'data_source':
-                    kwargs["queryset"] = models.DataSource.objects.filter(
-                        organisationdatasource__organisation=user_organisation
-                    )
-                if db_field.name == 'table':
-                    kwargs["queryset"] = models.Table.objects.filter(
-                        data_source__organisationdatasource__organisation=user_organisation
-                    )
-            else:
-                kwargs["queryset"] = models.Group.objects.none()
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 @admin.register(models.TableRowFilter)
 class TableRowFilterAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     list_display = ['table', 'filter_str']
     organisation_related_field_names = ['table__data_source__organisationdatasource__organisation']
-
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        """
-        Restrict foreign key fields (e.g., data_source) based on the user's organisation.
-        """
-        user_organisation = models.OrganisationUser.objects.filter(
-                user=request.user
-            ).values_list('organisation', flat=True).first()
-        if user_organisation:
-            if db_field.name == 'data_source':
-                kwargs["queryset"] = models.DataSource.objects.filter(
-                    organisationdatasource__organisation=user_organisation
-                )
-            if db_field.name == 'table':
-                kwargs["queryset"] = models.Table.objects.filter(
-                    data_source__organisationdatasource__organisation=user_organisation
-                )
-        else:
-            kwargs["queryset"] = models.Group.objects.none()
-
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+    organisation_foreignkey_field_names = {
+        'data_source': 'organisationdatasource__organisation',
+        'table': 'data_source__organisationdatasource__organisation',
+        'group': 'organisationgroup__organisation'
+    }
 
 
 @admin.register(models.QueryHistory)
@@ -475,27 +349,10 @@ class QueryHistoryAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     organisation_related_field_names = ['user__organisationuser__organisation', 'data_source__organisationdatasource__organisation']
     list_filter = ['data_source', 'data_type', 'created_at']
     search_fields = ['user__username', 'data_source__display_name', 'data']
-
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        """
-        Restrict foreign key fields (e.g., data_source) based on the user's organisation.
-        """
-        user_organisation = models.OrganisationUser.objects.filter(
-                user=request.user
-            ).values_list('organisation', flat=True).first()
-        if user_organisation:
-            if db_field.name == 'data_source':
-                kwargs["queryset"] = models.DataSource.objects.filter(
-                    organisationdatasource__organisation=user_organisation
-                )
-            if db_field.name == 'user':
-                kwargs["queryset"] = models.User.objects.filter(
-                    organisationuser__organisation=user_organisation
-                )
-        else:
-            kwargs["queryset"] = models.Group.objects.none()
-
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+    organisation_foreignkey_field_names = {
+        'data_source': 'organisationdatasource__organisation',
+        'user': 'organisationuser__organisation'
+    }
 
 
 @admin.register(models.PromptLog)
@@ -504,23 +361,10 @@ class PromptLogAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     organisation_related_field_names = ['user__organisationuser__organisation']
     list_filter = ['created_at']
     search_fields = ['user__username', 'llm_prompt']
+    organisation_foreignkey_field_names = {
+        'user': 'organisationuser__organisation'
+    }
 
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        """
-        Restrict foreign key fields (e.g., data_source) based on the user's organisation.
-        """
-        user_organisation = models.OrganisationUser.objects.filter(
-                user=request.user
-            ).values_list('organisation', flat=True).first()
-        if user_organisation:
-            if db_field.name == 'user':
-                kwargs["queryset"] = models.User.objects.filter(
-                    organisationuser__organisation=user_organisation
-                )
-        else:
-            kwargs["queryset"] = models.Group.objects.none()
-
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 @admin.register(models.SystemPrompts)
 class SystemPromptsAdmin(OrganisationFilterMixin, admin.ModelAdmin):
@@ -528,23 +372,9 @@ class SystemPromptsAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     organisation_related_field_names = ['data_source__organisationdatasource__organisation']
     list_filter = ['data_source']
     search_fields = ['data_source__display_name', 'system_prompt']
-
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        """
-        Restrict foreign key fields (e.g., data_source) based on the user's organisation.
-        """
-        user_organisation = models.OrganisationUser.objects.filter(
-                user=request.user
-            ).values_list('organisation', flat=True).first()
-        if user_organisation:
-            if db_field.name == 'data_source':
-                kwargs["queryset"] = models.DataSource.objects.filter(
-                    organisationdatasource__organisation=user_organisation
-                )
-        else:
-            kwargs["queryset"] = models.Group.objects.none()
-
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+    organisation_foreignkey_field_names = {
+        'data_source': 'organisationdatasource__organisation',
+    }
 
 
 admin.site.register(models.OrganisationDataSource)
