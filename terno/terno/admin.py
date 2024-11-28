@@ -62,6 +62,7 @@ class UserAdmin(DefaultUserAdmin):
 class OrganisationFilterMixin:
     organisation_related_field_names = []
     organisation_foreignkey_field_names = {}
+    organisation_manytomany_field_names = {}
 
     def get_user_organisation(self, request):
         return models.OrganisationUser.objects.filter(
@@ -91,6 +92,19 @@ class OrganisationFilterMixin:
             else:
                 kwargs["queryset"] = db_field.related_model.objects.none()
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        if not request.user.is_superuser:
+            user_organisation = self.get_user_organisation(request)
+            if user_organisation and db_field.name in self.organisation_manytomany_field_names:
+                field_filter = self.organisation_manytomany_field_names.get(db_field.name)
+                if field_filter:
+                    kwargs["queryset"] = db_field.related_model.objects.filter(
+                        **{field_filter: user_organisation})
+            else:
+                kwargs["queryset"] = db_field.related_model.objects.none()
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
+
 
 @admin.register(models.LLMConfiguration)
 class LLMConfigurationAdmin(OrganisationFilterMixin, admin.ModelAdmin):
@@ -174,26 +188,14 @@ class PrivateTableSelectorAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     search_fields = ['data_source__display_name']
     organisation_related_field_names = ['data_source__organisationdatasource__organisation']
     organisation_foreignkey_field_names = {
-        'data_source' : 'organisationdatasource__organisation'
+        'data_source': 'organisationdatasource__organisation'
+    }
+    organisation_manytomany_field_names = {
+        'tables': 'data_source__organisationdatasource__organisation'
     }
 
     def private_tables_count(self, obj):
         return obj.tables.count()
-
-    def formfield_for_manytomany(self, db_field, request, **kwargs):
-        """
-        Filter ManyToMany fields based on the user's organisation.
-        """
-        user_organisation = models.OrganisationUser.objects.filter(
-            user=request.user).values_list('organisation', flat=True).first()
-        if user_organisation:
-            # Filter the ManyToMany field (tables) based on the organization
-            kwargs["queryset"] = models.Table.objects.filter(
-                data_source__organisationdatasource__organisation=user_organisation)
-        else:
-            kwargs["queryset"] = models.Table.objects.none()
-
-        return super().formfield_for_manytomany(db_field, request, **kwargs)
 
     def get_list_filter(self, request):
         """
@@ -246,21 +248,19 @@ class GroupTableSelectorAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     filter_horizontal = ['tables']
     organisation_related_field_names = ['group__organisationgroup__organisation']
     organisation_foreignkey_field_names = {
-        'group' : 'organisationgroup__organisation'
+        'group': 'organisationgroup__organisation'
+    }
+    organisation_manytomany_field_names = {
+        'tables': 'data_source__organisationdatasource__organisation'
     }
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
-        if not request.user.is_superuser:
-            if db_field.name == "tables":
-                tables = models.Table.objects.filter(
-                    private_tables__in=models.PrivateTableSelector.objects.all())
-
-                user_organisation = models.OrganisationUser.objects.filter(
-                    user=request.user).values_list('organisation', flat=True).first()
-                if user_organisation:
-                    tables = tables.filter(data_source__organisationdatasource__organisation=user_organisation)
-                kwargs["queryset"] = tables
-        return super().formfield_for_manytomany(db_field, request, **kwargs)
+        formfield = super().formfield_for_manytomany(db_field, request, **kwargs)
+        if db_field.name == "tables":
+            tables = formfield.queryset.filter(
+                private_tables__in=models.PrivateTableSelector.objects.all())
+            formfield.queryset = tables
+        return formfield
 
 
 @admin.register(models.PrivateColumnSelector)
@@ -273,25 +273,12 @@ class PrivateColumnSelectorAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     organisation_foreignkey_field_names = {
         'data_source': 'organisationdatasource__organisation'
     }
+    organisation_manytomany_field_names = {
+        'columns': 'table__data_source__organisationdatasource__organisation'
+    }
 
     def private_columns_count(self, obj):
         return obj.columns.count()
-
-    def formfield_for_manytomany(self, db_field, request, **kwargs):
-        """
-        Filter ManyToMany fields based on the user's organisation.
-        """
-        if not request.user.is_superuser:
-            user_organisation = models.OrganisationUser.objects.filter(
-                user=request.user).values_list('organisation', flat=True).first()
-            if user_organisation:
-                # Filter the ManyToMany field (tables) based on the organization
-                kwargs["queryset"] = models.TableColumn.objects.filter(
-                    table__data_source__organisationdatasource__organisation=user_organisation)
-            else:
-                kwargs["queryset"] = models.TableColumn.objects.none()
-
-        return super().formfield_for_manytomany(db_field, request, **kwargs)
 
 
 @admin.register(models.GroupColumnSelector)
@@ -304,21 +291,9 @@ class GroupColumnSelectorAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     organisation_foreignkey_field_names = {
         'group': 'organisationgroup__organisation'
     }
-
-    def formfield_for_manytomany(self, db_field, request, **kwargs):
-        """
-        Filter ManyToMany fields based on the user's organisation.
-        """
-        user_organisation = models.OrganisationUser.objects.filter(
-            user=request.user).values_list('organisation', flat=True).first()
-        if user_organisation:
-            # Filter the ManyToMany field (tables) based on the organization
-            kwargs["queryset"] = models.TableColumn.objects.filter(
-                table__data_source__organisationdatasource__organisation=user_organisation)
-        else:
-            kwargs["queryset"] = models.TableColumn.objects.none()
-
-        return super().formfield_for_manytomany(db_field, request, **kwargs)
+    organisation_manytomany_field_names = {
+        'columns': 'table__data_source__organisationdatasource__organisation'
+    }
 
 
 @admin.register(models.GroupTableRowFilter)
