@@ -182,7 +182,7 @@ return (
         <div className="max-h-[200px]">
           <SqlError error={sqlError} />
           <RenderTable columns={tableData.columns} data={tableData.data}/>
-          {loadPaginate &&
+          {loadPaginate && !loading &&
             <><PaginatedList totalPages={tableData.total_pages} onSelect={handleQueryExecute} />
               <div className="text-center m-2">{tableData.row_count} Rows</div>
               </>}
