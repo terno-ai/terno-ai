@@ -63,6 +63,7 @@ class OrganisationFilterMixin:
     organisation_related_field_names = []
     organisation_foreignkey_field_names = {}
     organisation_manytomany_field_names = {}
+    organisation_list_filter_field_names = []
 
     def get_user_organisation(self, request):
         return models.OrganisationUser.objects.filter(
@@ -104,6 +105,22 @@ class OrganisationFilterMixin:
             else:
                 kwargs["queryset"] = db_field.related_model.objects.none()
         return super().formfield_for_manytomany(db_field, request, **kwargs)
+
+    def get_list_filter(self, request):
+        """
+        Dynamically apply filters to the list view based on the user's organisation.
+        """
+        filters = super().get_list_filter(request) or []
+        if request.user.is_superuser:
+            return filters
+        user_organisation = self.get_user_organisation(request)
+        if user_organisation and self.organisation_list_filter_field_names:
+            print(user_organisation)
+            filters += [
+                (field_name, admin.RelatedOnlyFieldListFilter)
+                for field_name in self.organisation_list_filter_field_names
+            ]
+        return filters
 
 
 @admin.register(models.LLMConfiguration)
@@ -164,27 +181,13 @@ class TableAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     organisation_foreignkey_field_names = {
         'data_source' : 'organisationdatasource__organisation'
     }
+    organisation_list_filter_field_names = ['data_source']
 
-    def get_list_filter(self, request):
-        """
-        Dynamically restrict filters for the list view.
-        """
-        user_organisation = models.OrganisationUser.objects.filter(
-            user=request.user
-        ).values_list('organisation', flat=True).first()
-
-        if user_organisation:
-            self.list_filter = [('data_source', admin.RelatedOnlyFieldListFilter)]
-        else:
-            self.list_filter = []
-
-        return self.list_filter
 
 @admin.register(models.PrivateTableSelector)
 class PrivateTableSelectorAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     list_display = ['data_source', 'private_tables_count']
     filter_horizontal = ['tables']
-    list_filter = ['data_source']
     search_fields = ['data_source__display_name']
     organisation_related_field_names = ['data_source__organisationdatasource__organisation']
     organisation_foreignkey_field_names = {
@@ -196,21 +199,10 @@ class PrivateTableSelectorAdmin(OrganisationFilterMixin, admin.ModelAdmin):
 
     def private_tables_count(self, obj):
         return obj.tables.count()
+    organisation_list_filter_field_names = ['data_source']
 
     def get_list_filter(self, request):
-        """
-        Dynamically restrict filters for the list view.
-        """
-        user_organisation = models.OrganisationUser.objects.filter(
-            user=request.user
-        ).values_list('organisation', flat=True).first()
-
-        if user_organisation:
-            self.list_filter = [('data_source', admin.RelatedOnlyFieldListFilter)]
-        else:
-            self.list_filter = []
-
-        return self.list_filter
+        return super().get_list_filter(request)
 
 
 @admin.register(models.TableColumn)
