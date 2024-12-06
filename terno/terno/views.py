@@ -43,8 +43,16 @@ def console(request):
         user_prompt = data.get('userPrompt')
 
         try:
-            datasource = models.DataSource.objects.get(id=datasource_id,
-                                                       enabled=True)
+            user_organisation = models.OrganisationUser.objects.filter(user=request.user).values_list('organisation', flat=True).first()
+
+            if not user_organisation:
+                return HttpResponseForbidden("You do not belong to any organization.")
+
+            datasource = models.DataSource.objects.get(
+                    id=datasource_id,
+                    enabled=True,
+                    organisationdatasource__organisation=user_organisation
+                )
         except ObjectDoesNotExist:
             return JsonResponse({
                 'status': 'error',
