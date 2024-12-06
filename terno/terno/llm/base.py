@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from django.core.exceptions import ObjectDoesNotExist
-from ..models import LLMConfiguration
+from ..models import LLMConfiguration, OrganisationLLM
 
 
 class BaseLLM(ABC):
@@ -24,9 +24,13 @@ class BaseLLM(ABC):
 
 class LLMFactory:
     @staticmethod
-    def create_llm() -> BaseLLM:
+    def create_llm(organisation) -> BaseLLM:
         try:
-            config = LLMConfiguration.objects.get(enabled=True)
+            organisation_llm = OrganisationLLM.objects.get(
+                organisation=organisation,
+                llm__enabled=True
+            )
+            config = organisation_llm.llm
         except ObjectDoesNotExist:
             raise ValueError("No enabled LLM configuration found.")
         common_params = {

@@ -3,6 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import User, Group
 import json
 from django.core.exceptions import ValidationError
+from django.contrib.auth.models import Permission
 
 
 class LLMConfiguration(models.Model):
@@ -206,6 +207,61 @@ class TableRowFilter(models.Model):
     data_source = models.ForeignKey(DataSource, on_delete=models.CASCADE)
     table = models.ForeignKey(Table, on_delete=models.CASCADE)
     filter_str = models.CharField(max_length=300)
+
+
+class Organisation(models.Model):
+    name = models.CharField(max_length=255)
+    subdomain = models.CharField(max_length=100, unique=True)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='organisation')
+    logo = models.URLField(null=True, blank=True)
+    is_active = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        # Automatically create OrganisationUser for the owner
+        if not OrganisationUser.objects.filter(
+                organisation=self, user=self.owner).exists():
+            OrganisationUser.objects.create(organisation=self, user=self.owner)
+
+        # Grant staff status to the owner user if not already staff
+        if not self.owner.is_staff:
+            self.owner.is_staff = True
+            self.owner.save()
+
+        # Assign org_owner group to org owner
+        org_owner_group = Group.objects.filter(name='org_owner').first()
+        self.owner.groups.add(org_owner_group)
+        self.owner.save()
+
+class OrganisationLLM(models.Model):
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
+    llm = models.ForeignKey(LLMConfiguration, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+
+
+class OrganisationUser(models.Model):
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+
+
+class OrganisationGroup(models.Model):
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+
+
+class OrganisationDataSource(models.Model):
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
+    datasource = models.ForeignKey(DataSource, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
 
 
 class QueryHistory(models.Model):

@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 import terno.models as models
 import terno.utils as utils
 import json
@@ -48,8 +48,16 @@ def console(request):
         user_prompt = data.get('userPrompt')
 
         try:
-            datasource = models.DataSource.objects.get(id=datasource_id,
-                                                       enabled=True)
+            user_organisation = models.OrganisationUser.objects.filter(user=request.user).values_list('organisation', flat=True).first()
+
+            if not user_organisation:
+                return HttpResponseForbidden("You do not belong to any organization.")
+
+            datasource = models.DataSource.objects.get(
+                    id=datasource_id,
+                    enabled=True,
+                    organisationdatasource__organisation=user_organisation
+                )
         except ObjectDoesNotExist:
             return JsonResponse({
                 'status': 'error',
@@ -68,7 +76,6 @@ def console(request):
             'db_schema': schema_generated,
             'dialect_name': datasource.dialect_name,
             'dialect_version': datasource.dialect_version,
-            'mdb': mDB,
         }
         system_prompt = utils.substitute_variables(template_str=system_prompt,
                                                    context_dict=context_dict)
@@ -87,7 +94,7 @@ def console(request):
             user=request.user, data_source=datasource,
             data_type='user_prompt', data=user_prompt)
 
-        llm_response = utils.console_llm_response(
+        llm_response = utils.llm_response(
             request.user, messages)
 
         if llm_response['status'] == 'error':
@@ -114,7 +121,15 @@ def settings(request):
 
 @login_required
 def get_datasources(request):
-    datasources = models.DataSource.objects.filter(enabled=True)
+    user_organisation = models.OrganisationUser.objects.filter(user=request.user).values_list('organisation', flat=True).first()
+
+    if not user_organisation:
+        return HttpResponseForbidden("You do not belong to any organization.")
+
+    datasources = models.DataSource.objects.filter(
+            enabled=True,
+            organisationdatasource__organisation=user_organisation
+        )
     data = [{'name': d.display_name, 'id': d.id} for d in datasources]
     return JsonResponse({
         'datasources': data
@@ -127,9 +142,16 @@ def get_sql(request):
     datasource_id = data.get('datasourceId')
     question = data.get('prompt')
 
+    user_organisation = models.OrganisationUser.objects.filter(user=request.user).values_list('organisation', flat=True).first()
+
+    if not user_organisation:
+        return HttpResponseForbidden("You do not belong to any organization.")
+
     try:
-        datasource = models.DataSource.objects.get(id=datasource_id,
-                                                   enabled=True)
+        datasource = models.DataSource.objects.get(
+            id=datasource_id,
+            enabled=True,
+            organisationdatasource__organisation=user_organisation)
     except ObjectDoesNotExist:
         return JsonResponse({
             'status': 'error',
@@ -169,10 +191,13 @@ def execute_sql(request):
     datasource_id = data.get('datasourceId')
     page = data.get('page', 1)
     per_page = data.get('per_page', 25)
+    user_organisation = models.OrganisationUser.objects.filter(user=request.user).values_list('organisation', flat=True).first()
 
     try:
-        datasource = models.DataSource.objects.get(id=datasource_id,
-                                                   enabled=True)
+        datasource = models.DataSource.objects.get(
+            id=datasource_id,
+            enabled=True,
+            organisationdatasource__organisation=user_organisation)
     except ObjectDoesNotExist:
         return JsonResponse({
             'status': 'error',
@@ -221,10 +246,13 @@ def export_sql_result(request):
     data = json.loads(request.body)
     user_sql = data.get('sql')
     datasource_id = data.get('datasourceId')
+    user_organisation = models.OrganisationUser.objects.filter(user=request.user).values_list('organisation', flat=True).first()
 
     try:
-        datasource = models.DataSource.objects.get(id=datasource_id,
-                                                   enabled=True)
+        datasource = models.DataSource.objects.get(
+            id=datasource_id,
+            enabled=True,
+            organisationdatasource__organisation=user_organisation)
     except ObjectDoesNotExist:
         return JsonResponse({
             'status': 'error',
@@ -260,9 +288,13 @@ def export_sql_result(request):
 
 @login_required
 def get_tables(request, datasource_id):
+    user_organisation = models.OrganisationUser.objects.filter(user=request.user).values_list('organisation', flat=True).first()
+
     try:
-        datasource = models.DataSource.objects.get(id=datasource_id,
-                                                   enabled=True)
+        datasource = models.DataSource.objects.get(
+            id=datasource_id,
+            enabled=True,
+            organisationdatasource__organisation=user_organisation)
     except ObjectDoesNotExist:
         return JsonResponse({
             'status': 'error',

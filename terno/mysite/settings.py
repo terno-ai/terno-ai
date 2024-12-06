@@ -54,6 +54,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'terno.middleware.org_domain_middleware.DefaultOrganisationMiddleware',
 ]
 
 ROOT_URLCONF = 'mysite.urls'

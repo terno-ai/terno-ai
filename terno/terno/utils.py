@@ -197,7 +197,8 @@ def console_llm_response(user, messages):
 
 def llm_response(user, user_query, db_schema, datasource):
     try:
-        llm = LLMFactory.create_llm()
+        user_organisation = models.OrganisationUser.objects.filter(user=user).values_list('organisation', flat=True).first()
+        llm = LLMFactory.create_llm(user_organisation)
         pipeline = create_pipeline(llm, 'one_step_pipeline', user, db_schema, datasource, user_query)
         response = get_response_from_pipeline(pipeline)
         generated_sql = response[0][0]
