@@ -39,15 +39,20 @@ def get_org_details(request):
         user_email = data.get('user')
         org_name = data.get('name')
         subdomain = data.get('subdomain')
-        user = get_or_create_user(user_email)
+        try:
+            user = get_or_create_user(user_email)
+            organisation = Organisation.objects.create(
+                name=org_name, subdomain=subdomain, owner=user, is_active=True)
+            OrganisationUser.objects.create(
+                organisation=organisation, user=user)
 
-        organisation = Organisation.objects.create(
-            name=org_name, subdomain=subdomain, owner=user, is_active=True)
-        OrganisationUser.objects.create(
-            organisation=organisation, user=user)
-
-        return JsonResponse(
-            {"status": "success", "message": "Organisation Created Successfully!"}, status=200)
+            return JsonResponse(
+                {"status": "success", "message": "Organisation Created Successfully!"}, status=200
+            )
+        except Exception as e:
+            return JsonResponse(
+                {"status": "error", "message": str(e)}, status=200
+            )
 
 
 def get_user_details(request):
