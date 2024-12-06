@@ -1,6 +1,8 @@
-from terno.models import OrganisationUser
+from terno.models import Organisation, OrganisationUser
+from api.utils import get_or_create_user
 import django.contrib.auth.models as authmodels
 from django.http import JsonResponse
+import json
 
 
 # Create your views here.
@@ -30,6 +32,20 @@ def get_org_details(request):
                 {"status": "error", "organisations": None}, status=200)
 
     if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+        user_email = data.get('user')
+        org_name = data.get('name')
+        subdomain = data.get('subdomain')
+        user = get_or_create_user(user_email)
+
+        organisation = Organisation.objects.create(
+            name=org_name, subdomain=subdomain, owner=user, is_active=True)
+        OrganisationUser.objects.create(
+            organisation=organisation, user=user)
+
         return JsonResponse(
             {"status": "success", "message": "Organisation Created Successfully!"}, status=200)
 
