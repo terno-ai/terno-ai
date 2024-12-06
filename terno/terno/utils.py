@@ -1,5 +1,6 @@
 import sqlglot
 import terno.models as models
+from django.contrib.auth.models import Group, Permission
 from django.views.decorators.cache import cache_page
 from sqlshield.shield import Session
 from sqlshield.models import MDatabase
@@ -350,3 +351,9 @@ def substitute_variables(template_str, context_dict):
     template = Template(template_str, engine=engine)
     context = Context(context_dict)
     return template.render(context)
+
+
+def create_org_owner_group():
+    group = Group.objects.create(name="org_owner")
+    permissions = Permission.objects.all()
+    group.permissions.set(permissions)
