@@ -342,10 +342,3 @@ class SystemPromptsAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     organisation_foreignkey_field_names = {
         'data_source': 'organisationdatasource__organisation',
     }
-
-
-admin.site.register(models.OrganisationDataSource)
-admin.site.register(models.OrganisationLLM)
-admin.site.register(models.OrganisationUser)
-admin.site.register(models.OrganisationGroup)
-admin.site.register(models.Organisation)
