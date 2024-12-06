@@ -27,7 +27,7 @@ fi
 if python /code/terno/manage.py shell -c 'from django.contrib.auth.models import Group; print(Group.objects.filter(name='org_owner').exists())' | grep -iq "false"; then
     #create a default group for organisation owner org_owner
     echo "Creating a default group for organisation owner org_owner"
-    python /code/terno/manage.py shell -c 'from your_app.utils import create_org_owner_group; create_org_owner_group()'
+    python /code/terno/manage.py shell -c 'from terno.utils import create_org_owner_group; create_org_owner_group()'
 else
     echo "Group 'org_owner' already exists"
 fi
