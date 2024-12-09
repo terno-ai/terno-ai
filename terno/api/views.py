@@ -12,7 +12,7 @@ def get_org_details(request):
         user = get_or_create_user(user_email)
         if user:
             user_organisations = OrganisationUser.objects.filter(
-                user=user).values_list('organisation', flat=True)
+                user=user)
 
             organisation_details = []
             for orgs in user_organisations:
