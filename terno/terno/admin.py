@@ -24,6 +24,15 @@ class GroupAdmin(DefaultGroupAdmin):
                 qs = qs.none()
         return qs
 
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        if not change:
+            org_id = request.org_id
+            organisation = get_object_or_404(models.Organisation, id=org_id)
+            if not models.OrganisationGroup.objects.filter(organisation=organisation, group=obj).exists():
+                models.OrganisationGroup.objects.create(organisation=organisation, group=obj)
+        super().save_model(request, obj, form, change)
+
 
 @admin.register(models.User)
 class UserAdmin(DefaultUserAdmin):
@@ -57,6 +66,14 @@ class UserAdmin(DefaultUserAdmin):
                 kwargs["queryset"] = models.Group.objects.none()
 
         return super().formfield_for_manytomany(db_field, request, **kwargs)
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        if not change:
+            org_id = request.org_id
+            organisation = get_object_or_404(models.Organisation, id=org_id)
+            if not models.OrganisationUser.objects.filter(organisation=organisation, user=obj).exists():
+                models.OrganisationUser.objects.create(organisation=organisation, user=obj)
 
 
 class OrganisationFilterMixin:
