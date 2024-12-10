@@ -57,8 +57,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'terno.middleware.org_domain_middleware.DefaultOrganisationMiddleware',
 ]
-if os.getenv('ENABLE_SUBDOMAIN'):
-    MIDDLEWARE += 'terno.middleware.subdomain_middleware.SubdomainOrganisationMiddleware'
 
 
 ROOT_URLCONF = 'mysite.urls'

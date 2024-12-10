@@ -1,5 +1,6 @@
 from django.http import HttpResponseForbidden
 from terno.models import Organisation
+import os
 
 
 class SubdomainOrganisationMiddleware:
@@ -7,6 +8,9 @@ class SubdomainOrganisationMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+        if not os.getenv('ENABLE_SUBDOMAIN'):
+            return self.get_response(request)
+
         if '/api' in request.path or '/sso-login' in request.path:
             return self.get_response(request)
 
