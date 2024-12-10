@@ -160,3 +160,5 @@ if TERNO_LOG_FILE:
         os.path.join(BASE_DIR, TERNO_LOG_FILE)
 
 logging.config.dictConfig(logging_config)
+
+SSO_KEY = os.getenv('SSO_KEY')

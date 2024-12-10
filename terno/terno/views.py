@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.http import JsonResponse, HttpResponseForbidden
+from django.http import JsonResponse, HttpResponseForbidden, HttpResponseRedirect
 import terno.models as models
 import terno.utils as utils
 import json
@@ -10,6 +10,9 @@ from django.contrib import messages
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.core.exceptions import ObjectDoesNotExist
 import logging
+import jwt
+from django.contrib.auth.models import User
+
 
 logger = logging.getLogger(__name__)
 
@@ -326,3 +329,25 @@ def get_user_details(request):
         'id': user.id,
         'username': user.username
     })
+
+
+def sso_login(request):
+    token = request.GET.get('token')
+    redirect_url = request.GET.get('redirect_url')
+    if not token:
+        return HttpResponseForbidden("Missing token")
+
+    try:
+        payload = jwt.decode(token, settings.SSO_KEY, algorithms=["HS256"])
+    except jwt.ExpiredSignatureError:
+        return HttpResponseForbidden("Token expired")
+    except jwt.InvalidTokenError:
+        return HttpResponseForbidden("Invalid token")
+
+    user = User.objects.get(
+        email=payload["email"],
+    )
+
+    login(request, user)
+
+    return HttpResponseRedirect(redirect_url)
