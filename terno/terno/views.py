@@ -50,17 +50,20 @@ def console(request):
         system_prompt = data.get('systemPrompt')
         assistant_message = data.get('assistantMessage')
         user_prompt = data.get('userPrompt')
+        org_id = request.org_id
+
+        organisation = models.Organisation.objects.get(id=org_id)
 
         try:
-            user_organisation = models.OrganisationUser.objects.filter(user=request.user).values_list('organisation', flat=True).first()
-
-            if not user_organisation:
-                return HttpResponseForbidden("You do not belong to any organization.")
+            if not models.OrganisationUser.objects.filter(
+                user=request.user,
+                organisation=organisation).exists():
+                return HttpResponseForbidden("You do not belong to this organization.")
 
             datasource = models.DataSource.objects.get(
                     id=datasource_id,
                     enabled=True,
-                    organisationdatasource__organisation=user_organisation
+                    organisationdatasource__organisation=organisation
                 )
         except ObjectDoesNotExist:
             return JsonResponse({
@@ -125,14 +128,17 @@ def usersettings(request):
 
 @login_required
 def get_datasources(request):
-    user_organisation = models.OrganisationUser.objects.filter(user=request.user).values_list('organisation', flat=True).first()
+    org_id = request.org_id
+    organisation = models.Organisation.objects.get(id=org_id)
 
-    if not user_organisation:
-        return HttpResponseForbidden("You do not belong to any organization.")
+    if not models.OrganisationUser.objects.filter(
+        user=request.user,
+        organisation=organisation).exists():
+        return HttpResponseForbidden("You do not belong to this organization.")
 
     datasources = models.DataSource.objects.filter(
             enabled=True,
-            organisationdatasource__organisation=user_organisation
+            organisationdatasource__organisation=organisation
         )
     data = [{'name': d.display_name, 'id': d.id} for d in datasources]
     return JsonResponse({
@@ -144,18 +150,20 @@ def get_datasources(request):
 def get_sql(request):
     data = json.loads(request.body)
     datasource_id = data.get('datasourceId')
-    question = data.get('prompt')
+    org_id = request.org_id
 
-    user_organisation = models.OrganisationUser.objects.filter(user=request.user).values_list('organisation', flat=True).first()
+    organisation = models.Organisation.objects.get(id=org_id)
 
-    if not user_organisation:
-        return HttpResponseForbidden("You do not belong to any organization.")
+    if not models.OrganisationUser.objects.filter(
+        user=request.user,
+        organisation=organisation).exists():
+        return HttpResponseForbidden("You do not belong to this organization.")
 
     try:
         datasource = models.DataSource.objects.get(
             id=datasource_id,
             enabled=True,
-            organisationdatasource__organisation=user_organisation)
+            organisationdatasource__organisation=organisation)
     except ObjectDoesNotExist:
         return JsonResponse({
             'status': 'error',
@@ -195,13 +203,20 @@ def execute_sql(request):
     datasource_id = data.get('datasourceId')
     page = data.get('page', 1)
     per_page = data.get('per_page', 25)
-    user_organisation = models.OrganisationUser.objects.filter(user=request.user).values_list('organisation', flat=True).first()
+    org_id = request.org_id
+
+    organisation = models.Organisation.objects.get(id=org_id)
+
+    if not models.OrganisationUser.objects.filter(
+        user=request.user,
+        organisation=organisation).exists():
+        return HttpResponseForbidden("You do not belong to this organization.")
 
     try:
         datasource = models.DataSource.objects.get(
             id=datasource_id,
             enabled=True,
-            organisationdatasource__organisation=user_organisation)
+            organisationdatasource__organisation=organisation)
     except ObjectDoesNotExist:
         return JsonResponse({
             'status': 'error',
@@ -250,13 +265,19 @@ def export_sql_result(request):
     data = json.loads(request.body)
     user_sql = data.get('sql')
     datasource_id = data.get('datasourceId')
-    user_organisation = models.OrganisationUser.objects.filter(user=request.user).values_list('organisation', flat=True).first()
+    org_id = request.org_id
+
+    organisation = models.Organisation.objects.get(id=org_id)
+    if not models.OrganisationUser.objects.filter(
+        user=request.user,
+        organisation=organisation).exists():
+        return HttpResponseForbidden("You do not belong to this organization.")
 
     try:
         datasource = models.DataSource.objects.get(
             id=datasource_id,
             enabled=True,
-            organisationdatasource__organisation=user_organisation)
+            organisationdatasource__organisation=organisation)
     except ObjectDoesNotExist:
         return JsonResponse({
             'status': 'error',
@@ -292,13 +313,19 @@ def export_sql_result(request):
 
 @login_required
 def get_tables(request, datasource_id):
-    user_organisation = models.OrganisationUser.objects.filter(user=request.user).values_list('organisation', flat=True).first()
+    org_id = request.org_id
+    organisation = models.Organisation.objects.get(id=org_id)
+
+    if not models.OrganisationUser.objects.filter(
+        user=request.user,
+        organisation=organisation).exists():
+        return HttpResponseForbidden("You do not belong to this organization.")
 
     try:
         datasource = models.DataSource.objects.get(
             id=datasource_id,
             enabled=True,
-            organisationdatasource__organisation=user_organisation)
+            organisationdatasource__organisation=organisation)
     except ObjectDoesNotExist:
         return JsonResponse({
             'status': 'error',
