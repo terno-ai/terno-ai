@@ -3,9 +3,11 @@ from api.utils import get_or_create_user
 import django.contrib.auth.models as authmodels
 from django.http import JsonResponse
 import json
+from django.views.decorators.csrf import csrf_exempt
 
 
 # Create your views here.
+@csrf_exempt
 def get_org_details(request):
     if request.method == "GET":
         user_email = request.GET.get('user')
@@ -37,7 +39,7 @@ def get_org_details(request):
         except json.JSONDecodeError:
             return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
         user_email = data.get('user')
-        org_name = data.get('org_name')
+        org_name = data.get('name')
         subdomain = data.get('subdomain')
         try:
             user = get_or_create_user(user_email)
