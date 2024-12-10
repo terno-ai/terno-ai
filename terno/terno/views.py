@@ -12,6 +12,7 @@ from django.core.exceptions import ObjectDoesNotExist
 import logging
 import jwt
 from django.contrib.auth.models import User
+from django.conf import settings
 
 
 logger = logging.getLogger(__name__)
@@ -118,7 +119,7 @@ def console(request):
     return render(request, 'frontend/index.html')
 
 
-def settings(request):
+def usersettings(request):
     return render(request, 'frontend/index.html')
 
 
