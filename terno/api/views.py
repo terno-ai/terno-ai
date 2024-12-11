@@ -1,12 +1,9 @@
 from terno.models import Organisation, OrganisationUser
 from api.utils import get_or_create_user
 from django.contrib.auth.models import User
-from django.http import HttpResponseForbidden, HttpResponseRedirect, JsonResponse
+from django.http import JsonResponse
 import json
 from django.views.decorators.csrf import csrf_exempt
-from django.conf import settings
-import jwt
-from django.contrib.auth import login
 
 
 @csrf_exempt
@@ -72,25 +69,3 @@ def get_user_details(request):
     return JsonResponse({
         'status': 'success',
         'user': user_details}, status=200)
-
-
-def sso_login(request):
-    token = request.GET.get('token')
-    redirect_url = request.GET.get('redirect_url')
-    if not token:
-        return HttpResponseForbidden("Missing token")
-
-    try:
-        payload = jwt.decode(token, settings.SSO_KEY, algorithms=["HS256"])
-    except jwt.ExpiredSignatureError:
-        return HttpResponseForbidden("Token expired")
-    except jwt.InvalidTokenError:
-        return HttpResponseForbidden("Invalid token")
-
-    user = User.objects.get(
-        email=payload["email"],
-    )
-
-    login(request, user)
-
-    return HttpResponseRedirect(redirect_url)
