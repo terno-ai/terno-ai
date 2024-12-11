@@ -1,3 +1,4 @@
+import urllib.parse
 from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect, JsonResponse, HttpResponseForbidden
 import terno.models as models
@@ -13,6 +14,7 @@ import logging
 from django.conf import settings
 import jwt
 from django.contrib.auth.models import User
+from urllib.parse import unquote
 
 
 logger = logging.getLogger(__name__)
@@ -356,7 +358,8 @@ def get_user_details(request):
 
 def sso_login(request):
     token = request.GET.get('token')
-    redirect_url = request.GET.get('redirect_url')
+    encoded_redirect_url = request.GET.get('redirect_url')
+
     if not token:
         return HttpResponseForbidden("Missing token")
 
@@ -367,10 +370,9 @@ def sso_login(request):
     except jwt.InvalidTokenError:
         return HttpResponseForbidden("Invalid token")
 
-    user = User.objects.get(
-        email=payload["email"],
-    )
+    user = User.objects.get(email=payload["email"])
 
     login(request, user)
 
+    redirect_url = unquote(encoded_redirect_url)
     return HttpResponseRedirect(redirect_url)
