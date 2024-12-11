@@ -58,6 +58,7 @@ MIDDLEWARE = [
     'terno.middleware.org_domain_middleware.DefaultOrganisationMiddleware',
 ]
 
+
 ROOT_URLCONF = 'mysite.urls'
 
 TEMPLATES = [
