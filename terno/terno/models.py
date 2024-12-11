@@ -236,6 +236,7 @@ class Organisation(models.Model):
         self.owner.groups.add(org_owner_group)
         self.owner.save()
 
+
 class OrganisationLLM(models.Model):
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
     llm = models.ForeignKey(LLMConfiguration, on_delete=models.CASCADE)
@@ -248,6 +249,12 @@ class OrganisationUser(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['organisation', 'user'], name='user_organisation')
+        ]
 
 
 class OrganisationGroup(models.Model):

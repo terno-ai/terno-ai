@@ -43,10 +43,8 @@ def get_org_details(request):
         subdomain = data.get('subdomain')
         try:
             user = get_or_create_user(user_email)
-            organisation = Organisation.objects.create(
+            Organisation.objects.create(
                 name=org_name, subdomain=subdomain, owner=user, is_active=True)
-            OrganisationUser.objects.create(
-                organisation=organisation, user=user)
 
             return JsonResponse(
                 {"status": "success", "message": "Organisation Created Successfully!"}, status=200
