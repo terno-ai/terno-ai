@@ -147,11 +147,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'assets/'
-# STATIC_ROOT = 'assets/'
 STATIC_ROOT = BASE_DIR / 'assets'
-# STATICFILES_DIRS = [
-#     BASE_DIR / 'static',
-# ]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -171,7 +167,7 @@ if TERNO_LOG_FILE:
 logging.config.dictConfig(logging_config)
 
 SSO_KEY = os.getenv('SSO_KEY')
-SESSION_COOKIE_DOMAIN = ".ternoapp.com"
+SESSION_COOKIE_DOMAIN = os.getenv('SESSION_COOKIE_DOMAIN')
 SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_SAMESITE = "None"
 CSRF_COOKIE_SECURE = True
