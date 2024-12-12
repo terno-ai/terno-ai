@@ -197,13 +197,13 @@ class DataSourceAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     organisation_related_field_names = ['organisationdatasource__organisation']
 
     def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
         org_id = request.org_id
         organisation = get_object_or_404(models.Organisation, id=org_id)
         if not models.OrganisationDataSource.objects.filter(organisation=organisation, datasource=obj).exists():
             models.OrganisationDataSource.objects.create(organisation=organisation, datasource=obj)
         if not models.OrganisationUser.objects.filter(organisation=organisation, user=request.user).exists():
             models.OrganisationUser.objects.create(organisation=organisation, user=request.user)
-        super().save_model(request, obj, form, change)
 
 
 @admin.register(models.Table)
