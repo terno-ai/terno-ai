@@ -147,6 +147,7 @@ def get_datasources(request):
 def get_sql(request):
     data = json.loads(request.body)
     datasource_id = data.get('datasourceId')
+    question = data.get('prompt')
     org_id = request.org_id
 
     organisation = models.Organisation.objects.get(id=org_id)
