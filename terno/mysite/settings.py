@@ -55,9 +55,17 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'terno.middleware.org_domain_middleware.DefaultOrganisationMiddleware',
 ]
 
+if os.getenv('ENABLE_SUBDOMAIN') == 'True':
+    MIDDLEWARE += [
+        'terno.middleware.subdomain_middleware.SubdomainOrganisationMiddleware',
+    ]
+
+if os.getenv('ENABLE_SUBDOMAIN') == 'False':
+    MIDDLEWARE += [
+        'terno.middleware.org_domain_middleware.DefaultOrganisationMiddleware',
+    ]
 
 ROOT_URLCONF = 'mysite.urls'
 
