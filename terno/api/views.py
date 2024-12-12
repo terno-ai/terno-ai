@@ -20,14 +20,16 @@ def get_org_details(request):
                 org = orgs.organisation
                 organisation_details.append({
                     # 'organisation_id': org.id,
-                    'organisation_name': org.name,
-                    'organisation_subdomain': org.subdomain,
+                    'name': org.name,
+                    'subdomain': org.subdomain,
+                    'url': '',
+                    'admin_url': '',
                     # 'organisation_owner': org.owner,
                     # 'organisation_logo': org.logo,
                     # 'organisation_is_active': org.is_active,
                 })
             return JsonResponse(
-                {"status": "success", "data": organisation_details}, status=200)
+                {"status": "success", "organizations": organisation_details}, status=200)
         else:
             return JsonResponse(
                 {"status": "error", "data": None}, status=200)
