@@ -1,5 +1,6 @@
+import urllib.parse
 from django.shortcuts import render, redirect
-from django.http import JsonResponse, HttpResponseForbidden, HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse, HttpResponseForbidden
 import terno.models as models
 import terno.utils as utils
 import json
@@ -10,17 +11,13 @@ from django.contrib import messages
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.core.exceptions import ObjectDoesNotExist
 import logging
+from django.conf import settings
 import jwt
 from django.contrib.auth.models import User
-from django.conf import settings
+from urllib.parse import unquote
 
 
 logger = logging.getLogger(__name__)
-
-
-def create_org(request):
-    print('create org, give perm and rest of the things and return data to provisioner')
-    return JsonResponse({'status': 'success', 'msg': 'created org'})
 
 
 @login_required
@@ -361,7 +358,8 @@ def get_user_details(request):
 
 def sso_login(request):
     token = request.GET.get('token')
-    redirect_url = request.GET.get('redirect_url')
+    encoded_redirect_url = request.GET.get('redirect_url')
+
     if not token:
         return HttpResponseForbidden("Missing token")
 
@@ -372,10 +370,9 @@ def sso_login(request):
     except jwt.InvalidTokenError:
         return HttpResponseForbidden("Invalid token")
 
-    user = User.objects.get(
-        email=payload["email"],
-    )
+    user = User.objects.get(email=payload["email"])
 
     login(request, user)
 
+    redirect_url = unquote(encoded_redirect_url)
     return HttpResponseRedirect(redirect_url)

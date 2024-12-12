@@ -1,12 +1,11 @@
 from terno.models import Organisation, OrganisationUser
 from api.utils import get_or_create_user
-import django.contrib.auth.models as authmodels
+from django.contrib.auth.models import User
 from django.http import JsonResponse
 import json
 from django.views.decorators.csrf import csrf_exempt
 
 
-# Create your views here.
 @csrf_exempt
 def get_org_details(request):
     if request.method == "GET":
@@ -57,7 +56,7 @@ def get_org_details(request):
 
 def get_user_details(request):
     user_email = request.GET.get('user')
-    user = authmodels.User.objects.get(email=user_email)
+    user = User.objects.get(email=user_email)
     user_details = {
         # 'id': user.id,
         # 'username': user.username,

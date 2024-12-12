@@ -1,7 +1,5 @@
-import sqlglot
 import terno.models as models
 from django.contrib.auth.models import Group, Permission
-from django.views.decorators.cache import cache_page
 from sqlshield.shield import Session
 from sqlshield.models import MDatabase
 import sqlalchemy
@@ -11,10 +9,11 @@ from django.template import Template, Context, Engine
 import logging
 from terno.pipeline.pipeline import Pipeline
 from terno.pipeline.step import Step
-from terno.prompt import query_generation, table_select
+from terno.prompt import query_generation
 import csv
 from django.http import HttpResponse
 from django.utils import timezone
+from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +31,13 @@ def create_db_engine(db_type, connection_string, **kwargs):
 
 
 def prepare_mdb(datasource, roles):
+    role_ids = sorted(roles.values_list('id', flat=True))
+    cache_key = f"datasource_{datasource.id}_roles_{'_'.join(map(str, role_ids))}"
+    cached_mdb = cache.get(cache_key)
+
+    if cached_mdb is not None:
+        return cached_mdb
+
     allowed_tables, allowed_columns = get_admin_config_object(datasource, roles)
 
     mDb = generate_mdb(datasource)
@@ -41,6 +47,8 @@ def prepare_mdb(datasource, roles):
     tables = mDb.get_table_dict()
     update_table_descriptions(tables)
     update_filters(tables, datasource, roles)
+
+    cache.set(cache_key, mDb, timeout=3600)
 
     return mDb
 
