@@ -12,11 +12,19 @@ admin.site.unregister(models.User)
 @admin.register(models.Group)
 class GroupAdmin(DefaultGroupAdmin):
 
+    def get_user_organisation(self, request):
+        organisation = models.Organisation.objects.get(id=request.org_id)
+        if not models.OrganisationUser.objects.filter(
+                user=request.user,
+                organisation=organisation).exists():
+            return None
+        return organisation
+
     def get_queryset(self, request):
         qs = super().get_queryset(request)
 
         if not request.user.is_superuser:
-            user_organisation = models.OrganisationUser.objects.filter(user=request.user).values_list('organisation', flat=True).first()
+            user_organisation = self.get_user_organisation(request)
 
             if user_organisation:
                 qs = qs.filter(organisationgroup__organisation=user_organisation)
@@ -37,11 +45,19 @@ class GroupAdmin(DefaultGroupAdmin):
 @admin.register(models.User)
 class UserAdmin(DefaultUserAdmin):
 
+    def get_user_organisation(self, request):
+        organisation = models.Organisation.objects.get(id=request.org_id)
+        if not models.OrganisationUser.objects.filter(
+                user=request.user,
+                organisation=organisation).exists():
+            return None
+        return organisation
+
     def get_queryset(self, request):
         qs = super().get_queryset(request)
 
         if not request.user.is_superuser:
-            user_organisation = models.OrganisationUser.objects.filter(user=request.user).values_list('organisation', flat=True).first()
+            user_organisation = self.get_user_organisation(request)
 
             if user_organisation:
                 qs = qs.filter(organisationuser__organisation=user_organisation)
@@ -55,8 +71,7 @@ class UserAdmin(DefaultUserAdmin):
         """
 
         if not request.user.is_superuser:
-            user_organisation = models.OrganisationUser.objects.filter(
-                user=request.user).values_list('organisation', flat=True).first()
+            user_organisation = self.get_user_organisation(request)
             if user_organisation:
                 # Filter the ManyToMany field (group) based on the organization
                 if db_field.name == 'groups':
@@ -83,8 +98,12 @@ class OrganisationFilterMixin:
     organisation_list_filter_field_names = []
 
     def get_user_organisation(self, request):
-        return models.OrganisationUser.objects.filter(
-            user=request.user).values_list('organisation', flat=True).first()
+        organisation = models.Organisation.objects.get(id=request.org_id)
+        if not models.OrganisationUser.objects.filter(
+                user=request.user,
+                organisation=organisation).exists():
+            return None
+        return organisation
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -132,7 +151,6 @@ class OrganisationFilterMixin:
             return filters
         user_organisation = self.get_user_organisation(request)
         if user_organisation and self.organisation_list_filter_field_names:
-            print(user_organisation)
             filters += [
                 (field_name, admin.RelatedOnlyFieldListFilter)
                 for field_name in self.organisation_list_filter_field_names
@@ -237,9 +255,7 @@ class TableColumnAdmin(OrganisationFilterMixin, admin.ModelAdmin):
         """
         Dynamically restrict filters for the list view.
         """
-        user_organisation = models.OrganisationUser.objects.filter(
-            user=request.user
-        ).values_list('organisation', flat=True).first()
+        user_organisation = OrganisationFilterMixin.get_user_organisation(self, request)
 
         if user_organisation:
             self.list_filter = [('table__data_source', admin.RelatedOnlyFieldListFilter)]
