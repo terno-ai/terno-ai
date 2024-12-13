@@ -3,7 +3,8 @@ from openai import OpenAI
 
 
 class OpenAILLM(BaseLLM):
-
+    o1_beta_models = ['o1-preview', 'o1-mini']
+    """O1 beta models which do not support system prompt and some parameters."""
     model_name: str = "gpt-3.5-turbo"
     """Model name to use.
 
@@ -17,7 +18,7 @@ class OpenAILLM(BaseLLM):
     """What sampling temperature to use, between 0 and 2."""
     max_tokens: int = 1024
     """The maximum number of tokens to generate in the completion."""
-    top_p: float = 0
+    top_p: float = 1
     """Controls the cumulative probability threshold for next-word selection.
     The model considers the smallest set of words whose combined probability
     is at least top_p. A lower value reduces randomness, focusing on more
@@ -51,14 +52,23 @@ class OpenAILLM(BaseLLM):
 
     def get_response(self, messages) -> str:
         model = self.get_model_instance()
-        response = model.chat.completions.create(
-            model=self.model_name,
-            messages=messages,
-            temperature=self.temperature,
-            max_tokens=self.max_tokens,
-            top_p=self.top_p,
-            **self.custom_parameters
-        )
+        model_name = self.model_name
+        if model_name in self.o1_beta_models:
+            messages[0]['role'] = 'assistant'
+            response = model.chat.completions.create(
+                model=self.model_name,
+                messages=messages,
+                **self.custom_parameters
+            )
+        else:
+            response = model.chat.completions.create(
+                model=self.model_name,
+                messages=messages,
+                temperature=self.temperature,
+                max_tokens=self.max_tokens,
+                top_p=self.top_p,
+                **self.custom_parameters
+            )
         response = response.choices[0].message.content
         response = response.strip().removeprefix("```sql").removesuffix("```")
         return response
