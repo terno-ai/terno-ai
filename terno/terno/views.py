@@ -55,7 +55,7 @@ def console(request):
             if not models.OrganisationUser.objects.filter(
                 user=request.user,
                 organisation=organisation).exists():
-                return HttpResponseForbidden("You do not belong to this organization.")
+                return HttpResponseForbidden("You do not belong to this organisation.")
 
             datasource = models.DataSource.objects.get(
                     id=datasource_id,
@@ -131,7 +131,7 @@ def get_datasources(request):
     if not models.OrganisationUser.objects.filter(
         user=request.user,
         organisation=organisation).exists():
-        return HttpResponseForbidden("You do not belong to this organization.")
+        return HttpResponseForbidden("You do not belong to this organisation.")
 
     datasources = models.DataSource.objects.filter(
             enabled=True,
@@ -155,7 +155,7 @@ def get_sql(request):
     if not models.OrganisationUser.objects.filter(
         user=request.user,
         organisation=organisation).exists():
-        return HttpResponseForbidden("You do not belong to this organization.")
+        return HttpResponseForbidden("You do not belong to this organisation.")
 
     try:
         datasource = models.DataSource.objects.get(
@@ -208,7 +208,7 @@ def execute_sql(request):
     if not models.OrganisationUser.objects.filter(
         user=request.user,
         organisation=organisation).exists():
-        return HttpResponseForbidden("You do not belong to this organization.")
+        return HttpResponseForbidden("You do not belong to this organisation.")
 
     try:
         datasource = models.DataSource.objects.get(
@@ -269,7 +269,7 @@ def export_sql_result(request):
     if not models.OrganisationUser.objects.filter(
         user=request.user,
         organisation=organisation).exists():
-        return HttpResponseForbidden("You do not belong to this organization.")
+        return HttpResponseForbidden("You do not belong to this organisation.")
 
     try:
         datasource = models.DataSource.objects.get(
@@ -317,7 +317,7 @@ def get_tables(request, datasource_id):
     if not models.OrganisationUser.objects.filter(
         user=request.user,
         organisation=organisation).exists():
-        return HttpResponseForbidden("You do not belong to this organization.")
+        return HttpResponseForbidden("You do not belong to this organisation.")
 
     try:
         datasource = models.DataSource.objects.get(

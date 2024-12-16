@@ -29,7 +29,7 @@ def get_org_details(request):
                     # 'organisation_is_active': org.is_active,
                 })
             return JsonResponse(
-                {"status": "success", "organizations": organisation_details}, status=200)
+                {"status": "success", "organisations": organisation_details}, status=200)
         else:
             return JsonResponse(
                 {"status": "error", "data": None}, status=200)
