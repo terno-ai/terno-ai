@@ -176,12 +176,16 @@ class LLMConfigurationAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     )
 
     def save_model(self, request, obj, form, change):
-        if obj.enabled:
-            # Disable all other configurations
-            models.LLMConfiguration.objects.filter(enabled=True).update(enabled=False)
-
         org_id = request.org_id
         organisation = get_object_or_404(models.Organisation, id=org_id)
+
+        if obj.enabled:
+            # Disable all other configurations for the requested organisation
+            models.LLMConfiguration.objects.filter(
+                organisationllm__organisation=organisation,
+                enabled=True
+            ).update(enabled=False)
+
         obj.save()
         if not models.OrganisationLLM.objects.filter(organisation=organisation, llm=obj).exists():
             models.OrganisationLLM.objects.create(organisation=organisation, llm=obj)

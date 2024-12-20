@@ -99,7 +99,7 @@ def console(request):
             data_type='user_prompt', data=user_prompt)
 
         llm_response = utils.llm_response(
-            request.user, messages)
+            request.user, messages, organisation)
 
         if llm_response['status'] == 'error':
             return JsonResponse({
@@ -176,7 +176,7 @@ def get_sql(request):
     mDB = utils.prepare_mdb(datasource, roles)
     schema_generated = mDB.generate_schema()
     llm_response = utils.llm_response(
-        request.user, question, schema_generated, datasource)
+        request.user, question, schema_generated, organisation, datasource)
 
     if llm_response['status'] == 'error':
         return JsonResponse({
