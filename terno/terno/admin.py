@@ -266,9 +266,17 @@ class TableColumnAdmin(OrganisationFilterMixin, admin.ModelAdmin):
 
 
 @admin.register(models.ForeignKey)
-class ForeignKeyAdmin(admin.ModelAdmin):
+class ForeignKeyAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     list_display = ['constrained_table', 'constrained_columns',
                     'referred_table', 'referred_columns']
+    organisation_related_field_names = ['referred_schema__organisationdatasource__organisation']
+    organisation_foreignkey_field_names = {
+        'constrained_table': 'data_source__organisationdatasource__organisation',
+        'constrained_columns': 'table__data_source__organisationdatasource__organisation',
+        'referred_table': 'data_source__organisationdatasource__organisation',
+        'referred_columns': 'table__data_source__organisationdatasource__organisation',
+        'referred_schema': 'organisationdatasource__organisation'
+    }
     # list_editable = ['public_name']
     list_filter = ['referred_table__data_source']
     # search_fields = ['name', 'public_name', 'table__name', 'table__data_source']
