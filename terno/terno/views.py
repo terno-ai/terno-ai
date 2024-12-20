@@ -1,4 +1,3 @@
-import urllib.parse
 from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect, JsonResponse, HttpResponseForbidden
 import terno.models as models

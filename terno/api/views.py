@@ -19,14 +19,14 @@ def get_org_details(request):
             for orgs in user_organisations:
                 org = orgs.organisation
                 organisation_details.append({
-                    # 'organisation_id': org.id,
+                    'id': org.id,
                     'name': org.name,
                     'subdomain': org.subdomain,
                     'url': '',
                     'admin_url': '',
-                    # 'organisation_owner': org.owner,
-                    # 'organisation_logo': org.logo,
-                    # 'organisation_is_active': org.is_active,
+                    'owner': org.owner,
+                    'logo': org.logo,
+                    'is_active': org.is_active,
                 })
             return JsonResponse(
                 {"status": "success", "organisations": organisation_details}, status=200)
@@ -56,15 +56,21 @@ def get_org_details(request):
             )
 
 
-def get_user_details(request):
-    user_email = request.GET.get('user')
+def create_user(request):
+    # Not used
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+
+    user_email = data.get('email')
     user = User.objects.get(email=user_email)
     user_details = {
-        # 'id': user.id,
-        # 'username': user.username,
-        # 'email': user.email,
-        # 'first_name': user.first_name,
-        # 'last_name': user.last_name,
+        'id': user.id,
+        'username': user.username,
+        'email': user.email,
+        'first_name': user.first_name,
+        'last_name': user.last_name,
         'full_name': user.get_full_name(),
     }
 
