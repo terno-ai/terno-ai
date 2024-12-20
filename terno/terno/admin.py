@@ -73,7 +73,7 @@ class UserAdmin(DefaultUserAdmin):
         if not request.user.is_superuser:
             user_organisation = self.get_user_organisation(request)
             if user_organisation:
-                # Filter the ManyToMany field (group) based on the organization
+                # Filter the ManyToMany field (group) based on the organisation
                 if db_field.name == 'groups':
                     kwargs["queryset"] = models.Group.objects.filter(
                         organisationgroup__organisation=user_organisation)
@@ -110,7 +110,7 @@ class OrganisationFilterMixin:
         if not request.user.is_superuser:
             user_organisation = self.get_user_organisation(request)
             if user_organisation and self.organisation_related_field_names:
-                # Use dynamic filtering based on the organization field specified in the admin class
+                # Use dynamic filtering based on the organisation field specified in the admin class
                 for field_name in self.organisation_related_field_names:
                     filter_kwargs = {field_name: user_organisation}
                     qs = qs.filter(**filter_kwargs)
