@@ -1,15 +1,12 @@
 import React, { useState } from "react";
 
 const Settings = () => {
-  const [apiKey, setApiKey] = useState(""); // State to hold the API key
-  const [newApiKey, setNewApiKey] = useState(""); // State to hold the new API key input value
+  const [apiKey, setApiKey] = useState("");
+  const [newApiKey, setNewApiKey] = useState("");
 
-  // Function to handle form submission
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Update the API key with the new value
     setApiKey(newApiKey);
-    // Clear the input field
     setNewApiKey("");
   };
 

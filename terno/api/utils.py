@@ -8,8 +8,8 @@ def get_user_name(email):
     if re.match('^[0-9]+$', username):
         username = "user" + username
 
-    if len(username) > 20:
-        username = username[:20]
+    if len(username) > 40:
+        username = username[:40]
     username = username + str(random.randrange(1000, 9999))
     return username
 
