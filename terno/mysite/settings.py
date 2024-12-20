@@ -167,7 +167,8 @@ if TERNO_LOG_FILE:
 logging.config.dictConfig(logging_config)
 
 SSO_KEY = os.getenv('SSO_KEY')
-SESSION_COOKIE_DOMAIN = os.getenv('SESSION_COOKIE_DOMAIN')
+if not DEBUG:
+    SESSION_COOKIE_DOMAIN = os.getenv('SESSION_COOKIE_DOMAIN')
 SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_SAMESITE = "None"
 CSRF_COOKIE_SECURE = True
