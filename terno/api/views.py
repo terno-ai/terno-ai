@@ -24,7 +24,7 @@ def get_org_details(request):
                     'subdomain': org.subdomain,
                     'url': '',
                     'admin_url': '',
-                    'owner': org.owner,
+                    'owner': '',
                     'logo': org.logo,
                     'is_active': org.is_active,
                 })
