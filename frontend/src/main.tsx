@@ -6,6 +6,9 @@ import Home from "./pages/HomePage";
 import Settings from "./pages/Settings";
 import { lazy } from "react";
 import Console from "./pages/Console";
+const ProviderCallback = lazy(() => import("./pages/ProviderCallback"));
+const RequestPasswordReset = lazy(() => import("./pages/RequestPasswordReset"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Login = lazy(() => import("./pages/Login"));
 
 const router = createBrowserRouter([
@@ -18,12 +21,24 @@ const router = createBrowserRouter([
     element: <Settings />,
   },
   {
+    path: "console",
+    element: <Console />,
+  },
+  {
     path: "accounts/login",
     element: <Login />,
   },
   {
-    path: "console",
-    element: <Console />,
+    path: "accounts/provider/callback",
+    element: <ProviderCallback />,
+  },
+  {
+    path: "accounts/password/reset",
+    element: <RequestPasswordReset />,
+  },
+  {
+    path: "accounts/password/reset/key/:key",
+    element: <ResetPassword />,
   },
 ]);
 

@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect, JsonResponse, HttpResponseForbidden
+from django.urls import reverse
 import terno.models as models
 import terno.utils as utils
 import json
@@ -26,15 +27,13 @@ def index(request):
 
 @ensure_csrf_cookie
 def login_page(request):
-    if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            return redirect('terno:index')
-        else:
-            messages.error(request, 'Invalid username or password')
+    if request.user.is_authenticated:
+        return HttpResponseRedirect(reverse('terno:index'))
+    return render(request, 'frontend/index.html')
+
+
+@ensure_csrf_cookie
+def reset_password(request, key):
     return render(request, 'frontend/index.html')
 
 
@@ -376,3 +375,18 @@ def sso_login(request):
 
     redirect_url = unquote(encoded_redirect_url)
     return HttpResponseRedirect(redirect_url)
+
+
+def check_user_exists(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            email = data.get('email')
+            if User.objects.filter(email=email).exists():
+                return JsonResponse({'status': 'success', 'password_set': True})
+        except json.JSONDecodeError:
+            return JsonResponse({
+                'status': 'error',
+                'error': 'Invalid JSON data'
+            })
+    return JsonResponse({'status': 'error', 'error': 'User not found'})

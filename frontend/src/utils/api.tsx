@@ -18,6 +18,11 @@ export const endpoints = {
   getTables: (id: string) => `${API_BASE_URL}/get-tables/${id}`,
   getUserDetails: () => `${API_BASE_URL}/get-user-details`,
   getConsoleSQL: () => `${API_BASE_URL}/console/`,
+  checkUserExists: () => `${API_BASE_URL}/check-user`,
+  login: () => `${API_BASE_URL}/_allauth/browser/v1/auth/login`,
+  requestPasswordReset: () => `${API_BASE_URL}/_allauth/browser/v1/auth/password/request`,
+  resetPassword: () => `${API_BASE_URL}/_allauth/browser/v1/auth/password/reset`,
+  logout: () => `${API_BASE_URL}/_allauth/browser/v1/auth/session`,
 };
 
 export const sendMessage = async (prompt: string, datasourceId: string) => {
@@ -131,7 +136,6 @@ export const getUserDetails =  async () => {
   return result;
 };
 
-
 export const sendConsoleMessage = async (datasourceId: string, systemPrompt: string, assistantMessage: string, userPrompt: string) => {
   const csrfToken = getCsrfToken();
   const response = await fetch(endpoints.getConsoleSQL(), {
@@ -150,3 +154,72 @@ export const sendConsoleMessage = async (datasourceId: string, systemPrompt: str
   const result = await response.json();
   return result;
 };
+
+export const checkUserExists = async (data: any) => {
+  const csrfToken = getCsrfToken();
+  const response = await fetch(endpoints.checkUserExists(), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": csrfToken || "",
+    },
+    body: JSON.stringify(data),
+  });
+  const result = await response.json();
+  return result;
+}
+
+export const login = async (data: any) => {
+  const csrfToken = getCsrfToken();
+  const response = await fetch(endpoints.login(), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": csrfToken || "",
+    },
+    body: JSON.stringify(data),
+  });
+  const result = await response.json();
+  return result;
+}
+
+export const requestPasswordReset = async (data: any) => {
+  const csrfToken = getCsrfToken();
+  const response = await fetch(endpoints.requestPasswordReset(), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": csrfToken || "",
+    },
+    body: JSON.stringify(data),
+  });
+  const result = await response.json();
+  return result;
+}
+
+export const resetPassword = async (data: any) => {
+  const csrfToken = getCsrfToken();
+  const response = await fetch(endpoints.resetPassword(), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": csrfToken || "",
+    },
+    body: JSON.stringify(data),
+  });
+  const result = await response.json();
+  return result;
+}
+
+export const logout = async () => {
+  const csrfToken = getCsrfToken();
+  const response = await fetch(endpoints.logout(), {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": csrfToken || "",
+    },
+  });
+  const result = await response.json();
+  return result;
+}

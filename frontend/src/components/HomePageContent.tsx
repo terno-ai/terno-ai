@@ -5,10 +5,9 @@ import RenderTable from "./RenderTable";
 const SqlEditor = lazy(() => import("./SqlEditor"))
 import SqlError from "./SqlError";
 import { FaArrowRight, FaCopy, FaDownload, FaPlay } from "react-icons/fa6";
-import terno from "../assets/terno.svg";
 import { DataSourceContext } from "./ui/datasource-context";
 import PaginatedList from "./TablePagination";
-import useUserDetails from "../hooks/useUserDetails";
+import Navbar from "./Navbar";
 
 interface TableData {
   columns: string[];
@@ -19,7 +18,6 @@ interface TableData {
 
 const HomePageContent = () => {
   const { ds } = useContext(DataSourceContext);
-  const [user] = useUserDetails();
   const [inputText, setInputText] = useState("");
   const [generatedQueryText, setGeneratedQueryText] = useState("");
   const [tableData, setTableData] = useState<TableData>({
@@ -104,16 +102,9 @@ const HomePageContent = () => {
     }
   };
 
-return (
+  return (
     <div className="min-w-[300px] h-screen inline-flex flex-col pb-10 px-[15px] overflow-y-auto">
-      <div className="flex items-center justify-between text-xl p-5">
-        <div className="inline-flex items-center">
-          <img src={terno} className="logo h-[40px]" alt="Terno logo" />
-          <p className="font-semibold">Terno AI</p>
-        </div>
-        <div className="font-semibold">{ds.name}</div>
-        <div>{user.username}</div>
-      </div>
+      <Navbar />
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between gap-5 p-2.5 px-5 rounded-md bg-slate-100 hover:drop-shadow-sm focus-within:ring-1 focus-within:ring-sky-500 focus-within:hover:drop-shadow-none">
           <textarea
