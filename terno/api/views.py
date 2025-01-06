@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.http import JsonResponse
 import json
 from django.views.decorators.csrf import csrf_exempt
+from allauth.account.models import EmailAddress
 
 
 @csrf_exempt
@@ -71,6 +72,10 @@ def create_user(request):
         password=user_password,
         first_name=data.get('first_name'),
         last_name=data.get('last_name'))
+    email_address = EmailAddress.objects.get(user=user)
+    email_address.verified = True
+    email_address.primary = True
+    email_address.save()
     user_details = {
         'id': user.id,
         'username': user.username,
