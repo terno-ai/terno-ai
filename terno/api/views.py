@@ -1,17 +1,18 @@
 from terno.models import Organisation, OrganisationUser
-from api.utils import get_or_create_user, get_user_name
+from api.utils import get_user_name
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 import json
 from django.views.decorators.csrf import csrf_exempt
 from allauth.account.models import EmailAddress
+from allauth.account.utils import complete_signup
 
 
 @csrf_exempt
 def get_org_details(request):
     if request.method == "GET":
         user_email = request.GET.get('user')
-        user = get_or_create_user(user_email)
+        user = User.objects.filter(email=user_email).first()
         if user:
             user_organisations = OrganisationUser.objects.filter(
                 user=user)
@@ -44,7 +45,7 @@ def get_org_details(request):
         org_name = data.get('name')
         subdomain = data.get('subdomain')
         try:
-            user = get_or_create_user(user_email)
+            user = User.objects.filter(email=user_email).first()
             Organisation.objects.create(
                 name=org_name, subdomain=subdomain, owner=user, is_active=True)
 
@@ -66,19 +67,26 @@ def create_user(request):
 
     user_email = data.get('email')
     user_password = data.get('password')
-    user = User.objects.create_user(
+    new_user = User.objects.create_user(
         username=get_user_name(user_email),
         email=user_email,
         password=user_password,
         first_name=data.get('first_name'),
         last_name=data.get('last_name'))
+    complete_signup(request, new_user, "none", '')
+
+    email_address = EmailAddress(user=new_user, email=new_user.email)
+    email_address.primary = 1
+    email_address.verified = 1
+    email_address.save()
+
     user_details = {
-        'id': user.id,
-        'username': user.username,
-        'email': user.email,
-        'first_name': user.first_name,
-        'last_name': user.last_name,
-        'full_name': user.get_full_name(),
+        'id': new_user.id,
+        'username': new_user.username,
+        'email': new_user.email,
+        'first_name': new_user.first_name,
+        'last_name': new_user.last_name,
+        'full_name': new_user.get_full_name(),
     }
 
     return JsonResponse({

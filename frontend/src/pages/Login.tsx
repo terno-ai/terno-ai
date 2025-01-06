@@ -1,5 +1,3 @@
-import CSRFToken from "../utils/csrftoken";
-import { FcGoogle } from "react-icons/fc";
 import terno from "../assets/terno-ai.svg"
 import { checkUserExists, login } from "../utils/api";
 import { useState } from "react";
@@ -87,27 +85,6 @@ const Login = () => {
                       <p className="text-balance text-muted-foreground">
                         Login to your Terno App
                       </p>
-                    </div>
-                    <div className="flex flex-row">
-                      <form
-                        method="post"
-                        action="/_allauth/browser/v1/auth/provider/redirect?process=login&next=/"
-                        className="w-full"
-                      >
-                        <CSRFToken />
-                        <input name="provider" value={"google"} type="hidden" />
-                        <input name="process" value={"login"} type="hidden" />
-                        <input name="callback_url" value={"/accounts/provider/callback"} type="hidden" />
-                        <button className="w-full flex flex-row justify-center items-center gap-2 px-4 py-2 border rounded-md shadow hover:bg-zinc-100 transition-colors">
-                          <FcGoogle />
-                          <span className="">Login with Google</span>
-                        </button>
-                      </form>
-                    </div>
-                    <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
-                      <span className="bg-white relative z-10 bg-background px-2 text-muted-foreground">
-                        Or continue with
-                      </span>
                     </div>
                     <div
                       className="flex flex-col gap-6"
