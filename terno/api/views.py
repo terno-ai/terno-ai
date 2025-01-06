@@ -56,6 +56,7 @@ def get_org_details(request):
             )
 
 
+@csrf_exempt
 def create_user(request):
     try:
         data = json.loads(request.body)
@@ -84,6 +85,7 @@ def create_user(request):
         'user': user_details}, status=200)
 
 
+@csrf_exempt
 def check_user(request):
     if request.method == 'POST':
         try:
