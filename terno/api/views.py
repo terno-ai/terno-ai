@@ -1,5 +1,5 @@
 from terno.models import Organisation, OrganisationUser
-from api.utils import get_or_create_user
+from api.utils import get_or_create_user, get_user_name
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 import json
@@ -57,14 +57,19 @@ def get_org_details(request):
 
 
 def create_user(request):
-    # Not used
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
         return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
 
     user_email = data.get('email')
-    user = User.objects.get(email=user_email)
+    user_password = data.get('password')
+    user = User.objects.create_user(
+        username=get_user_name(user_email),
+        email=user_email,
+        password=user_password,
+        first_name=data.get('first_name'),
+        last_name=data.get('last_name'))
     user_details = {
         'id': user.id,
         'username': user.username,

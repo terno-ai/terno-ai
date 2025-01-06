@@ -19,4 +19,5 @@ google-cloud-bigquery-storage==2.26.0
 coverage==7.6.1
 Sphinx==8.0.2
 pyjwt==2.10.1
+django-allauth==65.3.0
 django-allauth[socialaccount]
