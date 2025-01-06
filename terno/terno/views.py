@@ -382,8 +382,14 @@ def check_user_exists(request):
         try:
             data = json.loads(request.body)
             email = data.get('email')
-            if User.objects.filter(email=email).exists():
-                return JsonResponse({'status': 'success', 'password_set': True})
+            user = User.objects.filter(email=email)
+            host = request.get_host().split(':')[0]
+            subdomain = host.split('.')[0]
+            org = models.Organisation.objects.filter(subdomain=subdomain)
+            if user:
+                org_user = models.OrganisationUser.objects.filter(user=user.first(), organisation=org.first())
+                if org_user:
+                    return JsonResponse({'status': 'success', 'message': 'User exists'})
         except json.JSONDecodeError:
             return JsonResponse({
                 'status': 'error',
