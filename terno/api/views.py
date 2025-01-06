@@ -82,3 +82,18 @@ def create_user(request):
     return JsonResponse({
         'status': 'success',
         'user': user_details}, status=200)
+
+
+def check_user(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            email = data.get('email')
+            if User.objects.filter(email=email).exists():
+                return JsonResponse({'status': 'success', 'password_set': True})
+        except json.JSONDecodeError:
+            return JsonResponse({
+                'status': 'error',
+                'error': 'Invalid JSON data'
+            })
+    return JsonResponse({'status': 'error', 'error': 'User not found'})
