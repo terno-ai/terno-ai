@@ -4,7 +4,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "./index.css";
 import Home from "./pages/HomePage";
 import Settings from "./pages/Settings";
-import { lazy } from "react";
+import { lazy, Suspense } from "react";
 import Console from "./pages/Console";
 const ProviderCallback = lazy(() => import("./pages/ProviderCallback"));
 const RequestPasswordReset = lazy(() => import("./pages/RequestPasswordReset"));
@@ -26,19 +26,35 @@ const router = createBrowserRouter([
   },
   {
     path: "accounts/login",
-    element: <Login />,
+    element: (
+      <Suspense fallback={<div>Loading</div>}>
+        <Login />
+      </Suspense>
+    ),
   },
   {
     path: "accounts/provider/callback",
-    element: <ProviderCallback />,
+    element: (
+      <Suspense fallback={<div>Loading</div>}>
+        <ProviderCallback />
+      </Suspense>
+    ),
   },
   {
     path: "accounts/password/reset",
-    element: <RequestPasswordReset />,
+    element: (
+      <Suspense fallback={<div>Loading</div>}>
+        <RequestPasswordReset />
+      </Suspense>
+    ),
   },
   {
     path: "accounts/password/reset/key/:key",
-    element: <ResetPassword />,
+    element: (
+      <Suspense fallback={<div>Loading</div>}>
+        <ResetPassword />
+      </Suspense>
+    ),
   },
 ]);
 

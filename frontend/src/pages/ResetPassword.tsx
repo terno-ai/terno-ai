@@ -102,7 +102,7 @@ const ResetPassword = () => {
                     <div className="text-center text-sm">
                       Remember your password?{" "}
                       <Link
-                        to="/accounts/login/"
+                        to="/accounts/login"
                         className="underline underline-offset-4"
                       >
                         Back to login.
