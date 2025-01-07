@@ -1,13 +1,11 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 from django.http import HttpResponseRedirect, JsonResponse, HttpResponseForbidden
 from django.urls import reverse
 import terno.models as models
 import terno.utils as utils
 import json
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import authenticate, login
 from django.contrib.admin.views.decorators import staff_member_required
-from django.contrib import messages
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.core.exceptions import ObjectDoesNotExist
 import logging
@@ -15,6 +13,7 @@ from django.conf import settings
 import jwt
 from django.contrib.auth.models import User
 from urllib.parse import unquote
+from allauth.account.utils import perform_login
 
 
 logger = logging.getLogger(__name__)
@@ -371,7 +370,7 @@ def sso_login(request):
 
     user = User.objects.get(email=payload["email"])
 
-    login(request, user)
+    perform_login(request, user, email_verification="none")
 
     redirect_url = unquote(encoded_redirect_url)
     return HttpResponseRedirect(redirect_url)
