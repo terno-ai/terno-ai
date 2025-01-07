@@ -6,6 +6,7 @@ import json
 from django.views.decorators.csrf import csrf_exempt
 from allauth.account.models import EmailAddress
 from allauth.account.utils import complete_signup
+from django.conf import settings
 
 
 @csrf_exempt
@@ -16,16 +17,21 @@ def get_org_details(request):
         if user:
             user_organisations = OrganisationUser.objects.filter(
                 user=user)
+            main_domain = settings.MAIN_DOMAIN
 
             organisation_details = []
             for orgs in user_organisations:
                 org = orgs.organisation
+                subdomain = org.subdomain
+                url = f"https://{subdomain}.{main_domain}"
+                admin_url = f"https://{subdomain}.{main_domain}/admin"
+
                 organisation_details.append({
                     'id': org.id,
                     'name': org.name,
                     'subdomain': org.subdomain,
-                    'url': '',
-                    'admin_url': '',
+                    'url': url,
+                    'admin_url': admin_url,
                     'owner': '',
                     'logo': org.logo,
                     'is_active': org.is_active,
