@@ -8,9 +8,9 @@ RUN apt-get update \
     && apt-get install -y gcc git default-libmysqlclient-dev pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /code
-COPY requirements.txt /code/
+WORKDIR /code/terno-ai
+COPY requirements.txt /code//terno-ai
 RUN pip install --upgrade pip \
     && pip3 install -r requirements.txt --no-cache-dir
-COPY . /code/
-WORKDIR /code/terno
+COPY . /code/terno-ai
+WORKDIR /code/terno-ai/terno
