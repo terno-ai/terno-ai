@@ -20,20 +20,20 @@ logger = logging.getLogger(__name__)
 
 
 @login_required
-def index(request):
+def index(request, slug):
     return render(request, 'frontend/index.html')
 
 
-@ensure_csrf_cookie
-def login_page(request):
-    if request.user.is_authenticated:
-        return HttpResponseRedirect(reverse('terno:index'))
-    return render(request, 'frontend/index.html')
+# @ensure_csrf_cookie
+# def login_page(request):
+#     if request.user.is_authenticated:
+#         return HttpResponseRedirect(reverse('terno:index'))
+#     return render(request, 'frontend/index.html')
 
 
-@ensure_csrf_cookie
-def reset_password(request, key):
-    return render(request, 'frontend/index.html')
+# @ensure_csrf_cookie
+# def reset_password(request, key):
+#     return render(request, 'frontend/index.html')
 
 
 @staff_member_required

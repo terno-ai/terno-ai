@@ -10,10 +10,13 @@ class SubdomainOrganisationMiddleware:
         if '/api' in request.path or '/sso-login' in request.path or not request.user.is_authenticated:
             return self.get_response(request)
 
-        host = request.get_host().split(':')[0]
-        subdomain = host.split('.')[0]
+        path_parts = request.path.strip('/').split('/')
+        if not path_parts:
+            return self.get_response(request)
+
+        slug = path_parts[0]
         try:
-            organisation = Organisation.objects.get(subdomain=subdomain)
+            organisation = Organisation.objects.get(subdomain=slug)
             if not OrganisationUser.objects.filter(
                     user=request.user, organisation=organisation).exists():
                 return HttpResponseForbidden("You are not allowed to access this Organisation.")

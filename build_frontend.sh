@@ -20,6 +20,6 @@ rm -rf $STATIC_DIR/*
 
 # Step 4: Copy assets to Django static directory
 echo "Step 4: Copying assets to Django static directory..."
-cp -r $FRONTEND_DIR/dist/assets/* $STATIC_DIR
+cp -r $FRONTEND_DIR/dist/terno-ai-assets/* $STATIC_DIR
 
 echo "Build process completed successfully!"
