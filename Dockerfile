@@ -23,6 +23,6 @@ RUN pip install --upgrade pip \
 COPY . /code/terno-ai
 
 COPY --from=frontend-builder /code/terno-ai/frontend-build/dist/index.html /code/terno-ai/terno/frontend/templates/frontend/
-COPY --from=frontend-builder /code/terno-ai/frontend-build/dist/assets/ /code/terno-ai/terno/frontend/static/
+COPY --from=frontend-builder /code/terno-ai/frontend-build/dist/terno-ai-assets/ /code/terno-ai/terno/frontend/static/
 
 WORKDIR /code/terno-ai/terno
