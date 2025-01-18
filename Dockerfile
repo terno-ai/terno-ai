@@ -1,11 +1,11 @@
-FROM node:20-slim as frontend-builder
-WORKDIR /code/terno-ai/frontend-build
+FROM node:20-slim as app-frontend-builder
+WORKDIR /frontend-build
 COPY frontend/package*.json ./
 RUN npm install
 COPY frontend/ ./
 RUN npm run build
 
-FROM python:3.10-slim
+FROM python:3.10-slim AS app
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
@@ -22,7 +22,10 @@ RUN pip install --upgrade pip \
 
 COPY . /code/terno-ai
 
-COPY --from=frontend-builder /code/terno-ai/frontend-build/dist/index.html /code/terno-ai/terno/frontend/templates/frontend/
-COPY --from=frontend-builder /code/terno-ai/frontend-build/dist/terno-ai-assets/ /code/terno-ai/terno/frontend/static/
+RUN rm -rf /code/terno-ai/terno/frontend/templates/frontend/* \
+    && rm -rf /code/terno-ai/terno/frontend/static/*
+
+COPY --from=app-frontend-builder /frontend-build/dist/index.html /code/terno-ai/terno/frontend/templates/frontend/
+COPY --from=app-frontend-builder /frontend-build/dist/terno-ai-assets/ /code/terno-ai/terno/frontend/static/
 
 WORKDIR /code/terno-ai/terno
