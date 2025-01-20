@@ -23,8 +23,8 @@ def get_org_details(request):
             for orgs in user_organisations:
                 org = orgs.organisation
                 subdomain = org.subdomain
-                url = f"https://{subdomain}.{main_domain}"
-                admin_url = f"https://{subdomain}.{main_domain}/admin"
+                url = f"https://{main_domain}/{subdomain}"
+                admin_url = f"https://{main_domain}/admin"
 
                 organisation_details.append({
                     'id': org.id,
