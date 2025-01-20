@@ -16,7 +16,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /code/terno-ai
-COPY requirements.txt /code//terno-ai
+COPY requirements.txt /code/terno-ai
 RUN pip install --upgrade pip \
     && pip3 install -r requirements.txt --no-cache-dir
 
