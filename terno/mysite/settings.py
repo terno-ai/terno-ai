@@ -241,3 +241,5 @@ CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_SAMESITE = "None"
 
 MAIN_DOMAIN = os.getenv('MAIN_DOMAIN')
+SESSION_COOKIE_NAME = 'ternoapp_sessionid'
+CSRF_COOKIE_NAME = 'ternoapp_csrftoken'
