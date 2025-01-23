@@ -9,3 +9,5 @@ chinook.db
 .coverage
 docs/build
 .DS_Store
+terno/frontend/static
+terno/frontend/templates/frontend

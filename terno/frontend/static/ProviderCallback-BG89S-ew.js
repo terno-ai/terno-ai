@@ -1,1 +1,0 @@
-import{u as s,j as r,N as t}from"./index-C2BRNr3X.js";const c=()=>{const a=s(),e=new URLSearchParams(a.search).get("error");let n="/accounts/login/";return e?r.jsxs(r.Fragment,{children:[r.jsx("h1",{children:"Third-Party Login Failure"}),r.jsxs("p",{children:["Something went wrong. ",e]}),r.jsx("a",{href:n,children:"Continue"})]}):r.jsx(t,{to:"/"})};export{c as default};
