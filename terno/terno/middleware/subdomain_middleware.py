@@ -7,7 +7,9 @@ class SubdomainOrganisationMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        if '/api' in request.path or '/sso-login' in request.path or not request.user.is_authenticated:
+        bypass_paths = ['/api', '/sso-login', '/admin']
+
+        if any(path in request.path for path in bypass_paths) or not request.user.is_authenticated:
             return self.get_response(request)
 
         path_parts = request.path.strip('/').split('/')
