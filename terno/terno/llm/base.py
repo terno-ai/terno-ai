@@ -18,7 +18,7 @@ class BaseLLM(ABC):
         pass
 
     @abstractmethod
-    def get_response(self, query: str) -> str:
+    def get_response(self, query: str) -> dict:
         pass
 
 

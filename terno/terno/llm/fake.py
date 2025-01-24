@@ -12,6 +12,6 @@ class FakeLLM(BaseLLM):
     def create_message_for_llm(self, system_prompt, ai_prompt, human_prompt):
         return []
 
-    def get_response(self, messages) -> str:
+    def get_response(self, messages) -> dict:
         self.get_model_instance()
-        return "SELECT 1"
+        return {'generated_sql': "SELECT 1"}

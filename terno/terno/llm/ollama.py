@@ -30,7 +30,7 @@ class OllamaLLM(BaseLLM):
         ]
         return messages
 
-    def get_response(self, messages) -> str:
+    def get_response(self, messages) -> dict:
         model = self.get_model_instance()
         response = model.chat(model=self.model_name, messages=messages)
-        return response['message']['content']
+        return {'generated_sql': response['message']['content']}

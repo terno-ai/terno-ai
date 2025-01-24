@@ -45,7 +45,7 @@ class AnthropicLLM(BaseLLM):
             ]
         return messages
 
-    def get_response(self, messages) -> str:
+    def get_response(self, messages) -> dict:
         model = self.get_model_instance()
         response = model.messages.create(
                 model=self.model_name,
@@ -58,4 +58,4 @@ class AnthropicLLM(BaseLLM):
                 **self.custom_parameters
             )
         response = response.content.strip().removeprefix("```sql").removesuffix("```")
-        return response
+        return {'generated_sql': response}

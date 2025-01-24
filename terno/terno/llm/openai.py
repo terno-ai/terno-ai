@@ -50,7 +50,7 @@ class OpenAILLM(BaseLLM):
         ]
         return messages
 
-    def get_response(self, messages) -> str:
+    def get_response(self, messages) -> dict:
         model = self.get_model_instance()
         model_name = self.model_name
         if model_name in self.o1_beta_models:
@@ -69,6 +69,13 @@ class OpenAILLM(BaseLLM):
                 top_p=self.top_p,
                 **self.custom_parameters
             )
-        response = response.choices[0].message.content
-        response = response.strip().removeprefix("```sql").removesuffix("```")
-        return response
+
+        return_dict = {}
+        generated_sql = response.choices[0].message.content
+        return_dict['generated_sql'] = generated_sql.strip().removeprefix("```sql").removesuffix("```")
+        return_dict['input_tokens'] = response.usage.prompt_tokens
+        return_dict['input_tokens_cached'] = response.usage.prompt_tokens_details['cached_tokens']
+        return_dict['output_tokens'] = response.usage.completion_tokens
+        return_dict['model'] = response.model
+        return_dict['llm_provider'] = 'openai'
+        return return_dict

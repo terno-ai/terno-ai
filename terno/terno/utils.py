@@ -196,12 +196,13 @@ def console_llm_response(user, messages):
     try:
         llm = LLMFactory.create_llm()
         response = llm.get_response(messages)
-        generated_sql = response
+        response_sql_obj = response
     except Exception as e:
         logger.exception(e)
         return {'status': 'error', 'error': str(e)}
 
-    return {'status': 'success', 'generated_sql': generated_sql}
+    response_sql_obj['status'] = 'success'
+    return response_sql_obj
 
 
 def llm_response(user, user_query, db_schema, organisation, datasource):
@@ -209,12 +210,13 @@ def llm_response(user, user_query, db_schema, organisation, datasource):
         llm = LLMFactory.create_llm(organisation)
         pipeline = create_pipeline(llm, 'one_step_pipeline', user, db_schema, datasource, user_query)
         response = get_response_from_pipeline(pipeline)
-        generated_sql = response[0][0]
+        response_sql_obj = response[0][0]
     except Exception as e:
         logger.exception(e)
         return {'status': 'error', 'error': str(e)}
 
-    return {'status': 'success', 'generated_sql': generated_sql}
+    response_sql_obj['status'] = 'success'
+    return response_sql_obj
 
 
 def create_pipeline(llm, name, user, db_schema, datasource, user_query):

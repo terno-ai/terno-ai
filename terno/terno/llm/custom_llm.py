@@ -13,5 +13,5 @@ class CustomLLM(BaseLLM):
     def create_message_for_llm(self, system_prompt, ai_prompt, human_prompt):
         pass
 
-    def get_response(self, messages) -> str:
+    def get_response(self, messages) -> dict:
         pass
