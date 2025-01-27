@@ -1,7 +1,7 @@
 export const getCsrfToken = () => {
   const cookieValue = document.cookie
     .split("; ")
-    .find((row) => row.startsWith("csrftoken="))
+    .find((row) => row.startsWith("ternoapp_csrftoken="))
     ?.split("=")[1];
 
   return cookieValue;
