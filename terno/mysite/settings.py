@@ -29,7 +29,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
 ALLOWED_HOSTS = ['*']
-CSRF_TRUSTED_ORIGINS = ['https://app.terno.io', os.getenv('CSRF_TRUSTED_ORIGINS')]
+CSRF_TRUSTED_ORIGINS = ['https://app.terno.ai', os.getenv('CSRF_TRUSTED_ORIGINS')]
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 

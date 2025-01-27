@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 @login_required
-def index(request, slug):
+def index(request):
     return render(request, 'frontend/index.html')
 
 
