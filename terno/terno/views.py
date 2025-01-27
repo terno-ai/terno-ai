@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 @login_required
+@ensure_csrf_cookie
 def index(request):
     return render(request, 'frontend/index.html')
 
