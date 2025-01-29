@@ -8,6 +8,8 @@ from allauth.account.models import EmailAddress
 from allauth.account.utils import complete_signup
 from django.conf import settings
 from subscription.models import LLMCredit
+from django.contrib.auth import logout
+
 
 @csrf_exempt
 def get_org_details(request):
@@ -119,3 +121,10 @@ def check_user(request):
                 'error': 'Invalid JSON data'
             })
     return JsonResponse({'status': 'error', 'error': 'User not found'})
+
+
+@csrf_exempt
+def logout_user(request):
+    if request.method == 'DELETE':
+        logout(request)
+        return JsonResponse({'status': 'success', 'error': 'User logout'})

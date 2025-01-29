@@ -38,7 +38,7 @@ const Navbar = () => {
   };
 
   if (response.content) {
-    window.location.href = import.meta.env.PROD.REACT_APP_MAIN_DOMAIN;
+    window.location.href = 'https://app.terno.ai';
   }
 
   return (
