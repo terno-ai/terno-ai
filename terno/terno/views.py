@@ -358,7 +358,6 @@ def get_user_details(request):
 def sso_login(request):
     token = request.GET.get('token')
     encoded_redirect_url = request.GET.get('redirect_url')
-    org_id = request.GET.get('org_id')
 
     if not token:
         return HttpResponseForbidden("Missing token")
@@ -375,9 +374,7 @@ def sso_login(request):
     perform_login(request, user, email_verification="none")
 
     redirect_url = unquote(encoded_redirect_url)
-    org = models.Organisation.objects.get(id=org_id)
     response = HttpResponseRedirect(redirect_url)
-    response.set_cookie('org_id', org.id)
     return response
 
 
