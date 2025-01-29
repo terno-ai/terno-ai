@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'terno',
     'frontend',
     'api',
+    'subscription'
 ]
 
 MIDDLEWARE = [
@@ -241,3 +242,5 @@ CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_SAMESITE = "None"
 
 MAIN_DOMAIN = os.getenv('MAIN_DOMAIN')
+
+FREE_LLM_CREDITS = 10

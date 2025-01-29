@@ -73,9 +73,12 @@ class OpenAILLM(BaseLLM):
         return_dict = {}
         generated_sql = response.choices[0].message.content
         return_dict['generated_sql'] = generated_sql.strip().removeprefix("```sql").removesuffix("```")
-        return_dict['input_tokens'] = response.usage.prompt_tokens
-        return_dict['input_tokens_cached'] = response.usage.prompt_tokens_details['cached_tokens']
-        return_dict['output_tokens'] = response.usage.completion_tokens
-        return_dict['model'] = response.model
-        return_dict['llm_provider'] = 'openai'
+        try:
+            return_dict['input_tokens'] = response.usage.prompt_tokens
+            return_dict['input_tokens_cached'] = response.usage.prompt_tokens_details['cached_tokens']
+            return_dict['output_tokens'] = response.usage.completion_tokens
+            return_dict['model'] = response.model
+            return_dict['llm_provider'] = 'openai'
+        except Exception as e:
+            pass
         return return_dict
