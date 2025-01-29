@@ -59,7 +59,7 @@ class GeminiLLM(BaseLLM):
                     {'role': 'user', 'parts': [human_prompt]}]
         return messages
 
-    def get_response(self, messages) -> str:
+    def get_response(self, messages) -> dict:
         system_prompt = messages[0]['parts'][0]
         messages = messages[1:]
         genai.configure(api_key=self.api_key)
@@ -79,4 +79,4 @@ class GeminiLLM(BaseLLM):
 
         response = response.text.strip().removeprefix("```sql").removesuffix("```")
 
-        return response
+        return {'generated_sql': response}

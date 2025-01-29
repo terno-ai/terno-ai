@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'terno',
     'frontend',
     'api',
+    'subscription'
 ]
 
 MIDDLEWARE = [
@@ -245,3 +246,5 @@ MAIN_DOMAIN = os.getenv('MAIN_DOMAIN')
 SESSION_COOKIE_NAME = 'ternoapp_sessionid'
 CSRF_COOKIE_NAME = 'ternoapp_csrftoken'
 CSRF_COOKIE_DOMAIN = '.terno.ai'
+
+FREE_LLM_CREDITS = 10

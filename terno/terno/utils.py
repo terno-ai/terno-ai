@@ -14,6 +14,9 @@ import csv
 from django.http import HttpResponse
 from django.utils import timezone
 from django.core.cache import cache
+from terno.llm.base import NoSufficientCreditsException, NoDefaultLLMException
+from subscription.utils import deduct_llm_credits
+
 
 logger = logging.getLogger(__name__)
 
@@ -194,27 +197,55 @@ def get_admin_config_object(datasource, roles):
 
 def console_llm_response(user, messages):
     try:
-        llm = LLMFactory.create_llm()
+        llm, is_default_llm = LLMFactory.create_llm()
         response = llm.get_response(messages)
-        generated_sql = response
+        response_sql = response
+    except NoSufficientCreditsException as e:
+        logger.exception(e)
+        return {'status': 'error', 'error': str(e)}
+    except NoDefaultLLMException as e:
+        logger.exception(e)
+        return {'status': 'error', 'error': str(e)}
     except Exception as e:
         logger.exception(e)
         return {'status': 'error', 'error': str(e)}
 
-    return {'status': 'success', 'generated_sql': generated_sql}
+    if is_default_llm:
+        organisation = models.OrganisationUser(user=user)
+        try:
+            deduct_llm_credits(organisation.llm_credit, response)
+        except Exception as e:
+            logger.exception(e)
+            disable_default_llm()
+    response_sql['status'] = 'success'
+    return response_sql
 
 
 def llm_response(user, user_query, db_schema, organisation, datasource):
     try:
-        llm = LLMFactory.create_llm(organisation)
+        llm, is_default_llm = LLMFactory.create_llm(organisation)
         pipeline = create_pipeline(llm, 'one_step_pipeline', user, db_schema, datasource, user_query)
         response = get_response_from_pipeline(pipeline)
-        generated_sql = response[0][0]
+        response_sql = response[0][0]
+    except NoSufficientCreditsException as e:
+        logger.exception(e)
+        return {'status': 'error', 'error': str(e)}
+    except NoDefaultLLMException as e:
+        logger.exception(e)
+        return {'status': 'error', 'error': str(e)}
     except Exception as e:
         logger.exception(e)
         return {'status': 'error', 'error': str(e)}
 
-    return {'status': 'success', 'generated_sql': generated_sql}
+    if is_default_llm:
+        try:
+            deduct_llm_credits(organisation.llm_credit, response)
+        except Exception as e:
+            logger.exception(e)
+            disable_default_llm()
+
+    response_sql['status'] = 'success'
+    return response_sql
 
 
 def create_pipeline(llm, name, user, db_schema, datasource, user_query):
@@ -396,3 +427,17 @@ def create_org_owner_group():
     group = Group.objects.create(name="org_owner")
     permissions = Permission.objects.all()
     group.permissions.set(permissions)
+
+
+def disable_default_llm():
+    default_org = models.Organisation.objects.filter(subdomain='terno-root').first()
+    if default_org:
+        # Get the default LLM (subdomain 'terno-root') if available
+        organisation_llms = models.OrganisationLLM.objects.filter(
+            organisation=default_org,
+            llm__enabled=True
+        )
+
+        for org_llm in organisation_llms:
+            org_llm.llm.enabled = False
+            org_llm.llm.save()

@@ -4,6 +4,7 @@ from django.contrib.auth.models import User, Group
 import json
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import Permission
+from subscription.models import LLMCredit
 
 
 class LLMConfiguration(models.Model):
@@ -215,6 +216,7 @@ class Organisation(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='organisation')
     logo = models.URLField(null=True, blank=True)
     is_active = models.BooleanField(default=False)
+    llm_credit = models.ForeignKey(LLMCredit, null=True, blank=True, on_delete=models.SET_NULL)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
 

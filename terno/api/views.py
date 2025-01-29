@@ -7,7 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 from allauth.account.models import EmailAddress
 from allauth.account.utils import complete_signup
 from django.conf import settings
-
+from subscription.models import LLMCredit
 
 @csrf_exempt
 def get_org_details(request):
@@ -52,8 +52,13 @@ def get_org_details(request):
         subdomain = data.get('subdomain')
         try:
             user = User.objects.filter(email=user_email).first()
+            llm_credit, created = LLMCredit.objects.get_or_create(owner=user)
+            if created:
+                llm_credit.credit = settings.FREE_LLM_CREDITS
+                llm_credit.save()
             Organisation.objects.create(
-                name=org_name, subdomain=subdomain, owner=user, is_active=True)
+                name=org_name, subdomain=subdomain, owner=user,
+                llm_credit=llm_credit, is_active=True)
 
             return JsonResponse(
                 {"status": "success", "message": "Organisation Created Successfully!"}, status=200
