@@ -2,7 +2,6 @@ import { useContext, useState } from "react";
 import terno from "../assets/terno.svg";
 import useUserDetails from "../hooks/useUserDetails";
 import { DataSourceContext } from "./ui/datasource-context";
-import { Navigate } from "react-router-dom";
 import { logout } from "../utils/api";
 import {
   DropdownMenu,
@@ -39,7 +38,7 @@ const Navbar = () => {
   };
 
   if (response.content) {
-    return <Navigate to="/accounts/login" />;
+    window.location.href = import.meta.env.REACT_APP_MAIN_DOMAIN;
   }
 
   return (
