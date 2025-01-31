@@ -1,4 +1,4 @@
-from terno.models import Organisation, OrganisationUser
+from terno.models import Organisation, OrganisationUser, DataSource, OrganisationDataSource
 from api.utils import get_user_name
 from django.contrib.auth.models import User
 from django.http import JsonResponse
@@ -52,11 +52,13 @@ def get_org_details(request):
         subdomain = data.get('subdomain')
         try:
             user = User.objects.filter(email=user_email).first()
-            Organisation.objects.create(
+            organisation = Organisation.objects.create(
                 name=org_name, subdomain=subdomain, owner=user, is_active=True)
-
+            org_id = organisation.id
             return JsonResponse(
-                {"status": "success", "message": "Organisation Created Successfully!"}, status=200
+                {"status": "success",
+                    "message": "Organisation Created Successfully!",
+                    "org_id": org_id}, status=200
             )
         except Exception as e:
             return JsonResponse(
@@ -114,3 +116,37 @@ def check_user(request):
                 'error': 'Invalid JSON data'
             })
     return JsonResponse({'status': 'error', 'error': 'User not found'})
+
+
+@csrf_exempt
+def add_datasource(request):
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+    org_id = data.get('org_id')
+    user_email = data.get('user')
+    user = User.objects.filter(email=user_email).first()
+    type = data.get('type')
+    connection_str = data.get('connection_str')
+    organisation = Organisation.objects.get(id=org_id)
+    if not OrganisationUser.objects.filter(
+            user=user,
+            organisation=organisation).exists():
+        return JsonResponse({
+            'message': 'You do not belong to this organisation.'}, status=200)
+    total_existing_ds = OrganisationDataSource.objects.filter(organisation=organisation).count()
+    display_name = organisation.name + "_ds_" + str(total_existing_ds+1)
+    datasource = DataSource.objects.create(
+        type=type, connection_str=connection_str, display_name=display_name
+    )
+    OrganisationDataSource.objects.create(
+        organisation=organisation,
+        datasource=datasource
+    )
+    main_domain = settings.MAIN_DOMAIN
+    redirect_url = f"https://{organisation.subdomain}.{main_domain}"
+    return JsonResponse({
+        'status': 'success',
+        'message': 'Added the DataSource successfully',
+        'redirect_url': redirect_url}, status=200)
