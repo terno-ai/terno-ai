@@ -167,6 +167,7 @@ def logout_user(request):
         return JsonResponse({'status': 'success', 'error': 'User logout'})
 
 
+@csrf_exempt
 def get_llm_credits(request):
     if request.method == 'POST':
         try:
