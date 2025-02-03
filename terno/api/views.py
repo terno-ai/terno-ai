@@ -83,31 +83,37 @@ def create_user(request):
 
     user_email = data.get('email')
     user_password = data.get('password')
-    new_user = User.objects.create_user(
-        username=get_user_name(user_email),
-        email=user_email,
-        password=user_password,
-        first_name=data.get('first_name'),
-        last_name=data.get('last_name'))
-    complete_signup(request, new_user, "none", '')
+    user = User.objects.filter(email=user_email)
+    if not user:
+        new_user = User.objects.create_user(
+            username=get_user_name(user_email),
+            email=user_email,
+            password=user_password,
+            first_name=data.get('first_name'),
+            last_name=data.get('last_name'))
+        complete_signup(request, new_user, "none", '')
 
-    email_address = EmailAddress(user=new_user, email=new_user.email)
-    email_address.primary = 1
-    email_address.verified = 1
-    email_address.save()
+        email_address = EmailAddress(user=new_user, email=new_user.email)
+        email_address.primary = 1
+        email_address.verified = 1
+        email_address.save()
 
-    user_details = {
-        'id': new_user.id,
-        'username': new_user.username,
-        'email': new_user.email,
-        'first_name': new_user.first_name,
-        'last_name': new_user.last_name,
-        'full_name': new_user.get_full_name(),
-    }
+        user_details = {
+            'id': new_user.id,
+            'username': new_user.username,
+            'email': new_user.email,
+            'first_name': new_user.first_name,
+            'last_name': new_user.last_name,
+            'full_name': new_user.get_full_name(),
+        }
 
-    return JsonResponse({
-        'status': 'success',
-        'user': user_details}, status=200)
+        return JsonResponse({
+            'status': 'success',
+            'user': user_details}, status=200)
+    else:
+        return JsonResponse({
+            'status': 'success',
+            'user': user}, status=200)
 
 
 @csrf_exempt
