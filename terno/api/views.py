@@ -174,9 +174,9 @@ def get_llm_credits(request):
             user_email = data.get('user_email')
             user = User.objects.filter(email=user_email)
             if user:
-                llm_credits = subs_models.LLMCredit.objects.filter(owner=user)
+                llm_credits = subs_models.LLMCredit.objects.filter(owner=user.first())
                 return JsonResponse({
-                    'llm_credits': llm_credits.first().credit if llm_credits else 0,
+                    'llm_credits': round(llm_credits.first().credit, 2) if llm_credits else 0,
                     'is_active': llm_credits.first().is_active if llm_credits else False
                 })
         except json.JSONDecodeError:
