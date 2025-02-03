@@ -9,6 +9,7 @@ from allauth.account.utils import complete_signup
 from django.conf import settings
 from subscription.models import LLMCredit
 from django.contrib.auth import logout
+import subscription.models as subs_models
 
 
 @csrf_exempt
@@ -164,3 +165,23 @@ def logout_user(request):
     if request.method == 'DELETE':
         logout(request)
         return JsonResponse({'status': 'success', 'error': 'User logout'})
+
+
+def get_llm_credits(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            user_email = data.get('user_email')
+            user = User.objects.filter(email=user_email)
+            if user:
+                llm_credits = subs_models.LLMCredit.objects.filter(owner=user)
+                return JsonResponse({
+                    'llm_credits': llm_credits.first().credit if llm_credits else 0,
+                    'is_active': llm_credits.first().is_active if llm_credits else False
+                })
+        except json.JSONDecodeError:
+            return JsonResponse({
+                'status': 'error',
+                'error': 'Invalid JSON data'
+            })
+    return JsonResponse({'status': 'error', 'error': 'User not found'})

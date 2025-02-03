@@ -9,4 +9,5 @@ urlpatterns = [
     path('check-user', views.check_user, name='check_user'),
     path('add-datasource', views.add_datasource, name='add_datasource'),
     path('logout', views.logout_user, name='logout_user'),
+    path('get-llm-credits', views.get_llm_credits, name='get_llm_credits'),
 ]

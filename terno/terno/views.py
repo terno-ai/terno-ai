@@ -376,24 +376,3 @@ def sso_login(request):
     redirect_url = unquote(encoded_redirect_url)
     response = HttpResponseRedirect(redirect_url)
     return response
-
-
-def check_user_exists(request):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            email = data.get('email')
-            user = User.objects.filter(email=email)
-            host = request.get_host().split(':')[0]
-            subdomain = host.split('.')[0]
-            org = models.Organisation.objects.filter(subdomain=subdomain)
-            if user:
-                org_user = models.OrganisationUser.objects.filter(user=user.first(), organisation=org.first())
-                if org_user:
-                    return JsonResponse({'status': 'success', 'message': 'User exists'})
-        except json.JSONDecodeError:
-            return JsonResponse({
-                'status': 'error',
-                'error': 'Invalid JSON data'
-            })
-    return JsonResponse({'status': 'error', 'error': 'User not found'})

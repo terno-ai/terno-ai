@@ -15,7 +15,6 @@ urlpatterns = [
     path('get-tables/<int:datasource_id>', views.get_tables, name='get_tables'),
     path('get-user-details/', views.get_user_details, name='get_user_details'),
     path('sso-login', views.sso_login, name='sso_login'),
-    path('check-user', views.check_user_exists, name='check_user_exists'),
     # path('accounts/login/', views.login_page, name='login_page'),
     # path('accounts/provider/callback/', views.login_page, name='provider_callback'),
     # path('accounts/password/reset/', views.login_page, name='request_password_reset'),
