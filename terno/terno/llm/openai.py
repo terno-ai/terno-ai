@@ -3,8 +3,11 @@ from openai import OpenAI
 
 
 class OpenAILLM(BaseLLM):
-    o1_beta_models = ['o1-preview', 'o1-mini']
-    """O1 beta models which do not support system prompt and some parameters."""
+    o_series_models = ['o1', 'o1-2024-12-17',
+                       'o1-preview', 'o1-preview-2024-09-12',
+                       'o1-mini', 'o1-mini-2024-09-12',
+                       'o3-mini', 'o3-mini-2025-01-31']
+    """O series models configuration."""
     model_name: str = "gpt-3.5-turbo"
     """Model name to use.
 
@@ -53,8 +56,8 @@ class OpenAILLM(BaseLLM):
     def get_response(self, messages) -> dict:
         model = self.get_model_instance()
         model_name = self.model_name
-        if model_name in self.o1_beta_models:
-            messages[0]['role'] = 'assistant'
+        if model_name in self.o_series_models:
+            messages[0]['role'] = 'developer'
             response = model.chat.completions.create(
                 model=self.model_name,
                 messages=messages,
