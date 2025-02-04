@@ -357,7 +357,8 @@ def get_user_details(request):
 
 def sso_login(request):
     token = request.GET.get('token')
-    encoded_redirect_url = request.GET.get('redirect_url')
+    org_id = request.GET.get('org_id')
+    redirect_to = request.GET.get('redirect_to')
 
     if not token:
         return HttpResponseForbidden("Missing token")
@@ -373,6 +374,16 @@ def sso_login(request):
 
     perform_login(request, user, email_verification="none")
 
-    redirect_url = unquote(encoded_redirect_url)
-    response = HttpResponseRedirect(redirect_url)
-    return response
+    redirect_url = unquote(redirect_to)
+    org_user = models.OrganisationUser.objects.filter(user=user, organisation__id=org_id)
+    if org_user:
+        org_user = org_user.first()
+        redirect_url = f"https://{org_user.organisation}.{settings.MAIN_DOMAIN}"
+        if redirect_to == 'admin':
+            redirect_url += '/admin'
+        elif redirect_to == 'add-ds':
+            redirect_url += '/admin/terno/datasource'
+        elif redirect_to == 'add-llm':
+            redirect_url += '/admin/terno/llmconfiguration'
+        return HttpResponseRedirect(redirect_url)
+    return HttpResponseForbidden
