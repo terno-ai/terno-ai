@@ -378,7 +378,7 @@ def sso_login(request):
     org_user = models.OrganisationUser.objects.filter(user=user, organisation__id=org_id)
     if org_user:
         org_user = org_user.first()
-        redirect_url = f"https://{org_user.organisation}.{settings.MAIN_DOMAIN}"
+        redirect_url = f"https://{org_user.organisation.subdomain}.{settings.MAIN_DOMAIN}"
         if redirect_to == 'admin':
             redirect_url += '/admin'
         elif redirect_to == 'add-ds':
