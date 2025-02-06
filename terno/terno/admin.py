@@ -4,6 +4,7 @@ from django.contrib.auth.admin import GroupAdmin as DefaultGroupAdmin
 import terno.models as models
 from django.shortcuts import get_object_or_404
 from django.db.models import QuerySet
+from django.utils.translation import gettext_lazy as _
 
 admin.site.unregister(models.Group)
 admin.site.unregister(models.User)
@@ -95,7 +96,6 @@ class OrganisationFilterMixin:
     organisation_related_field_names = []
     organisation_foreignkey_field_names = {}
     organisation_manytomany_field_names = {}
-    organisation_list_filter_field_names = []
 
     def get_user_organisation(self, request):
         organisation = models.Organisation.objects.get(id=request.org_id)
@@ -142,20 +142,41 @@ class OrganisationFilterMixin:
                 kwargs["queryset"] = db_field.related_model.objects.none()
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
-    def get_list_filter(self, request):
-        """
-        Dynamically apply filters to the list view based on the user's organisation.
-        """
-        filters = super().get_list_filter(request) or []
-        if request.user.is_superuser:
-            return filters
-        user_organisation = self.get_user_organisation(request)
-        if user_organisation and self.organisation_list_filter_field_names:
-            filters += [
-                (field_name, admin.RelatedOnlyFieldListFilter)
-                for field_name in self.organisation_list_filter_field_names
-            ]
-        return filters
+
+class DataSourceFilter(admin.SimpleListFilter):
+    title = _('Data Source')
+    parameter_name = 'data_source'
+    organisation_list_filter_field_names = []
+
+    def get_user_organisation(self, request):
+        organisation = models.Organisation.objects.get(id=request.org_id)
+        if not models.OrganisationUser.objects.filter(user=request.user, organisation=organisation).exists():
+            return None
+        return organisation
+
+    def lookups(self, request, model_admin):
+        if not request.user.is_superuser:
+            user_organisation = self.get_user_organisation(request)
+            if user_organisation:
+                return [
+                    (ds.id, ds.display_name)
+                    for ds in models.DataSource.objects.filter(organisationdatasource__organisation=user_organisation)
+                ]
+            return []
+        return [(ds.id, ds.display_name) for ds in models.DataSource.objects.all()]
+
+    def queryset(self, request, queryset):
+        if not request.user.is_superuser:
+            user_organisation = self.get_user_organisation(request)
+            if user_organisation:
+                for field_name in self.organisation_list_filter_field_names:
+                    filter_kwargs = {field_name: user_organisation}
+                    queryset = queryset.filter(**filter_kwargs)
+
+        if self.value():
+            queryset = queryset.filter(data_source_id=self.value())
+
+        return queryset
 
 
 @admin.register(models.LLMConfiguration)
@@ -214,13 +235,13 @@ class DataSourceAdmin(OrganisationFilterMixin, admin.ModelAdmin):
 class TableAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     list_display = ['name', 'public_name', 'data_source']
     list_editable = ['public_name']
-    list_filter = ['data_source']
+    list_filter = [DataSourceFilter]
     search_fields = ['name', 'public_name', 'data_source__display_name']
     organisation_related_field_names = ['data_source__organisationdatasource__organisation']
     organisation_foreignkey_field_names = {
         'data_source' : 'organisationdatasource__organisation'
     }
-    organisation_list_filter_field_names = ['data_source']
+    organisation_list_filter_field_names = ['data_source__organisationdatasource__organisation']
 
 
 @admin.register(models.PrivateTableSelector)
@@ -238,7 +259,6 @@ class PrivateTableSelectorAdmin(OrganisationFilterMixin, admin.ModelAdmin):
 
     def private_tables_count(self, obj):
         return obj.tables.count()
-    organisation_list_filter_field_names = ['data_source']
 
     def get_list_filter(self, request):
         return super().get_list_filter(request)
@@ -248,25 +268,13 @@ class PrivateTableSelectorAdmin(OrganisationFilterMixin, admin.ModelAdmin):
 class TableColumnAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     list_display = ['name', 'public_name', 'table', 'data_type']
     list_editable = ['public_name']
-    list_filter = ['table__data_source', 'table']
+    list_filter = [DataSourceFilter]
     search_fields = ['name', 'public_name', 'table__name', 'table__data_source']
     organisation_related_field_names = ['table__data_source__organisationdatasource__organisation']
     organisation_foreignkey_field_names = {
         'table': 'data_source__organisationdatasource__organisation'
     }
-
-    def get_list_filter(self, request):
-        """
-        Dynamically restrict filters for the list view.
-        """
-        user_organisation = OrganisationFilterMixin.get_user_organisation(self, request)
-
-        if user_organisation:
-            self.list_filter = [('table__data_source', admin.RelatedOnlyFieldListFilter)]
-        else:
-            self.list_filter = []
-
-        return self.list_filter
+    organisation_list_filter_field_names = ['table__data_source__organisationdatasource__organisation']
 
 
 @admin.register(models.ForeignKey)
@@ -282,7 +290,10 @@ class ForeignKeyAdmin(OrganisationFilterMixin, admin.ModelAdmin):
         'referred_schema': 'organisationdatasource__organisation'
     }
     # list_editable = ['public_name']
-    list_filter = ['referred_table__data_source']
+    list_filter = [DataSourceFilter]
+    organisation_list_filter_field_names = [
+        'referred_table__data_source__organisationdatasource__organisation'
+        ]
     # search_fields = ['name', 'public_name', 'table__name', 'table__data_source']
 
 
@@ -313,7 +324,7 @@ class GroupTableSelectorAdmin(OrganisationFilterMixin, admin.ModelAdmin):
 class PrivateColumnSelectorAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     list_display = ['data_source', 'private_columns_count']
     filter_horizontal = ['columns']
-    list_filter = ['data_source']
+    list_filter = [DataSourceFilter]
     search_fields = ['data_source__display_name']
     organisation_related_field_names = ['data_source__organisationdatasource__organisation']
     organisation_foreignkey_field_names = {
@@ -322,7 +333,7 @@ class PrivateColumnSelectorAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     organisation_manytomany_field_names = {
         'columns': 'table__data_source__organisationdatasource__organisation'
     }
-
+    organisation_list_filter_field_names = ['data_source__organisationdatasource__organisation']
     def private_columns_count(self, obj):
         return obj.columns.count()
 
@@ -368,12 +379,13 @@ class TableRowFilterAdmin(OrganisationFilterMixin, admin.ModelAdmin):
 class QueryHistoryAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     list_display = ['user', 'data_source', 'data_type', 'data', 'created_at']
     organisation_related_field_names = ['user__organisationuser__organisation', 'data_source__organisationdatasource__organisation']
-    list_filter = ['data_source', 'data_type', 'created_at']
+    list_filter = [DataSourceFilter, 'data_type', 'created_at']
     search_fields = ['user__username', 'data_source__display_name', 'data']
     organisation_foreignkey_field_names = {
         'data_source': 'organisationdatasource__organisation',
         'user': 'organisationuser__organisation'
     }
+    organisation_list_filter_field_names = ['data_source__organisationdatasource__organisation']
 
 
 @admin.register(models.PromptLog)
@@ -391,8 +403,9 @@ class PromptLogAdmin(OrganisationFilterMixin, admin.ModelAdmin):
 class SystemPromptsAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     list_display = ['data_source', 'system_prompt']
     organisation_related_field_names = ['data_source__organisationdatasource__organisation']
-    list_filter = ['data_source']
+    list_filter = [DataSourceFilter]
     search_fields = ['data_source__display_name', 'system_prompt']
     organisation_foreignkey_field_names = {
         'data_source': 'organisationdatasource__organisation',
     }
+    organisation_list_filter_field_names = ['data_source__organisationdatasource__organisation']
