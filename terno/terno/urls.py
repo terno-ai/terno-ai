@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 from . import receivers
+from django.conf import settings
 
 app_name = 'terno'
 
@@ -15,8 +16,12 @@ urlpatterns = [
     path('get-tables/<int:datasource_id>', views.get_tables, name='get_tables'),
     path('get-user-details/', views.get_user_details, name='get_user_details'),
     path('sso-login', views.sso_login, name='sso_login'),
-    # path('accounts/login/', views.login_page, name='login_page'),
-    # path('accounts/provider/callback/', views.login_page, name='provider_callback'),
-    # path('accounts/password/reset/', views.login_page, name='request_password_reset'),
-    # path('accounts/password/reset/key/<str:key>', views.reset_password, name='reset_password'),
 ]
+
+if settings.DEBUG:
+    urlpatterns += [
+        path('accounts/login/', views.login_page, name='login_page'),
+        path('accounts/provider/callback/', views.login_page, name='provider_callback'),
+        path('accounts/password/reset/', views.login_page, name='request_password_reset'),
+        path('accounts/password/reset/key/<str:key>', views.reset_password, name='reset_password'),
+    ]

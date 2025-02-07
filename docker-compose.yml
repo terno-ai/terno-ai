@@ -3,12 +3,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    platform: linux/amd64  # If image is not building due to platform you can comment this line
+    # If image is not building due to platform (on windows) you can uncomment this line
+    # platform: linux/amd64  
     container_name: "terno-ai"
     image: terno-ai:latest
-    command: bash -c ". ../setup.sh && python3 manage.py runserver 0.0.0.0:8000"
-    volumes:
-      - .:/code
+    command: bash -c ". /code/terno-ai/setup.sh && python3 manage.py runserver 0.0.0.0:8000"
     ports:
       - "8000:8000"
     env_file:

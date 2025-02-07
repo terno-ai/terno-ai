@@ -1,5 +1,5 @@
 import terno from "../assets/terno-ai.svg"
-import { checkUserExists, login } from "../utils/api";
+import { login } from "../utils/api";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Response, ErrorResponse } from "../utils/types";
@@ -9,8 +9,6 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [response, setResponse] = useState({ fetching: false, content: null as Response | ErrorResponse | null })
   const [formError, setFormError] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [submitBtnText, setSubmitBtnText] = useState('Continue');
   const navigate = useNavigate();
 
   const submitLogin = () => {
@@ -25,15 +23,7 @@ const Login = () => {
         }
         return;
       }
-
-      const verifyEmailFlow = content.data?.flows?.find(
-        flow => flow.id === 'verify_email' && flow.is_pending
-      );
-
-      if (verifyEmailFlow) {
-        navigate('/accounts/verify-email');
-      }
-      else if (content.meta?.is_authenticated) {
+      if (content.meta?.is_authenticated) {
         navigate('/');
       }
     }).catch((e) => {
@@ -43,32 +33,8 @@ const Login = () => {
     })
   }
 
-  const checkEmail = async () => {
-    setFormError('');
-    setResponse({ ...response, fetching: true });
-    try {
-      const content = await checkUserExists({'email': email})
-
-      if (content['status'] == 'error') {
-        setFormError('Please contact your organization administrator for access.');
-        return;
-      }
-
-      setShowPassword(true);
-      setSubmitBtnText('Login');
-    } catch (e) {
-      setFormError('An error occurred. Please try again.');
-    } finally {
-      setResponse((r) => ({ ...r, fetching: false }));
-    }
-  };
-
   const handleSubmit = () => {
-    if (!showPassword) {
-      checkEmail();
-    } else {
       submitLogin();
-    }
   };
 
   return (
@@ -100,7 +66,6 @@ const Login = () => {
                           className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
                         />
                       </div>
-                      {showPassword && (
                       <div className="grid gap-2">
                         <div className="flex items-center">
                           <label htmlFor="password">Password</label>
@@ -119,7 +84,6 @@ const Login = () => {
                           className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
                         />
                       </div>
-                    )}
                       <div className="text-sm text-red-500">
                         {formError}
                       </div>
@@ -127,7 +91,7 @@ const Login = () => {
                         onClick={handleSubmit}
                         className="w-full px-4 py-2 border rounded-md bg-slate-800 text-white hover:bg-slate-700 transition-colors"
                       >
-                        {submitBtnText}
+                        Login
                       </button>
                     </div>
                   </div>

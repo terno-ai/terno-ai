@@ -249,4 +249,5 @@ CSRF_COOKIE_NAME = 'ternoapp_csrftoken'
 
 FREE_LLM_CREDITS = 10
 
-LOGIN_URL = 'https://' + str(os.getenv('MAIN_DOMAIN'))
+if not DEBUG:
+    LOGIN_URL = 'https://' + str(os.getenv('MAIN_DOMAIN'))
