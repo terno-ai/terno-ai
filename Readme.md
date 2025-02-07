@@ -20,8 +20,11 @@ Terno AI is an open-source, enterprise-grade Text-to-SQL solution that ensures a
 
 ## 📦 Installation
 
-### Docker
-1. `docker compose up --build`
+### Using Docker
+
+1. `git clone https://github.com/terno-ai/terno-ai.git`
+2. `cd terno-ai`
+3. `docker compose up --build`
 
 ### Without docker
 1. Clone Repository `git clone git@github.com:terno-ai/terno-ai.git`
