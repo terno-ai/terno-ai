@@ -74,29 +74,23 @@ Django server is running on http://127.0.0.1:8000 by default and admin url is ht
 
 Open the `htmlcov/index.html` file in browser
 
-## Row Filters
-row_filter:
-    - table: sales
-    - filter: company_id = 10 and category_id not in (1, 2, 3)
-person is part of both: Groceries, Electronics
+## 🔍 Row Filters
+1. To restrict a table's access globally use `/admin/terno/tablerowfilter/`.
 
-group_row_filter:
-    - group: Groceries
-    - filter: category_id = 12
+Ex. To restrict row access for `sales` table with filter `company_id = 10 and category_id not in (1, 2, 3)` add create tablerowfilter
 
-group_row_filter:
-    - group: Electronics
-    - filter: category_id = 13
+2. To allow access to the globally restricted table to a specific group use `/admin/terno/grouptablerowfilter/`
 
-table filter generated for this sales table and this person:
-    where (
-    (company_id = 10 and category_id not in (1, 2, 3))
+Ex. To allow access to group `Groceries` access to the restricted category_ids and category_ids 12 and 13  which was added using previous method, create grouptablerowfilter with group `Groceries` and filter like
+```where (
+(company_id = 10 and category_id not in (1, 2, 3))
     AND (
-            (category_id = 12)
+        (category_id = 12)
             OR 
-            (category_id = 13)
-        )
+        (category_id = 13)
     )
+)
+```
 
 ## 🤝 Contributing
 
