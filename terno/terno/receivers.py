@@ -86,10 +86,13 @@ def delete_cache(datasource):
     org_data_source = models.OrganisationDataSource.objects.filter(
         datasource=datasource).first()
     org_users = models.OrganisationUser.objects.filter(organisation=org_data_source.organisation)
+    cache_key_set = set()
     for org_user in org_users:
         roles = org_user.user.groups.all()
         role_ids = sorted(roles.values_list('id', flat=True))
         cache_key = f"datasource_{datasource.id}_roles_{'_'.join(map(str, role_ids))}"
+        cache_key_set.add(cache_key)
+    for cache_key in cache_key_set:
         cache.delete(cache_key)
 
 
@@ -103,28 +106,27 @@ def delete_cache(datasource):
 @receiver(post_save, sender=models.TableColumn)
 @receiver(post_save, sender=models.Table)
 def delete_cache_for_datasource(sender, instance, created, **kwargs):
+    data_sources = set()
     if sender is models.Table:
-        data_source = instance.data_source
+        data_sources.add(instance.data_source)
     if sender is models.TableColumn:
-        data_source = instance.table.data_source
+        data_sources.add(instance.table.data_source)
     if sender is models.ForeignKey:
-        data_source = instance.constrained_table.data_source
+        data_sources.add(instance.constrained_table.data_source)
     if sender is models.PrivateTableSelector:
-        data_source = instance.data_source
+        data_sources.add(instance.data_source)
     if sender is models.GroupTableSelector:
-        # TODO
-        # data_source = instance.data_source
-        pass
+        for table in instance.tables.all():
+            data_sources.add(table.data_source)
     if sender is models.PrivateColumnSelector:
-        data_source = instance.data_source
+        data_sources.add(instance.data_source)
     if sender is models.GroupColumnSelector:
-        # TODO
-        # data_source = instance.data_source
-        pass
+        for column in instance.columns.all():
+            data_sources.add(column.table.data_source)
     if sender is models.GroupTableRowFilter:
-        data_source = instance.data_source
+        data_sources.add(instance.data_source)
     if sender is models.TableRowFilter:
-        data_source = instance.data_source
+        data_sources.add(instance.data_source)
 
-    if not created:
+    for data_source in data_sources:
         delete_cache(data_source)
