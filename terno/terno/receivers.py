@@ -4,6 +4,8 @@ from django.db.models.signals import post_save
 import sqlalchemy
 import terno.utils as utils
 from sqlshield.models import MDatabase
+import terno.models as models
+from django.core.cache import cache
 
 
 # TODO: delete the extra tables and columns
@@ -78,3 +80,51 @@ def update_tables_on_datasource_change(sender, instance, created, **kwargs):
     # if created:
     #     for table_name in retrieved_tables:
     #         Table.objects.create(name=table_name, data_source=instance)
+
+
+def delete_cache(datasource):
+    org_data_source = models.OrganisationDataSource.objects.filter(
+        datasource=datasource).first()
+    org_users = models.OrganisationUser.objects.filter(organisation=org_data_source.organisation)
+    for org_user in org_users:
+        roles = org_user.user.groups.all()
+        role_ids = sorted(roles.values_list('id', flat=True))
+        cache_key = f"datasource_{datasource.id}_roles_{'_'.join(map(str, role_ids))}"
+        cache.delete(cache_key)
+
+
+@receiver(post_save, sender=models.TableRowFilter)
+@receiver(post_save, sender=models.GroupTableRowFilter)
+@receiver(post_save, sender=models.GroupColumnSelector)
+@receiver(post_save, sender=models.PrivateColumnSelector)
+@receiver(post_save, sender=models.GroupTableSelector)
+@receiver(post_save, sender=models.PrivateTableSelector)
+@receiver(post_save, sender=models.ForeignKey)
+@receiver(post_save, sender=models.TableColumn)
+@receiver(post_save, sender=models.Table)
+def delete_cache_for_datasource(sender, instance, created, **kwargs):
+    if sender is models.Table:
+        data_source = instance.data_source
+    if sender is models.TableColumn:
+        data_source = instance.table.data_source
+    if sender is models.ForeignKey:
+        data_source = instance.constrained_table.data_source
+    if sender is models.PrivateTableSelector:
+        data_source = instance.data_source
+    if sender is models.GroupTableSelector:
+        # TODO
+        # data_source = instance.data_source
+        pass
+    if sender is models.PrivateColumnSelector:
+        data_source = instance.data_source
+    if sender is models.GroupColumnSelector:
+        # TODO
+        # data_source = instance.data_source
+        pass
+    if sender is models.GroupTableRowFilter:
+        data_source = instance.data_source
+    if sender is models.TableRowFilter:
+        data_source = instance.data_source
+
+    if not created:
+        delete_cache(data_source)
