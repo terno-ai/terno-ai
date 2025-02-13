@@ -128,5 +128,6 @@ def delete_cache_for_datasource(sender, instance, created, **kwargs):
     if sender is models.TableRowFilter:
         data_sources.add(instance.data_source)
 
-    for data_source in data_sources:
-        delete_cache(data_source)
+    if not (sender in [models.Table, models.TableColumn, models.ForeignKey] and created):
+        for data_source in data_sources:
+            delete_cache(data_source)

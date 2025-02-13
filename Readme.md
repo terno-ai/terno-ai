@@ -33,7 +33,7 @@ Terno AI is an open-source, enterprise-grade Text-to-SQL solution that ensures a
 4. Create virtualenv `virtualenv -p python3.10 venv`
 5. Activate venv `. venv/bin/activate`
 6. Install requirements `pip install -r requirements.txt`
-7. Source env file `source env.sh-sample.sh`
+7. Source env file `source env-sample.sh`
 8. Migrate Database `python terno/manage.py migrate`
 9. Run server `python terno/manage.py runserver`
 
