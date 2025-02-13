@@ -10,6 +10,9 @@ STATIC_DIR=$ROOT_DIR/terno/frontend/static
 echo "Step 1: Running npm build..."
 npm --prefix $FRONTEND_DIR run build
 
+mkdir -p $TEMPLATES_DIR
+mkdir -p $STATIC_DIR
+
 # Step 2: Copy index.html to Django templates directory
 echo "Step 2: Copying index.html to Django templates directory..."
 cp $FRONTEND_DIR/dist/index.html $TEMPLATES_DIR/index.html
