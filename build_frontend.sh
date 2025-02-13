@@ -6,6 +6,11 @@ FRONTEND_DIR=$ROOT_DIR/frontend
 TEMPLATES_DIR=$ROOT_DIR/terno/frontend/templates/frontend
 STATIC_DIR=$ROOT_DIR/terno/frontend/static
 
+if [ ! -d "$FRONTEND_DIR/node_modules" ]; then
+    echo "Installing npm dependencies..."
+    npm --prefix $FRONTEND_DIR install
+fi
+
 # Step 1: Run npm build inside frontend directory
 echo "Step 1: Running npm build..."
 npm --prefix $FRONTEND_DIR run build

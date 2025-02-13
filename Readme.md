@@ -27,18 +27,18 @@ Terno AI is an open-source, enterprise-grade Text-to-SQL solution that ensures a
 3. `docker compose up --build`
 
 ### Without docker
-1. Clone Repository `git clone git@github.com:terno-ai/terno-ai.git`
+1. Clone Repository `git clone git@github.com:terno-ai/terno-ai.git --depth 1`
 2. Change directory `cd terno-ai`
-3. Create virtualenv `virtualenv -p python3.10 venv`
-4. Activate venv `. venv/bin/activate`
-5. Install requirements `pip install -r requirements.txt`
-6. Copy env sample `cp env-sample.sh env.sh`
-7. Source env file `source env.sh`
+3. Build frontend `. ./build_frontend.sh`
+4. Create virtualenv `virtualenv -p python3.10 venv`
+5. Activate venv `. venv/bin/activate`
+6. Install requirements `pip install -r requirements.txt`
+7. Source env file `source env.sh-sample.sh`
 8. Migrate Database `python terno/manage.py migrate`
 9. Run server `python terno/manage.py runserver`
 
 ## 🔧 Configuring
-Django server is running on http://127.0.0.1:8000 by default and admin url is http://127.0.0.1:8000/admin/. To configure go to the admin page.
+Django server is running on http://127.0.0.1:8000 by default and admin url is http://127.0.0.1:8000/admin/. To configure go to the admin page. Default admin user email is admin@example.com and password is Superadmin@123.
 
 ### Basic config
 1. Add LLM Configuration - `/admin/terno/llmconfiguration/`
