@@ -38,7 +38,9 @@ Terno AI is an open-source, enterprise-grade Text-to-SQL solution that ensures a
 9. Run server `python terno/manage.py runserver`
 
 ## 🔧 Configuring
-Django server is running on http://127.0.0.1:8000 by default and admin url is http://127.0.0.1:8000/admin/. To configure go to the admin page. Default admin user email is admin@example.com and password is Superadmin@123.
+Django server is running on http://127.0.0.1:8000 by default and admin url is http://127.0.0.1:8000/admin/. To configure go to the admin page. 
+1. Default admin user email is `admin@example.com`  
+2. password is `Superadmin@123`
 
 ### Basic config
 1. Add LLM Configuration - `/admin/terno/llmconfiguration/`
