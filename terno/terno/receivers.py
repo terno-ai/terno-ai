@@ -6,6 +6,7 @@ import terno.utils as utils
 from sqlshield.models import MDatabase
 import terno.models as models
 from django.core.cache import cache
+from django.contrib.auth.models import User
 
 
 # TODO: delete the extra tables and columns
@@ -131,3 +132,11 @@ def delete_cache_for_datasource(sender, instance, created, **kwargs):
     if not (sender in [models.Table, models.TableColumn, models.ForeignKey] and created):
         for data_source in data_sources:
             delete_cache(data_source)
+
+
+@receiver(post_save, sender=User)
+def add_default_org_user(sender, instance, created, **kwargs):
+    get_default_org = models.Organisation.objects.filter(name='demo')
+    if get_default_org:
+        org_user, created = models.OrganisationUser.objects.get_or_create(
+            organisation=get_default_org.first(), user=instance)
