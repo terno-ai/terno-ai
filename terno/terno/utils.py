@@ -15,7 +15,9 @@ from django.http import HttpResponse
 from django.utils import timezone
 from django.core.cache import cache
 from terno.llm.base import NoSufficientCreditsException, NoDefaultLLMException
+from subscription.models import LLMCredit
 from subscription.utils import deduct_llm_credits
+from django.conf import settings
 
 
 logger = logging.getLogger(__name__)
@@ -239,7 +241,14 @@ def llm_response(user, user_query, db_schema, organisation, datasource):
 
     if is_default_llm:
         try:
-            deduct_llm_credits(organisation.llm_credit, response)
+            if organisation.name == 'demo':
+                llm_credit, created = LLMCredit.objects.get_or_create(owner=user)
+                if created:
+                    llm_credit.credit = settings.FREE_LLM_CREDITS
+                    llm_credit.save()
+                deduct_llm_credits(llm_credit, response)
+            else:
+                deduct_llm_credits(organisation.llm_credit, response)
         except Exception as e:
             logger.exception(e)
             disable_default_llm()
