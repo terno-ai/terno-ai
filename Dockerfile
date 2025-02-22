@@ -12,7 +12,7 @@ ENV PYTHONUNBUFFERED=1 \
 
 RUN apt-get update \
     && apt-get upgrade -y \
-    && apt-get install -y gcc git default-libmysqlclient-dev pkg-config \
+    && apt-get install -y gcc git default-libmysqlclient-dev libpq-dev pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /code/terno-ai
