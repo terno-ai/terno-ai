@@ -387,3 +387,11 @@ def sso_login(request):
             redirect_url += '/admin/terno/llmconfiguration'
         return HttpResponseRedirect(redirect_url)
     return HttpResponseForbidden
+
+
+def file_upload(request):
+    if request.method == 'POST':
+        files = request.FILES.getlist('files')
+        print(files)
+        return JsonResponse({'status': 'success', 'message': 'Files uploaded successfully'}, status=200)
+    return JsonResponse({'status': 'error', 'error': 'Invalid request'}, status=400)
