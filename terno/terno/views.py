@@ -14,6 +14,7 @@ import jwt
 from django.contrib.auth.models import User
 from urllib.parse import unquote
 from allauth.account.utils import perform_login
+import pandas as pd
 
 
 logger = logging.getLogger(__name__)
@@ -392,6 +393,8 @@ def sso_login(request):
 def file_upload(request):
     if request.method == 'POST':
         files = request.FILES.getlist('files')
-        print(files)
+        for file in files:
+            response = utils.parsing_csv_file(request.user, file)
+            logger.info(f"File Uploaded Successfully: {response}") 
         return JsonResponse({'status': 'success', 'message': 'Files uploaded successfully'}, status=200)
     return JsonResponse({'status': 'error', 'error': 'Invalid request'}, status=400)

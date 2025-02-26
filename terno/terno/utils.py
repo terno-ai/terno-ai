@@ -18,6 +18,8 @@ from terno.llm.base import NoSufficientCreditsException, NoDefaultLLMException
 from subscription.models import LLMCredit
 from subscription.utils import deduct_llm_credits
 from django.conf import settings
+import pandas as pd
+import terno.llm as llms
 
 
 logger = logging.getLogger(__name__)
@@ -450,3 +452,52 @@ def disable_default_llm():
         for org_llm in organisation_llms:
             org_llm.llm.enabled = False
             org_llm.llm.save()
+
+def parsing_csv_file(user, file):
+    data_frame_csv = pd.read_csv(file)
+    column_names_of_csv_file = data_frame_csv.columns.tolist()
+    null_values_count_in_columns = data_frame_csv.isnull().sum()
+    data_frame_csv['non_null_values_count_in_columns'] = data_frame_csv.notnull().sum(axis=1) - (data_frame_csv.astype(str).
+                                            apply(lambda x: x.str.strip() == '').sum(axis=1))
+    data_frame_csv_sorted = data_frame_csv.sort_values(by='non_null_values_count_in_columns', ascending=False, kind='stable')
+    top_five_rows = data_frame_csv_sorted.head(5).drop(columns=['non_null_values_count_in_columns'])
+    sample_data_for_llm = top_five_rows.head().to_csv(index=False, sep=",")
+
+    prompt = f"""
+    You are given a DataFrame sample in tabular form:
+
+    {sample_data_for_llm}
+
+    Analyze each column based on this DataFrame sample. For each column, provide:
+    - On the basis of data frame provide the table name.
+    - Make the key of json response as column_1, column_2, till column_n where n is the number of columns in the DataFrame: The count of columns in the DataFrame is {len(column_names_of_csv_file)}.
+    - Suggest human friendly column names for every column. 
+    - Data type (choose from: INT, SMALLINT, BIGINT, DECIMAL, FLOAT, CHAR, VARCHAR, DATE, TIMESTAMP)
+    - Nullable status : If null count for that column is greater than 0 then it is nullable otherwise not : The null counts for each column are as follows: {null_values_count_in_columns.to_string()}.
+    - A short and clear description (one sentence maximum) of the content in each column.
+
+    Respond strictly in the JSON format shown below without any explanations or markdown formatting. JSON format:
+
+    {{
+        "Table Name": {{
+            "name": "table_name_here",
+        }},
+        "column_name_1": {{
+            "name": "column_name_1",
+            "type": "data type here",
+            "nullable": true or false,
+            "description": "Short description here."
+        }},
+        "column_name_2": {{
+            "name": "column_name_2",
+            "type": "data type here",
+            "nullable": true or false,
+            "description": "Short description here."
+        }}
+    }}
+    """
+    organisation = models.OrganisationUser.objects.get(user=user).organisation
+    llm, is_default_llm = llms.LLMFactory().create_llm(organisation)
+    message = llm.create_message_for_llm(system_prompt="You are a helpful assistant skilled in data analysis and schema inference.", ai_prompt="", human_prompt=prompt)
+    response = llm.get_response(message)
+    return response
