@@ -1,3 +1,4 @@
+import io
 import terno.models as models
 from django.contrib.auth.models import Group, Permission
 from sqlshield.shield import Session
@@ -18,7 +19,6 @@ from terno.llm.base import NoSufficientCreditsException, NoDefaultLLMException
 from subscription.models import LLMCredit
 from subscription.utils import deduct_llm_credits
 from django.conf import settings
-import pandas as pd
 import terno.llm as llms
 
 
@@ -453,48 +453,70 @@ def disable_default_llm():
             org_llm.llm.enabled = False
             org_llm.llm.save()
 
+def count_non_null(row):
+    return sum(1 for value in row if value.strip())
+
+def sample_data_for_llm(file,no_of_rows):
+    file.seek(0)
+    reader = csv.reader(io.StringIO(file.read().decode('utf-8')))
+    data = list(reader)
+
+    columns = data[0]
+    num_columns = len(columns)
+    rows = data[0:]
+    null_counts_column = {col: 0 for col in columns}
+    for row in rows:
+        for i, value in enumerate(row):
+            if not value.strip():  
+                null_counts_column[columns[i]] += 1
+
+    rows_with_count = [(index, count_non_null(row), row) for index, row in enumerate(rows)]
+    rows_sorted = sorted(rows_with_count, key=lambda x: (-x[1], x[0])) 
+    top_five_rows = [row for _, _, row in rows_sorted[:no_of_rows]]
+
+    return top_five_rows, num_columns, null_counts_column
+
+
+
 def parsing_csv_file(user, file):
-    data_frame_csv = pd.read_csv(file)
-    column_names_of_csv_file = data_frame_csv.columns.tolist()
-    null_values_count_in_columns = data_frame_csv.isnull().sum()
-    data_frame_csv['non_null_values_count_in_columns'] = data_frame_csv.notnull().sum(axis=1) - (data_frame_csv.astype(str).
-                                            apply(lambda x: x.str.strip() == '').sum(axis=1))
-    data_frame_csv_sorted = data_frame_csv.sort_values(by='non_null_values_count_in_columns', ascending=False, kind='stable')
-    top_five_rows = data_frame_csv_sorted.head(5).drop(columns=['non_null_values_count_in_columns'])
-    sample_data_for_llm = top_five_rows.head().to_csv(index=False, sep=",")
+    sample_data, num_columns, null_values_count_in_columns = sample_data_for_llm(file,5)
+
+    json_response_format = {
+    "table_name": "table_name_here",
+    "column_1": {
+        "name": "column_name_1",
+        "type": "data type here",
+        "nullable": True,
+        "description": "Short description here."
+    },
+    "column_2": {
+        "name": "column_name_2",
+        "type": "data type here",
+        "nullable": False,
+        "description": "Short description here."
+    },
+    "Header Present": "true or false" }
 
     prompt = f"""
     You are given a DataFrame sample in tabular form:
 
-    {sample_data_for_llm}
+    {sample_data}
+
+    Analyze the DataFrame and determine the most appropriate table name based on its structure and contents.
+    - Examine the column names and data patterns in the provided sample.
+    - Based on the observed data, infer a suitable name for the table that best represents its purpose.
+    - Ensure the table name is meaningful, concise, and aligns with standard database naming conventions.
 
     Analyze each column based on this DataFrame sample. For each column, provide:
-    - On the basis of data frame provide the table name.
-    - Make the key of json response as column_1, column_2, till column_n where n is the number of columns in the DataFrame: The count of columns in the DataFrame is {len(column_names_of_csv_file)}.
+    - Make the key of json response as column_1, column_2, till column_n where n is the number of columns in the DataFrame: The count of columns in the DataFrame is {num_columns}.
     - Suggest human friendly column names for every column. 
     - Data type (choose from: INT, SMALLINT, BIGINT, DECIMAL, FLOAT, CHAR, VARCHAR, DATE, TIMESTAMP)
-    - Nullable status : If null count for that column is greater than 0 then it is nullable otherwise not : The null counts for each column are as follows: {null_values_count_in_columns.to_string()}.
+    - Nullable status : If null count for that column is greater than 0 then it is nullable otherwise not : The null counts for each column are as follows: {null_values_count_in_columns}.
     - A short and clear description (one sentence maximum) of the content in each column.
 
     Respond strictly in the JSON format shown below without any explanations or markdown formatting. JSON format:
 
-    {{
-        "Table Name": {{
-            "name": "table_name_here",
-        }},
-        "column_name_1": {{
-            "name": "column_name_1",
-            "type": "data type here",
-            "nullable": true or false,
-            "description": "Short description here."
-        }},
-        "column_name_2": {{
-            "name": "column_name_2",
-            "type": "data type here",
-            "nullable": true or false,
-            "description": "Short description here."
-        }}
-    }}
+    {json_response_format}
     """
     organisation = models.OrganisationUser.objects.get(user=user).organisation
     llm, is_default_llm = llms.LLMFactory().create_llm(organisation)

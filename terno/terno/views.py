@@ -14,7 +14,6 @@ import jwt
 from django.contrib.auth.models import User
 from urllib.parse import unquote
 from allauth.account.utils import perform_login
-import pandas as pd
 
 
 logger = logging.getLogger(__name__)
