@@ -8,8 +8,10 @@ import terno.llm as llms
 from terno.pipeline.pipeline import Pipeline
 from terno.pipeline.step import Step
 import csv
+from subscription.models import LLMCredit
+from terno.models import Organisation, OrganisationUser, OrganisationDataSource
 import io
-
+import sqlite3
 
 class BaseTestCase(TestCase):
     def create_user(self):
@@ -18,13 +20,41 @@ class BaseTestCase(TestCase):
     def create_datasource(self, display_name='test_db'):
         datasource = models.DataSource.objects.create(
             display_name=display_name, type='default',
-            connection_str='sqlite:///../chinook.db',
-            enabled=True
+            connection_str='sqlite:///../Chinook_Sqlite.sqlite',
+            enabled=True,
+            
         )
         return datasource
 
+    def create_organisationdatasource(self, datasource, organisation):
+        OrganisationDataSource.objects.create(
+            organisation=organisation,
+            datasource=datasource
+        )
+
+    def create_organisation(self, user, org_name = "Test Organisation", subdomain = "testorg"):
+
+        llm_credit, _ = LLMCredit.objects.get_or_create(owner=user)
+
+        organisation = Organisation.objects.create(
+            name=org_name,
+            subdomain=subdomain,
+            owner=user,
+            llm_credit=llm_credit,
+            is_active=True
+        )
+
+        OrganisationUser.objects.get_or_create( user=user,organisation=organisation)
+
+        return organisation, user
+
+
+
     def create_mdb(self, ds_display_name='test_db', roles='sales'):
+        user = self.create_user()
         ds = self.create_datasource()
+        organisation, _ = self.create_organisation(user)
+        self.create_organisationdatasource(ds, organisation)
         roles = Group.objects.create(name=roles)
 
         # Setting private tables for all
@@ -83,7 +113,7 @@ class BaseTestCase(TestCase):
 
 class DBEngineTestCase(TestCase):
     def setUp(self):
-        self.connection_string = "sqlite:///../chinook.db"
+        self.connection_string = "sqlite:///../Chinook_Sqlite.sqlite"
         self.bigquery_connection_string = "bigquery://project/dataset"
         self.credentials_info = {
             "type": "service_account",
@@ -93,8 +123,8 @@ class DBEngineTestCase(TestCase):
     def test_create_db_engine(self):
         engine = utils.create_db_engine('sqlite', self.connection_string)
         with engine.connect():
-            self.assertEqual(engine.dialect.name, 'sqlite')
-            self.assertEqual(str(engine.dialect.server_version_info), '(3, 46, 1)')
+            self.assertEqual(engine.dialect.name, 'sqlite') 
+            self.assertEqual(str(engine.dialect.server_version_info), str(tuple(map(int, sqlite3.sqlite_version.split('.')))))
 
     @patch('terno.utils.sqlalchemy.create_engine')
     def test_create_db_engine_bigquery(self, mock_create_engine):
@@ -190,6 +220,7 @@ class LLMResponseTestCase(BaseTestCase):
     def setUp(self):
         self.user = super().create_user()
         self.datasource = super().create_datasource()
+        self.organisation = super().create_organisation(self.user)
         self.user_query = "Show me all albums"
         self.db_schema = "CREATE TABLE Album (AlbumId INTEGER, Title NVARCHAR(160), ArtistId INTEGER)"
 
@@ -207,7 +238,7 @@ class LLMResponseTestCase(BaseTestCase):
         mock_get_response.return_value = [["SELECT * FROM Album"]]
 
         response = utils.llm_response(self.user, self.user_query,
-                                      self.db_schema, self.datasource)
+                                      self.db_schema,self.organisation , self.datasource)
 
         self.assertEqual(response['status'], 'success')
         self.assertEqual(response['generated_sql'], "SELECT * FROM Album")
@@ -221,7 +252,7 @@ class LLMResponseTestCase(BaseTestCase):
     def test_llm_response_error(self, mock_create_llm):
         mock_create_llm.side_effect = Exception("LLM Error")
 
-        response = utils.llm_response(self.user, self.user_query, self.db_schema, self.datasource)
+        response = utils.llm_response(self.user, self.user_query, self.db_schema,self.organisation ,  self.datasource)
 
         self.assertEqual(response['status'], 'error')
         self.assertIn('LLM Error', response['error'])
