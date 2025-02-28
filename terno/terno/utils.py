@@ -477,7 +477,12 @@ def sample_data_for_llm(file,no_of_rows):
 
     return top_five_rows, num_columns, null_counts_column
 
-
+def llm_response(user, prompt):
+    organisation = models.OrganisationUser.objects.get(user=user).organisation
+    llm, is_default_llm = llms.LLMFactory().create_llm(organisation)
+    message = llm.create_message_for_llm(system_prompt="You are a helpful assistant skilled in data analysis and schema inference.", ai_prompt="", human_prompt=prompt)
+    response = llm.get_response(message)
+    return response
 
 def parsing_csv_file(user, file):
     sample_data, num_columns, null_values_count_in_columns = sample_data_for_llm(file,5)
@@ -496,7 +501,7 @@ def parsing_csv_file(user, file):
         "nullable": False,
         "description": "Short description here."
     },
-    "Header Present": "true or false" }
+    "Header": "true or false" }
 
     prompt = f"""
     You are given a DataFrame sample in tabular form:
@@ -510,7 +515,8 @@ def parsing_csv_file(user, file):
 
     Analyze each column based on this DataFrame sample. For each column, provide:
     - Make the key of json response as column_1, column_2, till column_n where n is the number of columns in the DataFrame: The count of columns in the DataFrame is {num_columns}.
-    - Suggest human friendly column names for every column. 
+    - Column names can be present in first row, if not Suggest human friendly column names for every column.
+    - If column names are present set Header to true otherwise false. 
     - Data type (choose from: INT, SMALLINT, BIGINT, DECIMAL, FLOAT, CHAR, VARCHAR, DATE, TIMESTAMP)
     - Nullable status : If null count for that column is greater than 0 then it is nullable otherwise not : The null counts for each column are as follows: {null_values_count_in_columns}.
     - A short and clear description (one sentence maximum) of the content in each column.
@@ -519,10 +525,8 @@ def parsing_csv_file(user, file):
 
     {json_response_format}
     """
-    organisation = models.OrganisationUser.objects.get(user=user).organisation
-    llm, is_default_llm = llms.LLMFactory().create_llm(organisation)
-    message = llm.create_message_for_llm(system_prompt="You are a helpful assistant skilled in data analysis and schema inference.", ai_prompt="", human_prompt=prompt)
-    response = llm.get_response(message)
+    response = llm_response(user, prompt)
+
     return response
 
 

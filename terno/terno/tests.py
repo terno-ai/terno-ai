@@ -1,3 +1,6 @@
+import os
+from unittest import mock
+import django
 from django.test import TestCase
 from unittest.mock import patch, MagicMock
 from django.contrib.auth.models import User, Group
@@ -10,6 +13,9 @@ from terno.pipeline.step import Step
 import csv
 import io
 
+# Ensure the settings module is set
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'terno.settings')
+django.setup()
 
 class BaseTestCase(TestCase):
     def create_user(self):
@@ -348,3 +354,66 @@ class SubstituteTestCase(BaseTestCase):
         expected_response = f"{context_dict['db_schema']} {context_dict['dialect_name']} {context_dict['dialect_version']}"
 
         self.assertEqual(response, expected_response)
+
+class FileUploadTestCase(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='testuser', password='12345')
+        #self.organisation = models.OrganisationUser.objects.get(user=self.user).organisation
+        self.test_csv_file = "test_data.csv"
+        self.data = [
+                        ["id", "name", "email", "age", "is_active"],
+                        [1, "Alice", "alice@example.com", 25, True],
+                        [2, "Bob", "bob@example.com", 30, False],
+                        [3, "Charlie", "charlie@example.com", 28, True],
+                        [4, "David", "david@example.com", 35, False],
+                        [5, "Eve", "eve@example.com", None, True],  ]
+        self.generate_test_csv()
+    
+    def generate_test_csv(self):
+        with open(self.test_csv_file, mode="w", newline="") as file:
+            writer = csv.writer(file)
+            writer.writerows(self.data)
+        return self.test_csv_file
+    
+    @mock.patch("terno.utils.llm_response")
+    def test_file_upload(self, mock_llm_response):
+        # Create a test CSV file
+        mock_llm_response.return_value = {
+                "message": "File Uploaded Successfully",
+                "generated_sql": '''{
+                    "table_name": "users",
+                    "column_1": {
+                        "name": "UserId",
+                        "type": "INT",
+                        "nullable": false,
+                        "description": "Unique identifier for each user."
+                    },
+                    "column_2": {
+                        "name": "Username",
+                        "type": "VARCHAR",
+                        "nullable": false,
+                        "description": "Username of the user."
+                    },
+                    "column_3": {
+                        "name": "Email",
+                        "type": "VARCHAR",
+                        "nullable": false,
+                        "description": "Email address of the user."
+                    },
+                    "Header": true
+                }'''
+            }
+
+        # Create a test CSV file
+        test_file = self.generate_test_csv()
+        with open(self.test_csv_file, "rb") as test_file:
+            response = utils.parsing_csv_file(self.user, test_file)
+
+        print("Expected:", mock_llm_response.return_value["generated_sql"])
+        print("Actual:", response['generated_sql'])
+
+        # Check the response
+        self.assertEqual(response['message'], "File Uploaded Successfully")
+        self.assertEqual(response['generated_sql'], mock_llm_response.return_value["generated_sql"])
+
+        mock_llm_response.assert_called_once()
