@@ -13,6 +13,7 @@ from terno.models import Organisation, OrganisationUser, OrganisationDataSource
 import io
 import sqlite3
 
+
 class BaseTestCase(TestCase):
     def create_user(self):
         return User.objects.create_user(username='testuser', password='12345')
@@ -32,7 +33,7 @@ class BaseTestCase(TestCase):
             datasource=datasource
         )
 
-    def create_organisation(self, user, org_name = "Test Organisation", subdomain = "testorg"):
+    def create_organisation(self, user, org_name="Test Organisation", subdomain="testorg"):
 
         llm_credit, _ = LLMCredit.objects.get_or_create(owner=user)
 
@@ -44,11 +45,9 @@ class BaseTestCase(TestCase):
             is_active=True
         )
 
-        OrganisationUser.objects.get_or_create( user=user,organisation=organisation)
+        OrganisationUser.objects.get_or_create(user=user, organisation=organisation)
 
         return organisation, user
-
-
 
     def create_mdb(self, ds_display_name='test_db', roles='sales'):
         user = self.create_user()
@@ -123,7 +122,7 @@ class DBEngineTestCase(TestCase):
     def test_create_db_engine(self):
         engine = utils.create_db_engine('sqlite', self.connection_string)
         with engine.connect():
-            self.assertEqual(engine.dialect.name, 'sqlite') 
+            self.assertEqual(engine.dialect.name, 'sqlite')
             self.assertEqual(str(engine.dialect.server_version_info), str(tuple(map(int, sqlite3.sqlite_version.split('.')))))
 
     @patch('terno.utils.sqlalchemy.create_engine')
@@ -213,14 +212,15 @@ class LLMTestCase(BaseTestCase):
 
         llm = llms.LLMFactory().create_llm()
         response = llm.get_response(messages='messages')
-        self.assertEqual(response, "SELECT 1")
+        print("Actual Fake LLM Response: ", type(response))
+        self.assertEqual(response[1], "SELECT 1")
 
 
 class LLMResponseTestCase(BaseTestCase):
     def setUp(self):
         self.user = super().create_user()
         self.datasource = super().create_datasource()
-        self.organisation = super().create_organisation(self.user)
+        self.organisation, _ = super().create_organisation(self.user)
         self.user_query = "Show me all albums"
         self.db_schema = "CREATE TABLE Album (AlbumId INTEGER, Title NVARCHAR(160), ArtistId INTEGER)"
 
@@ -238,8 +238,9 @@ class LLMResponseTestCase(BaseTestCase):
         mock_get_response.return_value = [["SELECT * FROM Album"]]
 
         response = utils.llm_response(self.user, self.user_query,
-                                      self.db_schema,self.organisation , self.datasource)
-
+                                      self.db_schema, self.organisation, self.datasource)
+        print("Actual Response:", response)
+        print("Organisation : ", self.organisation)
         self.assertEqual(response['status'], 'success')
         self.assertEqual(response['generated_sql'], "SELECT * FROM Album")
         mock_create_llm.assert_called_once()
@@ -252,7 +253,7 @@ class LLMResponseTestCase(BaseTestCase):
     def test_llm_response_error(self, mock_create_llm):
         mock_create_llm.side_effect = Exception("LLM Error")
 
-        response = utils.llm_response(self.user, self.user_query, self.db_schema,self.organisation ,  self.datasource)
+        response = utils.llm_response(self.user, self.user_query, self.db_schema, self.organisation ,  self.datasource)
 
         self.assertEqual(response['status'], 'error')
         self.assertIn('LLM Error', response['error'])
