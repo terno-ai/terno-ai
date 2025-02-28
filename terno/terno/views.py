@@ -394,6 +394,7 @@ def file_upload(request):
         files = request.FILES.getlist('files')
         for file in files:
             response = utils.parsing_csv_file(request.user, file)
-            logger.info(f"File Uploaded Successfully: {response}") 
+            sqlite = utils.write_sqlite_from_json(response)
+            logger.info(f"File Uploaded Successfully: {response}")
         return JsonResponse({'status': 'success', 'message': 'Files uploaded successfully'}, status=200)
     return JsonResponse({'status': 'error', 'error': 'Invalid request'}, status=400)

@@ -20,6 +20,7 @@ from subscription.models import LLMCredit
 from subscription.utils import deduct_llm_credits
 from django.conf import settings
 import terno.llm as llms
+from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, Float, Boolean
 
 
 logger = logging.getLogger(__name__)
@@ -523,3 +524,91 @@ def parsing_csv_file(user, file):
     message = llm.create_message_for_llm(system_prompt="You are a helpful assistant skilled in data analysis and schema inference.", ai_prompt="", human_prompt=prompt)
     response = llm.get_response(message)
     return response
+
+
+def write_sqlite_from_json(data):
+    data = {
+        'table_name': 'Album',
+        'columns': [
+            {
+                "name": "id",
+                "type": "int",
+                "nullable": False,
+                "description": "Short description here."
+            },
+            {
+                "name": "Album Name",
+                "type": "str",
+                "nullable": False,
+                "description": "Short description here."
+            },
+            {
+                "name": "Artist id",
+                "type": "int",
+                "nullable": False,
+                "description": "Short description here."
+            },
+        ],
+        'header_row': True
+    }
+    type_mapping = {
+        'int': Integer,
+        'str': String,
+        'float': Float,
+        'bool': Boolean
+    }
+    engine = create_engine('sqlite:///my_database.db', echo=True)
+    metadata = MetaData()
+    columns = []
+    for col in data['columns']:
+        col_name = col['name']
+        col_type = type_mapping.get(col['type'], String)
+
+        if col_name.lower() == 'id':
+            column = Column(col_name, col_type, primary_key=True, nullable=col['nullable'],
+                            comment=col.get('description', ''))
+        else:
+            column = Column(col_name, col_type, nullable=col['nullable'],
+                            comment=col.get('description', ''))
+        columns.append(column)
+
+    table = Table(data['table_name'], metadata, *columns)
+
+    metadata.create_all(engine)
+    add_data_sqlite(engine, data, table)
+    return data
+
+
+def add_data_sqlite(engine, data, table):
+    csv_file_path = ''
+
+    with open(csv_file_path, newline='', encoding='utf-8') as csvfile:
+        reader = csv.DictReader(csvfile)
+
+        with engine.connect() as connection:
+            trans = connection.begin()
+            try:
+                if data.get('header_row', True):
+                    header = next(reader, None)
+                else:
+                    header = None
+                for row in reader:
+                    ordered_row = {}
+
+                    for index, col in enumerate(data['columns']):
+                        col_name = col['name']
+                        value = list(row.values())[index] if index < len(row) else None
+
+                        if col['type'] == 'int':
+                            ordered_row[col_name] = int(value) if value else None
+                        elif col['type'] == 'float':
+                            ordered_row[col_name] = float(value) if value else None
+                        else:
+                            ordered_row[col_name] = value
+
+                    connection.execute(table.insert().values(**ordered_row))
+
+                trans.commit()
+            except Exception as e:
+                trans.rollback()
+                logger.exception(e)
