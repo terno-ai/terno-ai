@@ -455,13 +455,13 @@ def disable_default_llm():
         for org_llm in organisation_llms:
             org_llm.llm.enabled = False
             org_llm.llm.save()
-            
+
 
 def count_non_null(row):
     return sum(1 for value in row if value.strip())
 
 
-def sample_data_for_llm(file,no_of_rows):
+def sample_data_for_llm(file, no_of_rows):
     file.seek(0)
     reader = csv.reader(io.StringIO(file.read().decode('utf-8')))
     data = list(reader)
@@ -481,27 +481,52 @@ def sample_data_for_llm(file,no_of_rows):
 
     return top_five_rows, num_columns, null_counts_column
 
-    
-def parsing_csv_file(user, file):
+
+def parsing_csv_file(user, file, organisation):
+    return {
+        'table_name': 'Album',
+        'columns': [
+            {
+                "name": "id",
+                "type": "int",
+                "nullable": False,
+                "description": "Short description here."
+            },
+            {
+                "name": "Album Name",
+                "type": "str",
+                "nullable": False,
+                "description": "Short description here."
+            },
+            {
+                "name": "Artist id",
+                "type": "int",
+                "nullable": False,
+                "description": "Short description here."
+            },
+        ],
+        'header_row': True
+    }
     sample_data, num_columns, null_values_count_in_columns = sample_data_for_llm(file,5)
 
     json_response_format = {
-   "table_name": "table_name_here",
-    "columns": [
-        {
-            "name": "column_name_1",
-            "type": "data type here",
-            "nullable": True,
-            "description": "Short description here."
-        },
-        {
-            "name": "column_name_2",
-            "type": "data type here",
-            "nullable": False,
-            "description": "Short description here."
-        }
-    ],
-    "header_row": "True or false" }
+        "table_name": "table_name_here",
+        "columns": [
+            {
+                "name": "column_name_1",
+                "type": "data type here",
+                "nullable": True,
+                "description": "Short description here."
+            },
+            {
+                "name": "column_name_2",
+                "type": "data type here",
+                "nullable": False,
+                "description": "Short description here."
+            }
+        ],
+        "header_row": "True or false"
+    }
 
     prompt = f"""
     You are given a DataFrame sample in tabular form:
@@ -529,38 +554,15 @@ def parsing_csv_file(user, file):
     return response
 
 
-def write_sqlite_from_json(data):
-    data = {
-        'table_name': 'Album',
-        'columns': [
-            {
-                "name": "id",
-                "type": "int",
-                "nullable": False,
-                "description": "Short description here."
-            },
-            {
-                "name": "Album Name",
-                "type": "str",
-                "nullable": False,
-                "description": "Short description here."
-            },
-            {
-                "name": "Artist id",
-                "type": "int",
-                "nullable": False,
-                "description": "Short description here."
-            },
-        ],
-        'header_row': True
-    }
+def write_sqlite_from_json(data, datasource):
     type_mapping = {
         'int': Integer,
         'str': String,
         'float': Float,
         'bool': Boolean
     }
-    engine = create_engine('sqlite:///my_database.db', echo=True)
+    sqlite_url = 'sqlite:///' + datasource.display_name + '.db'
+    engine = create_engine(sqlite_url, echo=True)
     metadata = MetaData()
     columns = []
     for col in data['columns']:
@@ -576,16 +578,14 @@ def write_sqlite_from_json(data):
         columns.append(column)
 
     table = Table(data['table_name'], metadata, *columns)
-
     metadata.create_all(engine)
-    add_data_sqlite(engine, data, table)
-    return data
+    return table, sqlite_url
 
 
-def add_data_sqlite(engine, data, table):
-    csv_file_path = ''
+def add_data_sqlite(sqlite_url, data, table, file):
+    engine = create_engine(sqlite_url, echo=True)
 
-    with open(csv_file_path, newline='', encoding='utf-8') as csvfile:
+    with open(file, newline='', encoding='utf-8') as csvfile:
         reader = csv.DictReader(csvfile)
 
         with engine.connect() as connection:

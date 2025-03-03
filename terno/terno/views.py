@@ -392,9 +392,24 @@ def sso_login(request):
 def file_upload(request):
     if request.method == 'POST':
         files = request.FILES.getlist('files')
-        for file in files:
-            response = utils.parsing_csv_file(request.user, file)
-            sqlite = utils.write_sqlite_from_json(response)
-            logger.info(f"File Uploaded Successfully: {response}")
-        return JsonResponse({'status': 'success', 'message': 'Files uploaded successfully'}, status=200)
+        org_id = request.org_id
+        organisation = models.Organisation.objects.get(id=org_id)
+        datasource = models.DataSource.objects.get(id=17)
+
+        if not models.OrganisationUser.objects.filter(
+            user=request.user,
+            organisation=organisation).exists():
+            return HttpResponseForbidden("You do not belong to this organisation.")
+
+        try:
+            for file in files:
+                file_metadata = utils.parsing_csv_file(request.user, file, organisation)
+                table, sqlite_url = utils.write_sqlite_from_json(file_metadata, datasource)
+                utils.add_data_sqlite(sqlite_url, file_metadata, table, file)
+                datasource.connection_str = sqlite_url
+                datasource.save()
+                logger.info(f"File Uploaded Successfully: {file_metadata}")
+            return JsonResponse({'status': 'success', 'message': 'Files uploaded successfully'}, status=200)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'error': e}, status=200)
     return JsonResponse({'status': 'error', 'error': 'Invalid request'}, status=400)
