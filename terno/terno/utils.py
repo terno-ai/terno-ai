@@ -453,9 +453,11 @@ def disable_default_llm():
         for org_llm in organisation_llms:
             org_llm.llm.enabled = False
             org_llm.llm.save()
+            
 
 def count_non_null(row):
     return sum(1 for value in row if value.strip())
+
 
 def sample_data_for_llm(file,no_of_rows):
     file.seek(0)
@@ -483,25 +485,27 @@ def llm_response(user, prompt):
     message = llm.create_message_for_llm(system_prompt="You are a helpful assistant skilled in data analysis and schema inference.", ai_prompt="", human_prompt=prompt)
     response = llm.get_response(message)
     return response
-
+    
 def parsing_csv_file(user, file):
     sample_data, num_columns, null_values_count_in_columns = sample_data_for_llm(file,5)
 
     json_response_format = {
-    "table_name": "table_name_here",
-    "column_1": {
-        "name": "column_name_1",
-        "type": "data type here",
-        "nullable": True,
-        "description": "Short description here."
-    },
-    "column_2": {
-        "name": "column_name_2",
-        "type": "data type here",
-        "nullable": False,
-        "description": "Short description here."
-    },
-    "Header": "true or false" }
+   "table_name": "table_name_here",
+    "columns": [
+        {
+            "name": "column_name_1",
+            "type": "data type here",
+            "nullable": True,
+            "description": "Short description here."
+        },
+        {
+            "name": "column_name_2",
+            "type": "data type here",
+            "nullable": False,
+            "description": "Short description here."
+        }
+    ],
+    "header_row": "True or false" }
 
     prompt = f"""
     You are given a DataFrame sample in tabular form:
@@ -514,9 +518,9 @@ def parsing_csv_file(user, file):
     - Ensure the table name is meaningful, concise, and aligns with standard database naming conventions.
 
     Analyze each column based on this DataFrame sample. For each column, provide:
-    - Make the key of json response as column_1, column_2, till column_n where n is the number of columns in the DataFrame: The count of columns in the DataFrame is {num_columns}.
+    - The count of columns in the DataFrame is {num_columns}. Make sure the order of columns is preserved.
     - Column names can be present in first row, if not Suggest human friendly column names for every column.
-    - If column names are present set Header to true otherwise false. 
+    - If column names are present set header_row to true otherwise false. 
     - Data type (choose from: INT, SMALLINT, BIGINT, DECIMAL, FLOAT, CHAR, VARCHAR, DATE, TIMESTAMP)
     - Nullable status : If null count for that column is greater than 0 then it is nullable otherwise not : The null counts for each column are as follows: {null_values_count_in_columns}.
     - A short and clear description (one sentence maximum) of the content in each column.

@@ -404,15 +404,10 @@ class FileUploadTestCase(TestCase):
                 }'''
             }
 
-        # Create a test CSV file
         test_file = self.generate_test_csv()
         with open(self.test_csv_file, "rb") as test_file:
             response = utils.parsing_csv_file(self.user, test_file)
 
-        print("Expected:", mock_llm_response.return_value["generated_sql"])
-        print("Actual:", response['generated_sql'])
-
-        # Check the response
         self.assertEqual(response['message'], "File Uploaded Successfully")
         self.assertEqual(response['generated_sql'], mock_llm_response.return_value["generated_sql"])
 
