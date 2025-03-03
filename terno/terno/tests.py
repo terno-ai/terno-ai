@@ -375,7 +375,7 @@ class FileUploadTestCase(TestCase):
             writer.writerows(self.data)
         return self.test_csv_file
     
-    @mock.patch("terno.utils.llm_response")
+    @mock.patch("terno.utils.console_llm_response")
     def test_file_upload(self, mock_llm_response):
         # Create a test CSV file
         mock_llm_response.return_value = {

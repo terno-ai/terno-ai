@@ -200,10 +200,12 @@ def get_admin_config_object(datasource, roles):
     return all_group_tables, group_columns
 
 
-def console_llm_response(user, messages):
+def console_llm_response(user, human_prompt):
     try:
-        llm, is_default_llm = LLMFactory.create_llm()
-        response = llm.get_response(messages)
+        organisation = models.OrganisationUser.objects.get(user=user).organisation
+        llm, is_default_llm = LLMFactory.create_llm(organisation)
+        message = llm.create_message_for_llm(system_prompt="You are a helpful assistant skilled in data analysis and schema inference.", ai_prompt="", human_prompt=human_prompt)
+        response = llm.get_response(message)
         response_sql = response
     except NoSufficientCreditsException as e:
         logger.exception(e)
@@ -479,12 +481,6 @@ def sample_data_for_llm(file,no_of_rows):
 
     return top_five_rows, num_columns, null_counts_column
 
-def llm_response(user, prompt):
-    organisation = models.OrganisationUser.objects.get(user=user).organisation
-    llm, is_default_llm = llms.LLMFactory().create_llm(organisation)
-    message = llm.create_message_for_llm(system_prompt="You are a helpful assistant skilled in data analysis and schema inference.", ai_prompt="", human_prompt=prompt)
-    response = llm.get_response(message)
-    return response
     
 def parsing_csv_file(user, file):
     sample_data, num_columns, null_values_count_in_columns = sample_data_for_llm(file,5)
@@ -529,8 +525,7 @@ def parsing_csv_file(user, file):
 
     {json_response_format}
     """
-    response = llm_response(user, prompt)
-
+    response = console_llm_response(user, prompt)
     return response
 
 
