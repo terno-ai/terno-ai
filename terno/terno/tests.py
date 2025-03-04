@@ -281,9 +281,11 @@ class CreatePipelineTestCase(BaseTestCase):
 class GenerateExecuteNativeSQLTestCase(BaseTestCase):
     def setUp(self) -> None:
         self.mdb = super().create_mdb()
+        self.datasource = super().create_datasource()
 
     def test_generate_native_sql(self):
-        response = utils.generate_native_sql(self.mdb, 'SELECT * from Album;')
+        response = utils.generate_native_sql(
+            self.mdb, 'SELECT * from Album;', self.datasource.dialect_name)
         expected_sql = 'SELECT * FROM (SELECT AlbumId AS AlbumId, Title AS Title, ArtistId AS ArtistId FROM Album) AS Album'
 
         self.assertEqual(response['status'], 'success')
@@ -291,7 +293,8 @@ class GenerateExecuteNativeSQLTestCase(BaseTestCase):
                          expected_sql)
 
     def test_generate_native_sql_error(self):
-        response = utils.generate_native_sql(self.mdb, 'SELECT * from InvalidTable;')
+        response = utils.generate_native_sql(
+            self.mdb, 'SELECT * from InvalidTable;', self.datasource.dialect_name)
 
         self.assertEqual(response['status'], 'error')
         self.assertEqual(response['error'],

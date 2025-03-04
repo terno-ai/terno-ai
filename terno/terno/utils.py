@@ -326,10 +326,10 @@ def generate_mdb(datasource):
     return mdb
 
 
-def generate_native_sql(mDb, user_sql):
+def generate_native_sql(mDb, user_sql, dialect):
     sess = Session(mDb, '')
     try:
-        native_sql = sess.generateNativeSQL(user_sql)
+        native_sql = sess.generateNativeSQL(user_sql, dialect)
         return {
             'status': 'success',
             'native_sql': native_sql

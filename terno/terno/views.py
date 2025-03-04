@@ -226,7 +226,8 @@ def execute_sql(request):
 
     mDB = utils.prepare_mdb(datasource, roles)
 
-    native_sql_response = utils.generate_native_sql(mDB, user_sql)
+    native_sql_response = utils.generate_native_sql(
+        mDB, user_sql, datasource.dialect_name)
 
     if native_sql_response['status'] == 'error':
         return JsonResponse({
@@ -287,7 +288,8 @@ def export_sql_result(request):
 
     mDB = utils.prepare_mdb(datasource, roles)
 
-    native_sql_response = utils.generate_native_sql(mDB, user_sql)
+    native_sql_response = utils.generate_native_sql(
+        mDB, user_sql, datasource.dialect_name)
 
     if native_sql_response['status'] == 'error':
         return JsonResponse({
