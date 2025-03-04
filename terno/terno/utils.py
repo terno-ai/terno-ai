@@ -584,34 +584,28 @@ def write_sqlite_from_json(data, datasource):
 
 def add_data_sqlite(sqlite_url, data, table, file):
     engine = create_engine(sqlite_url, echo=True)
+    with engine.connect() as connection:
+        trans = connection.begin()
+        try:
+            file.seek(0)
+            reader = csv.reader(file.read().decode('utf-8').splitlines())
 
-    with open(file, newline='', encoding='utf-8') as csvfile:
-        reader = csv.DictReader(csvfile)
+            if data.get('header_row', True):
+                header = next(reader, None)
 
-        with engine.connect() as connection:
-            trans = connection.begin()
-            try:
-                if data.get('header_row', True):
-                    header = next(reader, None)
-                else:
-                    header = None
-                for row in reader:
-                    ordered_row = {}
-
-                    for index, col in enumerate(data['columns']):
-                        col_name = col['name']
-                        value = list(row.values())[index] if index < len(row) else None
-
-                        if col['type'] == 'int':
-                            ordered_row[col_name] = int(value) if value else None
-                        elif col['type'] == 'float':
-                            ordered_row[col_name] = float(value) if value else None
-                        else:
-                            ordered_row[col_name] = value
-
-                    connection.execute(table.insert().values(**ordered_row))
-
-                trans.commit()
-            except Exception as e:
-                trans.rollback()
-                logger.exception(e)
+            for row in reader:
+                ordered_row = {}
+                for index, col in enumerate(data['columns']):
+                    col_name = col['name']
+                    value = row[index] if index < len(row) else None
+                    if col['type'] == 'int':
+                        ordered_row[col_name] = int(value) if value else None
+                    elif col['type'] == 'float':
+                        ordered_row[col_name] = float(value) if value else None
+                    else:
+                        ordered_row[col_name] = value
+                connection.execute(table.insert().values(**ordered_row))
+            trans.commit()
+        except Exception as e:
+            trans.rollback()
+            print("Error inserting data:", e)

@@ -30,7 +30,6 @@ const Uploadfiles = ({
   const handleUpload = async () => {
     setOpen(true);
     setLoading(true);
-    console.log(files);
     if (files) {
       const response = await fileUpload(files);
       if (response["status"] == "success") {
@@ -51,7 +50,7 @@ const Uploadfiles = ({
           </AlertDialogTitle>
           <AlertDialogDescription>
             <div className="w-[400px]">
-              <form method="post" onSubmit={handleUpload}>
+              <form method="post">
                 <CSRFToken />
                 <div className="my-4">
                   <label
