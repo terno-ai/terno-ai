@@ -75,7 +75,8 @@ class OpenAILLM(BaseLLM):
 
         return_dict = {}
         generated_sql = response.choices[0].message.content
-        return_dict['generated_sql'] = generated_sql.strip().removeprefix("```sql").removesuffix("```")
+        return_dict['generated_sql'] = generated_sql.strip().removeprefix("```sql").removeprefix("```").removesuffix("```").strip()
+
         try:
             return_dict['input_tokens'] = response.usage.prompt_tokens
             return_dict['input_tokens_cached'] = response.usage.prompt_tokens_details['cached_tokens']
