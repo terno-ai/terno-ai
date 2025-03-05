@@ -493,13 +493,13 @@ def parsing_csv_file(user, file, organisation):
                 "description": "Short description here."
             },
             {
-                "name": "Album Name",
+                "name": "name",
                 "type": "str",
                 "nullable": False,
                 "description": "Short description here."
             },
             {
-                "name": "Artist id",
+                "name": "artistid",
                 "type": "int",
                 "nullable": False,
                 "description": "Short description here."
@@ -563,7 +563,9 @@ def write_sqlite_from_json(data, datasource):
         'float': Float,
         'bool': Boolean
     }
-    sqlite_url = 'sqlite:///' + datasource.display_name + '.db'
+    user_sqlite_path = settings.USER_SQLITE_PATH
+    file_name = datasource.display_name + '.db'
+    sqlite_url = 'sqlite:///' + user_sqlite_path + file_name
     engine = create_engine(sqlite_url, echo=True)
     metadata = MetaData()
     columns = []

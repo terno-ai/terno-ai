@@ -211,12 +211,8 @@ def file_upload(request):
         try:
             total_existing_ds = models.OrganisationDataSource.objects.filter(organisation=organisation).count()
             display_name = f"{organisation.name}_ds_{total_existing_ds + 1}"
-            sqlite_db_path = os.path.join(settings.BASE_DIR, f"{display_name}.sqlite")
-            connection_str = f"sqlite:///{sqlite_db_path}"
-
             datasource = models.DataSource.objects.create(
                 type='sqlite',
-                connection_str=connection_str,
                 display_name=display_name,
                 enabled=True
             )
