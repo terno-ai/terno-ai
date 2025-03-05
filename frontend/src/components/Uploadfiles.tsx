@@ -14,9 +14,11 @@ import { fileUpload } from "../utils/api";
 const Uploadfiles = ({
   open,
   setOpen,
+  dsId,
 }: {
   open: boolean;
   setOpen: (open: boolean) => void;
+  dsId: string;
 }) => {
   const [files, setFiles] = useState<FileList | null>(null);
   const [loading, setLoading] = useState(false);
@@ -31,7 +33,7 @@ const Uploadfiles = ({
     setOpen(true);
     setLoading(true);
     if (files) {
-      const response = await fileUpload(files);
+      const response = await fileUpload(files, dsId);
       if (response["status"] == "success") {
         console.log("done");
       } else {

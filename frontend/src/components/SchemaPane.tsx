@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { getTables } from "../utils/api";
 import DataSourceDropDown from "./DataSourceDropDown";
 import TableColumnAccordian from "./TableColumnAccordian";
 import { UploadIcon } from "lucide-react";
 import Uploadfiles from "./Uploadfiles";
 import useUserDetails from "../hooks/useUserDetails";
+import { DataSourceContext } from "./ui/datasource-context";
 
 interface ColumnData {
   public_name: string;
@@ -23,6 +24,7 @@ const SchemaPane = () => {
   const [filteredData, setFilteredData] = useState<TableData[]>([]);
   const [open, setOpen] = useState(false);
   const [user] = useUserDetails();
+  const { ds } = useContext(DataSourceContext);
 
   const handleSelect = async (value: string) => {
     const response = await getTables(value);
@@ -54,6 +56,7 @@ const SchemaPane = () => {
           <Uploadfiles
             open={open}
             setOpen={setOpen}
+            dsId={ds.id}
           />
         </a>
         ): <></>}

@@ -225,10 +225,10 @@ export const logout = async () => {
   return result;
 }
 
-export const fileUpload = async (files: FileList) => {
+export const fileUpload = async (files: FileList, dsId: string) => {
   const csrfToken = getCsrfToken();
   const formData = new FormData();
-  
+  formData.append('dsId', dsId);
   for (let i = 0; i < files.length; i++) {
     formData.append('files', files[i]);
   }

@@ -405,12 +405,19 @@ def file_upload(request):
         files = request.FILES.getlist('files')
         org_id = request.org_id
         organisation = models.Organisation.objects.get(id=org_id)
-        datasource = models.DataSource.objects.get(id=17)
 
         if not models.OrganisationUser.objects.filter(
             user=request.user,
             organisation=organisation).exists():
             return HttpResponseForbidden("You do not belong to this organisation.")
+
+        ds_id = request.POST.get('dsId')
+        datasource = models.DataSource.objects.get(id=ds_id)
+        if not models.OrganisationDataSource.objects.filter(
+            organisation=organisation,
+            datasource=datasource
+        ).exists():
+            return HttpResponseForbidden("You do not have access to this datasource.")
 
         try:
             for file in files:
