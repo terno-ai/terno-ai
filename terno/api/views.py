@@ -192,3 +192,19 @@ def get_llm_credits(request):
                 'error': 'Invalid JSON data'
             })
     return JsonResponse({'status': 'error', 'error': 'User not found'})
+
+@csrf_exempt
+def file_upload(request):
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+
+    org_id = data.get('org_id')
+    if not org_id:
+        return JsonResponse({'status': 'error', 'message': 'Organisation ID is required'}, status=400)
+            
+    return JsonResponse({"status": "success",
+                    "message": "File Uploaded Successfully!",
+                    "org_id": org_id}, status=200
+            )
