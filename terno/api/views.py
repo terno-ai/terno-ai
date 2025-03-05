@@ -1,7 +1,8 @@
+import os
 from terno.models import Organisation, OrganisationUser, DataSource, OrganisationDataSource
 from api.utils import get_user_name
 from django.contrib.auth.models import User
-from django.http import JsonResponse
+from django.http import HttpResponseForbidden, JsonResponse
 import json
 from django.views.decorators.csrf import csrf_exempt
 from allauth.account.models import EmailAddress
@@ -10,6 +11,8 @@ from django.conf import settings
 from subscription.models import LLMCredit
 from django.contrib.auth import logout
 import subscription.models as subs_models
+import terno.utils as utils
+import terno.models as models
 
 
 @csrf_exempt
@@ -195,16 +198,40 @@ def get_llm_credits(request):
 
 @csrf_exempt
 def file_upload(request):
-    try:
-        data = json.loads(request.body)
-    except json.JSONDecodeError:
-        return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+    if request.method == 'POST':
+        files = request.FILES.getlist('files')
+        org_id = request.org_id
+        organisation = models.Organisation.objects.get(id=org_id)
 
-    org_id = data.get('org_id')
-    if not org_id:
-        return JsonResponse({'status': 'error', 'message': 'Organisation ID is required'}, status=400)
-            
-    return JsonResponse({"status": "success",
-                    "message": "File Uploaded Successfully!",
-                    "org_id": org_id}, status=200
+        if not models.OrganisationUser.objects.filter(
+            user=request.user,
+            organisation=organisation).exists():
+            return HttpResponseForbidden("You do not belong to this organisation.")
+
+        try:
+            total_existing_ds = models.OrganisationDataSource.objects.filter(organisation=organisation).count()
+            display_name = f"{organisation.name}_ds_{total_existing_ds + 1}"
+            sqlite_db_path = os.path.join(settings.BASE_DIR, f"{display_name}.sqlite")
+            connection_str = f"sqlite:///{sqlite_db_path}"
+
+            datasource = models.DataSource.objects.create(
+                type='sqlite',
+                connection_str=connection_str,
+                display_name=display_name,
+                enabled=True
             )
+
+            models.OrganisationDataSource.objects.create(
+                organisation=organisation,
+                datasource=datasource
+            )
+            for file in files:
+                file_metadata = utils.parsing_csv_file(request.user, file, organisation)
+                table, sqlite_url = utils.write_sqlite_from_json(file_metadata, datasource)
+                utils.add_data_sqlite(sqlite_url, file_metadata, table, file)
+                datasource.connection_str = sqlite_url
+                datasource.save()
+            return JsonResponse({'status': 'success', 'message': 'Files uploaded successfully'}, status=200)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'error': e}, status=200)
+    return JsonResponse({'status': 'error', 'error': 'Invalid request'}, status=400)
