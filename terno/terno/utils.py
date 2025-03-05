@@ -483,30 +483,6 @@ def sample_data_for_llm(file, no_of_rows):
 
 
 def parsing_csv_file(user, file, organisation):
-    return {
-        'table_name': 'Album',
-        'columns': [
-            {
-                "name": "id",
-                "type": "int",
-                "nullable": False,
-                "description": "Short description here."
-            },
-            {
-                "name": "Album Name",
-                "type": "str",
-                "nullable": False,
-                "description": "Short description here."
-            },
-            {
-                "name": "Artist id",
-                "type": "int",
-                "nullable": False,
-                "description": "Short description here."
-            },
-        ],
-        'header_row': True
-    }
     sample_data, num_columns, null_values_count_in_columns = sample_data_for_llm(file,5)
 
     json_response_format = {
@@ -537,10 +513,12 @@ def parsing_csv_file(user, file, organisation):
     - Examine the column names and data patterns in the provided sample.
     - Based on the observed data, infer a suitable name for the table that best represents its purpose.
     - Ensure the table name is meaningful, concise, and aligns with standard database naming conventions.
+    - Table name should be in lowercase and snake_case format.
 
     Analyze each column based on this DataFrame sample. For each column, provide:
     - The count of columns in the DataFrame is {num_columns}. Make sure the order of columns is preserved.
     - Column names can be present in first row, if not Suggest human friendly column names for every column.
+    - Column names should be in lowercase and snake_case format.
     - If column names are present set header_row to true otherwise false. 
     - Data type (choose from: INT, SMALLINT, BIGINT, DECIMAL, FLOAT, CHAR, VARCHAR, DATE, TIMESTAMP)
     - Nullable status : If null count for that column is greater than 0 then it is nullable otherwise not : The null counts for each column are as follows: {null_values_count_in_columns}.
