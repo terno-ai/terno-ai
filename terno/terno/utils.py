@@ -493,13 +493,13 @@ def parsing_csv_file(user, file, organisation):
                 "description": "Short description here."
             },
             {
-                "name": "Album Name",
+                "name": "name",
                 "type": "str",
                 "nullable": False,
                 "description": "Short description here."
             },
             {
-                "name": "Artist id",
+                "name": "artistid",
                 "type": "int",
                 "nullable": False,
                 "description": "Short description here."
@@ -571,13 +571,13 @@ def write_sqlite_from_json(data, datasource):
 
         if col_name.lower() == 'id':
             column = Column(col_name, col_type, primary_key=True, nullable=col['nullable'],
-                            comment=col.get('description', ''))
+                            comment=col.get('description', ''), quote=False)
         else:
             column = Column(col_name, col_type, nullable=col['nullable'],
-                            comment=col.get('description', ''))
+                            comment=col.get('description', ''), quote=False)
         columns.append(column)
 
-    table = Table(data['table_name'], metadata, *columns)
+    table = Table(data['table_name'], metadata, quote=False, *columns)
     metadata.create_all(engine)
     return table, sqlite_url
 
@@ -608,4 +608,4 @@ def add_data_sqlite(sqlite_url, data, table, file):
             trans.commit()
         except Exception as e:
             trans.rollback()
-            print("Error inserting data:", e)
+            logger.exception("Error inserting data:", e)
