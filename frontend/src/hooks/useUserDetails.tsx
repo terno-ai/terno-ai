@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { getUserDetails } from "../utils/api";
 
 const useUserDetails = () => {
-  const [user, setUser] = useState({id: '', username: ''});
+  const [user, setUser] = useState({id: '', username: '', is_admin: false});
 
   useEffect(() => {
     const fetchUserDetails = async () => {

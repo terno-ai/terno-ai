@@ -351,9 +351,18 @@ def get_tables(request, datasource_id):
 @login_required
 def get_user_details(request):
     user = request.user
+    org_id = request.org_id
+    organisation = models.Organisation.objects.get(id=org_id)
+
+    if not models.OrganisationUser.objects.filter(
+            user=request.user,
+            organisation=organisation).exists():
+        return HttpResponseForbidden("You do not belong to this organisation.")
+
     return JsonResponse({
         'id': user.id,
-        'username': user.username
+        'username': user.username,
+        'is_admin': organisation.owner == user
     })
 
 

@@ -4,6 +4,7 @@ import DataSourceDropDown from "./DataSourceDropDown";
 import TableColumnAccordian from "./TableColumnAccordian";
 import { UploadIcon } from "lucide-react";
 import Uploadfiles from "./Uploadfiles";
+import useUserDetails from "../hooks/useUserDetails";
 
 interface ColumnData {
   public_name: string;
@@ -21,6 +22,7 @@ const SchemaPane = () => {
   const [query, setQuery] = useState("");
   const [filteredData, setFilteredData] = useState<TableData[]>([]);
   const [open, setOpen] = useState(false);
+  const [user] = useUserDetails();
 
   const handleSelect = async (value: string) => {
     const response = await getTables(value);
@@ -43,7 +45,8 @@ const SchemaPane = () => {
     <div className="mt-8">
       <div className="flex flex-row justify-center items-center gap-2">
         <DataSourceDropDown onSelect={handleSelect} />
-        <a
+        {user.is_admin ? (
+          <a
           className="p-2 cursor-pointer rounded-md border border-slate-400"
           onClick={() => setOpen(true)}
         >
@@ -53,6 +56,7 @@ const SchemaPane = () => {
             setOpen={setOpen}
           />
         </a>
+        ): <></>}
       </div>
       <div className="mt-4 font-bold text-lg">Allowed Tables</div>
       <input
