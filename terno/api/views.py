@@ -196,11 +196,12 @@ def get_llm_credits(request):
             })
     return JsonResponse({'status': 'error', 'error': 'User not found'})
 
+
 @csrf_exempt
 def file_upload(request):
     if request.method == 'POST':
         files = request.FILES.getlist('files')
-        org_id = request.org_id
+        org_id = request.POST.get('org_id')
         organisation = models.Organisation.objects.get(id=org_id)
 
         if not models.OrganisationUser.objects.filter(

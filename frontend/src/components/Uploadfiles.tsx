@@ -62,7 +62,7 @@ const Uploadfiles = ({
                     Choose CSV files to upload:
                   </label>
                   <div className="rounded-md bg-slate-100 hover:drop-shadow-sm focus-within:ring-1 focus-within:ring-sky-500 focus-within:hover:drop-shadow-none">
-                    <input type="file" multiple onChange={handleFileInput} />
+                    <input type="file" accept=".csv" multiple onChange={handleFileInput} />
                   </div>
                 </div>
 
