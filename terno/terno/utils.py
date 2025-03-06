@@ -483,6 +483,30 @@ def sample_data_for_llm(file, no_of_rows):
 
 
 def parsing_csv_file(user, file, organisation):
+    return {
+       'table_name': 'Album',
+       'columns': [
+           {
+               "name": "id",
+               "type": "int",
+               "nullable": False,
+               "description": "Short description here."
+           },
+           {
+               "name": "name",
+               "type": "str",
+               "nullable": False,
+               "description": "Short description here."
+           },
+           {
+               "name": "artistid",
+               "type": "int",
+               "nullable": False,
+               "description": "Short description here."
+           },
+       ],
+       'header_row': True
+    }
     sample_data, num_columns, null_values_count_in_columns = sample_data_for_llm(file,5)
 
     json_response_format = {
@@ -532,7 +556,7 @@ def parsing_csv_file(user, file, organisation):
     return response
 
 
-def write_sqlite_from_json(data, datasource):
+def write_sqlite_from_json(data, display_name):
     type_mapping = {
         'int': Integer,
         'str': String,
@@ -540,7 +564,7 @@ def write_sqlite_from_json(data, datasource):
         'bool': Boolean
     }
     user_sqlite_path = settings.USER_SQLITE_PATH
-    file_name = datasource.display_name + '.db'
+    file_name = display_name + '.db'
     sqlite_url = 'sqlite:///' + user_sqlite_path + file_name
     engine = create_engine(sqlite_url, echo=True)
     metadata = MetaData()
