@@ -19,6 +19,7 @@ export const endpoints = {
   getUserDetails: () => `${API_BASE_URL}/get-user-details`,
   getConsoleSQL: () => `${API_BASE_URL}/console/`,
   checkUserExists: () => `${API_BASE_URL}/check-user`,
+  fileUpload: () => `${API_BASE_URL}/file-upload`,
   login: () => `${API_BASE_URL}/_allauth/browser/v1/auth/login`,
   requestPasswordReset: () => `${API_BASE_URL}/_allauth/browser/v1/auth/password/request`,
   resetPassword: () => `${API_BASE_URL}/_allauth/browser/v1/auth/password/reset`,
@@ -219,6 +220,25 @@ export const logout = async () => {
       "Content-Type": "application/json",
       "X-CSRFToken": csrfToken || "",
     },
+  });
+  const result = await response.json();
+  return result;
+}
+
+export const fileUpload = async (files: FileList, dsId: string) => {
+  const csrfToken = getCsrfToken();
+  const formData = new FormData();
+  formData.append('dsId', dsId);
+  for (let i = 0; i < files.length; i++) {
+    formData.append('files', files[i]);
+  }
+
+  const response = await fetch(endpoints.fileUpload(), {
+    method: "POST",
+    headers: {
+      "X-CSRFToken": csrfToken || "",
+    },
+    body: formData,
   });
   const result = await response.json();
   return result;

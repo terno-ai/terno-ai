@@ -16,6 +16,7 @@ urlpatterns = [
     path('get-tables/<int:datasource_id>', views.get_tables, name='get_tables'),
     path('get-user-details/', views.get_user_details, name='get_user_details'),
     path('sso-login', views.sso_login, name='sso_login'),
+    path('file-upload', views.file_upload, name='file_upload'),
 ]
 
 if settings.DEBUG:

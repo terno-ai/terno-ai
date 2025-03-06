@@ -254,3 +254,5 @@ FREE_LLM_CREDITS = 10
 
 if not DEBUG:
     LOGIN_URL = 'https://' + str(os.getenv('MAIN_DOMAIN'))
+
+USER_SQLITE_PATH = os.getenv('USER_SQLITE_PATH')

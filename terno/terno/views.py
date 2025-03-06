@@ -351,9 +351,18 @@ def get_tables(request, datasource_id):
 @login_required
 def get_user_details(request):
     user = request.user
+    org_id = request.org_id
+    organisation = models.Organisation.objects.get(id=org_id)
+
+    if not models.OrganisationUser.objects.filter(
+            user=request.user,
+            organisation=organisation).exists():
+        return HttpResponseForbidden("You do not belong to this organisation.")
+
     return JsonResponse({
         'id': user.id,
-        'username': user.username
+        'username': user.username,
+        'is_admin': organisation.owner == user
     })
 
 
@@ -389,3 +398,36 @@ def sso_login(request):
             redirect_url += '/admin/terno/llmconfiguration'
         return HttpResponseRedirect(redirect_url)
     return HttpResponseForbidden
+
+
+def file_upload(request):
+    if request.method == 'POST':
+        files = request.FILES.getlist('files')
+        org_id = request.org_id
+        organisation = models.Organisation.objects.get(id=org_id)
+
+        if not models.OrganisationUser.objects.filter(
+            user=request.user,
+            organisation=organisation).exists():
+            return HttpResponseForbidden("You do not belong to this organisation.")
+
+        ds_id = request.POST.get('dsId')
+        datasource = models.DataSource.objects.get(id=ds_id)
+        if not models.OrganisationDataSource.objects.filter(
+            organisation=organisation,
+            datasource=datasource
+        ).exists():
+            return HttpResponseForbidden("You do not have access to this datasource.")
+
+        try:
+            for file in files:
+                file_metadata = utils.parsing_csv_file(request.user, file, organisation)
+                table, sqlite_url = utils.write_sqlite_from_json(file_metadata, datasource)
+                utils.add_data_sqlite(sqlite_url, file_metadata, table, file)
+                datasource.connection_str = sqlite_url
+                datasource.save()
+                logger.info(f"File Uploaded Successfully: {file_metadata}")
+            return JsonResponse({'status': 'success', 'message': 'Files uploaded successfully'}, status=200)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'error': e}, status=200)
+    return JsonResponse({'status': 'error', 'error': 'Invalid request'}, status=400)
