@@ -202,10 +202,12 @@ def file_upload(request):
     if request.method == 'POST':
         files = request.FILES.getlist('files')
         org_id = request.POST.get('org_id')
+        user_id = request.POST.get('user_id')
+        user = User.objects.get(id=user_id)
         organisation = models.Organisation.objects.get(id=org_id)
 
         if not models.OrganisationUser.objects.filter(
-            user=request.user,
+            user=user,
             organisation=organisation).exists():
             return HttpResponseForbidden("You do not belong to this organisation.")
 
@@ -223,7 +225,7 @@ def file_upload(request):
                 datasource=datasource
             )
             for file in files:
-                file_metadata = utils.parsing_csv_file(request.user, file, organisation)
+                file_metadata = utils.parsing_csv_file(user, file, organisation)
                 table, sqlite_url = utils.write_sqlite_from_json(file_metadata, datasource)
                 utils.add_data_sqlite(sqlite_url, file_metadata, table, file)
                 datasource.connection_str = sqlite_url
