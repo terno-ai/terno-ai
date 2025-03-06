@@ -481,32 +481,14 @@ def sample_data_for_llm(file, no_of_rows):
 
     return top_five_rows, num_columns, null_counts_column
 
+def csv_llm_response(user, prompt, organisation):
+    llm, is_default_llm = llms.LLMFactory().create_llm(organisation)
+    message = llm.create_message_for_llm(system_prompt="You are a helpful assistant skilled in data analysis and schema inference.", ai_prompt="", human_prompt=prompt)
+    response = llm.get_response(message)
+    return response
+
 
 def parsing_csv_file(user, file, organisation):
-    return {
-       'table_name': 'Album',
-       'columns': [
-           {
-               "name": "id",
-               "type": "int",
-               "nullable": False,
-               "description": "Short description here."
-           },
-           {
-               "name": "name",
-               "type": "str",
-               "nullable": False,
-               "description": "Short description here."
-           },
-           {
-               "name": "artistid",
-               "type": "int",
-               "nullable": False,
-               "description": "Short description here."
-           },
-       ],
-       'header_row': True
-    }
     sample_data, num_columns, null_values_count_in_columns = sample_data_for_llm(file,5)
 
     json_response_format = {
@@ -552,7 +534,7 @@ def parsing_csv_file(user, file, organisation):
 
     {json_response_format}
     """
-    response = console_llm_response(user, prompt)
+    response = csv_llm_response(user, prompt,organisation)
     return response
 
 
