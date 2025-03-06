@@ -202,8 +202,8 @@ def file_upload(request):
     if request.method == 'POST':
         files = request.FILES.getlist('files')
         org_id = request.POST.get('org_id')
-        user_id = request.POST.get('user_id')
-        user = User.objects.get(id=user_id)
+        user_email = request.POST.get('user_email')
+        user = User.objects.get(email=user_email)
         organisation = models.Organisation.objects.get(id=org_id)
 
         if not models.OrganisationUser.objects.filter(
