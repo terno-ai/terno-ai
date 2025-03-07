@@ -497,13 +497,13 @@ def parsing_csv_file(user, file, organisation):
             {
                 "name": "column_name_1",
                 "type": "data type here",
-                "nullable": True,
+                "nullable": "true or false",
                 "description": "Short description here."
             },
             {
                 "name": "column_name_2",
                 "type": "data type here",
-                "nullable": False,
+                "nullable": "true or false",
                 "description": "Short description here."
             }
         ],
