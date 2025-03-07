@@ -87,7 +87,7 @@ class OpenAILLM(BaseLLM):
         except Exception as e:
             pass
         return return_dict
-    
+
     def csv_llm_response(self, messages):
         model = self.get_model_instance()
         model_name = self.model_name
@@ -109,10 +109,8 @@ class OpenAILLM(BaseLLM):
             )
 
         generated_csv_schema = response.choices[0].message.content
-        generated_csv_schema.strip().removeprefix("```").removesuffix("```").strip()
+        generated_csv_schema = generated_csv_schema.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
         print("This is generated schema", generated_csv_schema)
         generated_csv_schema_json = json.loads(generated_csv_schema)
 
         return generated_csv_schema_json
-
-       
