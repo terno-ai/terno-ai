@@ -411,19 +411,27 @@ def file_upload(request):
             organisation=organisation).exists():
             return HttpResponseForbidden("You do not belong to this organisation.")
 
-        ds_id = request.POST.get('dsId')
-        datasource = models.DataSource.objects.get(id=ds_id)
-        if not models.OrganisationDataSource.objects.filter(
-            organisation=organisation,
-            datasource=datasource
-        ).exists():
-            return HttpResponseForbidden("You do not have access to this datasource.")
-
         try:
+            total_existing_ds = models.OrganisationDataSource.objects.filter(organisation=organisation).count()
+            display_name = f"{organisation.name}_ds_{total_existing_ds + 1}"
             for file in files:
                 file_metadata = utils.parsing_csv_file(request.user, file, organisation)
-                table, sqlite_url = utils.write_sqlite_from_json(file_metadata, datasource)
+                print("THIS is the llm response", file_metadata)
+                table, sqlite_url = utils.write_sqlite_from_json(file_metadata, display_name)
                 utils.add_data_sqlite(sqlite_url, file_metadata, table, file)
+
+                datasource = models.DataSource.objects.create(
+                    type='Generic',
+                    display_name=display_name,
+                    connection_str=sqlite_url,
+                    enabled=True
+                )
+
+                models.OrganisationDataSource.objects.create(
+                    organisation=organisation,
+                    datasource=datasource
+                )
+
                 datasource.connection_str = sqlite_url
                 datasource.save()
                 logger.info(f"File Uploaded Successfully: {file_metadata}")

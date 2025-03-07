@@ -484,7 +484,7 @@ def sample_data_for_llm(file, no_of_rows):
 def csv_llm_response(user, prompt, organisation):
     llm, is_default_llm = llms.LLMFactory().create_llm(organisation)
     message = llm.create_message_for_llm(system_prompt="You are a helpful assistant skilled in data analysis and schema inference.", ai_prompt="", human_prompt=prompt)
-    response = llm.get_response(message)
+    response = llm.csv_llm_response(message)
     return response
 
 
@@ -535,13 +535,16 @@ def parsing_csv_file(user, file, organisation):
     {json_response_format}
     """
     response = csv_llm_response(user, prompt,organisation)
+    print(response)
     return response
 
 
 def write_sqlite_from_json(data, display_name):
     type_mapping = {
-        'int': Integer,
-        'str': String,
+        'INT': Integer,
+        'SMALLINT': Integer,
+        'BIGINT': Integer,
+        'VARCHAR': String,
         'float': Float,
         'bool': Boolean
     }
