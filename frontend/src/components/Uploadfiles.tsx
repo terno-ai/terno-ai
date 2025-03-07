@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
   AlertDialog,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -29,22 +28,34 @@ const Uploadfiles = ({
     setFiles(selectedFiles);
   };
 
-  const handleUpload = async () => {
-    setOpen(true);
+  const handleUpload = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
     if (files) {
-      const response = await fileUpload(files, dsId);
-      if (response["status"] == "success") {
+      const formData = new FormData();
+      for (let i = 0; i < files.length; i++) {
+        formData.append("files", files[i]);
+      }
+      formData.append("dsId", dsId);
+
+      const response = await fileUpload(formData);
+      if (response["status"] === "success") {
         console.log("done");
       } else {
         setError(response["error"]);
       }
     }
     setLoading(false);
+    setOpen(false);
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
+    <AlertDialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        setOpen(isOpen);
+      }}
+    >
       <AlertDialogContent className="bg-white m-2">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-center">
@@ -62,7 +73,12 @@ const Uploadfiles = ({
                     Choose CSV files to upload:
                   </label>
                   <div className="rounded-md bg-slate-100 hover:drop-shadow-sm focus-within:ring-1 focus-within:ring-sky-500 focus-within:hover:drop-shadow-none">
-                    <input type="file" accept=".csv" multiple onChange={handleFileInput} />
+                    <input
+                      type="file"
+                      accept=".csv"
+                      multiple
+                      onChange={handleFileInput}
+                    />
                   </div>
                 </div>
 
@@ -71,12 +87,17 @@ const Uploadfiles = ({
                 )}
                 <div className="">
                   <AlertDialogFooter>
-                    <AlertDialogCancel
-                      onClick={() => setOpen(false)}
-                      className="hover:bg-slate-100"
+                    <div
+                      onClick={() => {
+                        console.log("Closing modal...");
+                        setTimeout(() => {
+                          setOpen(false);
+                        }, 50);
+                      }}
+                      className="cursor-pointer px-4 py-2 border rounded-md bg-gray-200 hover:bg-gray-300 transition-colors"
                     >
                       Cancel
-                    </AlertDialogCancel>
+                    </div>
                     <button
                       type="submit"
                       onClick={handleUpload}
