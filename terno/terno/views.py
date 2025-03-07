@@ -415,15 +415,25 @@ def file_upload(request):
             total_existing_ds = models.OrganisationDataSource.objects.filter(organisation=organisation).count()
             display_name = f"{organisation.name}_ds_{total_existing_ds + 1}"
             for file in files:
-                file_metadata = utils.parsing_csv_file(request.user, file, organisation)
-                print("THIS is the llm response", file_metadata)
-                table, sqlite_url = utils.write_sqlite_from_json(file_metadata, display_name)
-                utils.add_data_sqlite(sqlite_url, file_metadata, table, file)
+                file_metadata_response = utils.parsing_csv_file(request.user, file, organisation)
+                if file_metadata_response['status'] == 'error':
+                    return JsonResponse({'status': 'error', 'error': file_metadata_response['error']})
+                print("THIS is the llm response", file_metadata_response['response'])
+
+                sqlite_write_response = utils.write_sqlite_from_json(file_metadata_response['response'], display_name)
+                if sqlite_write_response['status'] == 'error':
+                    return JsonResponse({'status': 'error', 'error': sqlite_write_response['error']})
+
+                add_data_response = utils.add_data_sqlite(sqlite_write_response['sqlite_url'],
+                                                          file_metadata_response['response'],
+                                                          sqlite_write_response['table'], file)
+                if add_data_response['status'] == 'error':
+                    return JsonResponse({'status': 'error', 'error': add_data_response['error']})
 
                 datasource = models.DataSource.objects.create(
                     type='Generic',
                     display_name=display_name,
-                    connection_str=sqlite_url,
+                    connection_str=sqlite_write_response['sqlite_url'],
                     enabled=True
                 )
 
@@ -432,9 +442,9 @@ def file_upload(request):
                     datasource=datasource
                 )
 
-                datasource.connection_str = sqlite_url
+                datasource.connection_str = sqlite_write_response['sqlite_url']
                 datasource.save()
-                logger.info(f"File Uploaded Successfully: {file_metadata}")
+                logger.info(f"File Uploaded Successfully: {file_metadata_response['response']}")
             return JsonResponse({'status': 'success', 'message': 'Files uploaded successfully'}, status=200)
         except Exception as e:
             return JsonResponse({'status': 'error', 'error': e}, status=200)
