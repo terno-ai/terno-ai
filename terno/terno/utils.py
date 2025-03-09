@@ -539,7 +539,7 @@ def parsing_csv_file(user, file, organisation):
         print(response)
         return {'status': 'success', 'response': response}
     except Exception as e:
-        return {'status': 'error', 'error': e}
+        return {'status': 'error', 'error': str(e)}
 
 
 def write_sqlite_from_json(data, sqlite_url):
@@ -549,8 +549,8 @@ def write_sqlite_from_json(data, sqlite_url):
             'SMALLINT': Integer,
             'BIGINT': Integer,
             'VARCHAR': String,
-            'float': Float,
-            'bool': Boolean
+            'FLOAT': Float,
+            'BOOLEAN': Boolean
         }
         engine = create_engine(sqlite_url, echo=True)
         metadata = MetaData()
@@ -571,7 +571,7 @@ def write_sqlite_from_json(data, sqlite_url):
         metadata.create_all(engine)
         return {'status': 'success', 'table': table, 'sqlite_url': sqlite_url}
     except Exception as e:
-        return {'status': 'error', 'error': e}
+        return {'status': 'error', 'error': str(e)}
 
 
 def add_data_sqlite(sqlite_url, data, table, file,data_source):
@@ -603,5 +603,5 @@ def add_data_sqlite(sqlite_url, data, table, file,data_source):
             return {'status': 'success'}
         except Exception as e:
             trans.rollback()
-            logger.exception("Error inserting data:", e)
-            return {'status': 'error', 'error': e}
+            logger.exception("Error inserting data:", str(e))
+            return {'status': 'error', 'error': str(e)}

@@ -404,9 +404,6 @@ def file_upload(request):
     if request.method == 'POST':
         files = request.FILES.getlist('files')
         org_id = request.org_id
-        ds_id = request.POST.get('dsId')
-        logger.info(f"The data source id is: {ds_id}")
-        logger.info(f"The Org id is: {org_id}")
         organisation = models.Organisation.objects.get(id=org_id)
 
         if not models.OrganisationUser.objects.filter(
@@ -452,5 +449,5 @@ def file_upload(request):
             logger.info(f"File Uploaded Successfully: {file_metadata_response['response']}")
             return JsonResponse({'status': 'success', 'message': 'Files uploaded successfully'}, status=200)
         except Exception as e:
-            return JsonResponse({'status': 'error', 'error': e}, status=200)
+            return JsonResponse({'status': 'error', 'error': str(e)}, status=200)
     return JsonResponse({'status': 'error', 'error': 'Invalid request'}, status=400)
