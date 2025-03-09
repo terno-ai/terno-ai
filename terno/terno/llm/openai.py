@@ -112,7 +112,7 @@ class OpenAILLM(BaseLLM):
         generated_csv_schema = generated_csv_schema.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
         print("This is generated schema", generated_csv_schema)
         generated_csv_schema_json = json.loads(generated_csv_schema)
-
+        print("This is generated schema Json", generated_csv_schema)
         return generated_csv_schema_json
 
        
