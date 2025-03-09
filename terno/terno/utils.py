@@ -542,7 +542,7 @@ def parsing_csv_file(user, file, organisation):
         return {'status': 'error', 'error': e}
 
 
-def write_sqlite_from_json(data, display_name):
+def write_sqlite_from_json(data, sqlite_url):
     try:
         type_mapping = {
             'INT': Integer,
@@ -552,9 +552,6 @@ def write_sqlite_from_json(data, display_name):
             'float': Float,
             'bool': Boolean
         }
-        user_sqlite_path = settings.USER_SQLITE_PATH
-        file_name = display_name + '.db'
-        sqlite_url = 'sqlite:///' + user_sqlite_path + file_name
         engine = create_engine(sqlite_url, echo=True)
         metadata = MetaData()
         columns = []
@@ -577,7 +574,7 @@ def write_sqlite_from_json(data, display_name):
         return {'status': 'error', 'error': e}
 
 
-def add_data_sqlite(sqlite_url, data, table, file):
+def add_data_sqlite(sqlite_url, data, table, file,data_source):
     engine = create_engine(sqlite_url, echo=True)
     with engine.connect() as connection:
         trans = connection.begin()
@@ -601,6 +598,8 @@ def add_data_sqlite(sqlite_url, data, table, file):
                         ordered_row[col_name] = value
                 connection.execute(table.insert().values(**ordered_row))
             trans.commit()
+            data_source.save()
+            trans.close()
             return {'status': 'success'}
         except Exception as e:
             trans.rollback()

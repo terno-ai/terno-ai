@@ -404,6 +404,9 @@ def file_upload(request):
     if request.method == 'POST':
         files = request.FILES.getlist('files')
         org_id = request.org_id
+        ds_id = request.POST.get('dsId')
+        logger.info(f"The data source id is: {ds_id}")
+        logger.info(f"The Org id is: {org_id}")
         organisation = models.Organisation.objects.get(id=org_id)
 
         if not models.OrganisationUser.objects.filter(
@@ -414,37 +417,39 @@ def file_upload(request):
         try:
             total_existing_ds = models.OrganisationDataSource.objects.filter(organisation=organisation).count()
             display_name = f"{organisation.name}_ds_{total_existing_ds + 1}"
+            user_sqlite_path = settings.USER_SQLITE_PATH
+            file_name = display_name + '.sqlite'
+            sqlite_url = 'sqlite:///' + user_sqlite_path + file_name
+            
+            datasource = models.DataSource.objects.create(
+                type='sqlite',
+                connection_str=sqlite_url,
+                display_name=display_name,
+                enabled=True
+            )
+
+            models.OrganisationDataSource.objects.create(
+                organisation=organisation,
+                datasource=datasource
+            )
+
             for file in files:
                 file_metadata_response = utils.parsing_csv_file(request.user, file, organisation)
                 if file_metadata_response['status'] == 'error':
                     return JsonResponse({'status': 'error', 'error': file_metadata_response['error']})
                 print("THIS is the llm response", file_metadata_response['response'])
 
-                sqlite_write_response = utils.write_sqlite_from_json(file_metadata_response['response'], display_name)
+                sqlite_write_response = utils.write_sqlite_from_json(file_metadata_response['response'], sqlite_url)
                 if sqlite_write_response['status'] == 'error':
                     return JsonResponse({'status': 'error', 'error': sqlite_write_response['error']})
 
                 add_data_response = utils.add_data_sqlite(sqlite_write_response['sqlite_url'],
                                                           file_metadata_response['response'],
-                                                          sqlite_write_response['table'], file)
+                                                          sqlite_write_response['table'], file,datasource)
                 if add_data_response['status'] == 'error':
                     return JsonResponse({'status': 'error', 'error': add_data_response['error']})
-
-                datasource = models.DataSource.objects.create(
-                    type='Generic',
-                    display_name=display_name,
-                    connection_str=sqlite_write_response['sqlite_url'],
-                    enabled=True
-                )
-
-                models.OrganisationDataSource.objects.create(
-                    organisation=organisation,
-                    datasource=datasource
-                )
-
-                datasource.connection_str = sqlite_write_response['sqlite_url']
-                datasource.save()
-                logger.info(f"File Uploaded Successfully: {file_metadata_response['response']}")
+            
+            logger.info(f"File Uploaded Successfully: {file_metadata_response['response']}")
             return JsonResponse({'status': 'success', 'message': 'Files uploaded successfully'}, status=200)
         except Exception as e:
             return JsonResponse({'status': 'error', 'error': e}, status=200)
