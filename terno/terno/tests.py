@@ -33,9 +33,9 @@ class BaseTestCase(TestCase):
             datasource=datasource
         )
 
-    def create_organisation(self, user, org_name="Test Organisation", subdomain="testorg"):
+    def create_organisation(self, user, org_name="Test Organisation", subdomain="terno-root"):
 
-        llm_credit, _ = LLMCredit.objects.get_or_create(owner=user)
+        llm_credit, _ = LLMCredit.objects.get_or_create(owner=user, credit = 10)
 
         organisation = Organisation.objects.create(
             name=org_name,
@@ -212,8 +212,7 @@ class LLMTestCase(BaseTestCase):
 
         llm = llms.LLMFactory().create_llm()
         response = llm.get_response(messages='messages')
-        print("Actual Fake LLM Response: ", type(response))
-        self.assertEqual(response[1], "SELECT 1")
+        self.assertEqual(response['generated_sql'], "SELECT 1")
 
 
 class LLMResponseTestCase(BaseTestCase):
@@ -230,17 +229,14 @@ class LLMResponseTestCase(BaseTestCase):
     def test_llm_response_success(self, mock_get_response,
                                   mock_create_pipeline, mock_create_llm):
         mock_llm = MagicMock(spec=llms.BaseLLM)
-        mock_create_llm.return_value = mock_llm
+        mock_create_llm.return_value = (mock_llm, True)
 
         mock_pipeline = MagicMock(spec=Pipeline)
         mock_create_pipeline.return_value = mock_pipeline
-
-        mock_get_response.return_value = [["SELECT * FROM Album"]]
-
+    
+        mock_get_response.return_value =[[{'status': 'success', "generated_sql": "SELECT * FROM Album"}]]
         response = utils.llm_response(self.user, self.user_query,
                                       self.db_schema, self.organisation, self.datasource)
-        print("Actual Response:", response)
-        print("Organisation : ", self.organisation)
         self.assertEqual(response['status'], 'success')
         self.assertEqual(response['generated_sql'], "SELECT * FROM Album")
         mock_create_llm.assert_called_once()
