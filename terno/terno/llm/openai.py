@@ -1,5 +1,6 @@
 from .base import BaseLLM
 from openai import OpenAI
+import json
 
 
 class OpenAILLM(BaseLLM):
@@ -86,3 +87,32 @@ class OpenAILLM(BaseLLM):
         except Exception as e:
             pass
         return return_dict
+
+    def csv_llm_response(self, messages):
+        model = self.get_model_instance()
+        model_name = self.model_name
+        if model_name in self.o_series_models:
+            messages[0]['role'] = 'developer'
+            response = model.chat.completions.create(
+                model=self.model_name,
+                messages=messages,
+                **self.custom_parameters
+            )
+        else:
+            response = model.chat.completions.create(
+                model=self.model_name,
+                messages=messages,
+                temperature=self.temperature,
+                max_tokens=self.max_tokens,
+                top_p=self.top_p,
+                **self.custom_parameters
+            )
+
+        generated_csv_schema = response.choices[0].message.content
+        generated_csv_schema = generated_csv_schema.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        print("This is generated schema", generated_csv_schema)
+        generated_csv_schema_json = json.loads(generated_csv_schema)
+        print("This is generated schema Json", generated_csv_schema)
+        return generated_csv_schema_json
+
+       

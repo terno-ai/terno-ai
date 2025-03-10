@@ -196,37 +196,40 @@ def get_llm_credits(request):
             })
     return JsonResponse({'status': 'error', 'error': 'User not found'})
 
+
 @csrf_exempt
 def file_upload(request):
     if request.method == 'POST':
         files = request.FILES.getlist('files')
-        org_id = request.org_id
+        org_id = request.POST.get('org_id')
+        user_email = request.POST.get('user_email')
+        user = User.objects.get(email=user_email)
         organisation = models.Organisation.objects.get(id=org_id)
 
         if not models.OrganisationUser.objects.filter(
-            user=request.user,
+            user=user,
             organisation=organisation).exists():
             return HttpResponseForbidden("You do not belong to this organisation.")
 
         try:
             total_existing_ds = models.OrganisationDataSource.objects.filter(organisation=organisation).count()
             display_name = f"{organisation.name}_ds_{total_existing_ds + 1}"
-            datasource = models.DataSource.objects.create(
-                type='sqlite',
-                display_name=display_name,
-                enabled=True
-            )
-
-            models.OrganisationDataSource.objects.create(
-                organisation=organisation,
-                datasource=datasource
-            )
             for file in files:
-                file_metadata = utils.parsing_csv_file(request.user, file, organisation)
-                table, sqlite_url = utils.write_sqlite_from_json(file_metadata, datasource)
+                file_metadata = utils.parsing_csv_file(user, file, organisation)
+                table, sqlite_url = utils.write_sqlite_from_json(file_metadata, display_name)
                 utils.add_data_sqlite(sqlite_url, file_metadata, table, file)
-                datasource.connection_str = sqlite_url
-                datasource.save()
+
+                datasource = models.DataSource.objects.create(
+                    type='Generic',
+                    display_name=display_name,
+                    connection_str=sqlite_url,
+                    enabled=True
+                )
+
+                models.OrganisationDataSource.objects.create(
+                    organisation=organisation,
+                    datasource=datasource
+                )
             return JsonResponse({'status': 'success', 'message': 'Files uploaded successfully'}, status=200)
         except Exception as e:
             return JsonResponse({'status': 'error', 'error': e}, status=200)

@@ -481,88 +481,100 @@ def sample_data_for_llm(file, no_of_rows):
 
     return top_five_rows, num_columns, null_counts_column
 
-
-def parsing_csv_file(user, file, organisation):
-    sample_data, num_columns, null_values_count_in_columns = sample_data_for_llm(file,5)
-
-    json_response_format = {
-        "table_name": "table_name_here",
-        "columns": [
-            {
-                "name": "column_name_1",
-                "type": "data type here",
-                "nullable": True,
-                "description": "Short description here."
-            },
-            {
-                "name": "column_name_2",
-                "type": "data type here",
-                "nullable": False,
-                "description": "Short description here."
-            }
-        ],
-        "header_row": "True or false"
-    }
-
-    prompt = f"""
-    You are given a DataFrame sample in tabular form:
-
-    {sample_data}
-
-    Analyze the DataFrame and determine the most appropriate table name based on its structure and contents.
-    - Examine the column names and data patterns in the provided sample.
-    - Based on the observed data, infer a suitable name for the table that best represents its purpose.
-    - Ensure the table name is meaningful, concise, and aligns with standard database naming conventions.
-    - Table name should be in lowercase and snake_case format.
-
-    Analyze each column based on this DataFrame sample. For each column, provide:
-    - The count of columns in the DataFrame is {num_columns}. Make sure the order of columns is preserved.
-    - Column names can be present in first row, if not Suggest human friendly column names for every column.
-    - Column names should be in lowercase and snake_case format.
-    - If column names are present set header_row to true otherwise false. 
-    - Data type (choose from: INT, SMALLINT, BIGINT, DECIMAL, FLOAT, CHAR, VARCHAR, DATE, TIMESTAMP)
-    - Nullable status : If null count for that column is greater than 0 then it is nullable otherwise not : The null counts for each column are as follows: {null_values_count_in_columns}.
-    - A short and clear description (one sentence maximum) of the content in each column.
-
-    Respond strictly in the JSON format shown below without any explanations or markdown formatting. JSON format:
-
-    {json_response_format}
-    """
-    response = console_llm_response(user, prompt)
+def csv_llm_response(user, prompt, organisation):
+    llm, is_default_llm = llms.LLMFactory().create_llm(organisation)
+    message = llm.create_message_for_llm(system_prompt="You are a helpful assistant skilled in data analysis and schema inference.", ai_prompt="", human_prompt=prompt)
+    response = llm.csv_llm_response(message)
     return response
 
 
-def write_sqlite_from_json(data, datasource):
-    type_mapping = {
-        'int': Integer,
-        'str': String,
-        'float': Float,
-        'bool': Boolean
-    }
-    user_sqlite_path = settings.USER_SQLITE_PATH
-    file_name = datasource.display_name + '.db'
-    sqlite_url = 'sqlite:///' + user_sqlite_path + file_name
-    engine = create_engine(sqlite_url, echo=True)
-    metadata = MetaData()
-    columns = []
-    for col in data['columns']:
-        col_name = col['name']
-        col_type = type_mapping.get(col['type'], String)
+def parsing_csv_file(user, file, organisation):
+    try:
+        sample_data, num_columns, null_values_count_in_columns = sample_data_for_llm(file,5)
 
-        if col_name.lower() == 'id':
-            column = Column(col_name, col_type, primary_key=True, nullable=col['nullable'],
-                            comment=col.get('description', ''), quote=False)
-        else:
-            column = Column(col_name, col_type, nullable=col['nullable'],
-                            comment=col.get('description', ''), quote=False)
-        columns.append(column)
+        json_response_format = {
+            "table_name": "table_name_here",
+            "columns": [
+                {
+                    "name": "column_name_1",
+                    "type": "data type here",
+                    "nullable": "true or false",
+                    "description": "Short description here."
+                },
+                {
+                    "name": "column_name_2",
+                    "type": "data type here",
+                    "nullable": "true or false",
+                    "description": "Short description here."
+                }
+            ],
+            "header_row": "True or false"
+        }
 
-    table = Table(data['table_name'], metadata, quote=False, *columns)
-    metadata.create_all(engine)
-    return table, sqlite_url
+        prompt = f"""
+        You are given a DataFrame sample in tabular form:
+
+        {sample_data}
+
+        Analyze the DataFrame and determine the most appropriate table name based on its structure and contents.
+        - Examine the column names and data patterns in the provided sample.
+        - Based on the observed data, infer a suitable name for the table that best represents its purpose.
+        - Ensure the table name is meaningful, concise, and aligns with standard database naming conventions.
+        - Table name should be in lowercase and snake_case format.
+
+        Analyze each column based on this DataFrame sample. For each column, provide:
+        - The count of columns in the DataFrame is {num_columns}. Make sure the order of columns is preserved.
+        - Column names can be present in first row, if not Suggest human friendly column names for every column.
+        - Column names should be in lowercase and snake_case format.
+        - If column names are present set header_row to true otherwise false. 
+        - Data type (choose from: INT, SMALLINT, BIGINT, DECIMAL, FLOAT, CHAR, VARCHAR, DATE, TIMESTAMP)
+        - Nullable status : If null count for that column is greater than 0 then it is nullable otherwise not : The null counts for each column are as follows: {null_values_count_in_columns}.
+        - A short and clear description (one sentence maximum) of the content in each column.
+
+        Respond strictly in the JSON format shown below without any explanations or markdown formatting. JSON format:
+
+        {json_response_format}
+        """
+        response = csv_llm_response(user, prompt,organisation)
+        print(response)
+        return {'status': 'success', 'response': response}
+    except Exception as e:
+        return {'status': 'error', 'error': str(e)}
 
 
-def add_data_sqlite(sqlite_url, data, table, file):
+def write_sqlite_from_json(data, sqlite_url):
+    try:
+        type_mapping = {
+            'INT': Integer,
+            'SMALLINT': Integer,
+            'BIGINT': Integer,
+            'VARCHAR': String,
+            'FLOAT': Float,
+            'BOOLEAN': Boolean
+        }
+        engine = create_engine(sqlite_url, echo=True)
+        metadata = MetaData()
+        columns = []
+        for col in data['columns']:
+            col_name = col['name']
+            col_type = type_mapping.get(col['type'], String)
+
+            if col_name.lower() == 'id':
+                column = Column(col_name, col_type, primary_key=True, nullable=col['nullable'],
+                                comment=col.get('description', ''), quote=False)
+            else:
+                column = Column(col_name, col_type, nullable=col['nullable'],
+                                comment=col.get('description', ''), quote=False)
+            columns.append(column)
+
+        table = Table(data['table_name'], metadata, quote=False, *columns)
+        metadata.create_all(engine)
+        return {'status': 'success', 'table': table, 'sqlite_url': sqlite_url}
+    except Exception as e:
+        return {'status': 'error', 'error': str(e)}
+
+
+def add_data_sqlite(sqlite_url, data, table, file,data_source):
     engine = create_engine(sqlite_url, echo=True)
     with engine.connect() as connection:
         trans = connection.begin()
@@ -586,6 +598,10 @@ def add_data_sqlite(sqlite_url, data, table, file):
                         ordered_row[col_name] = value
                 connection.execute(table.insert().values(**ordered_row))
             trans.commit()
+            data_source.save()
+            trans.close()
+            return {'status': 'success'}
         except Exception as e:
             trans.rollback()
-            logger.exception("Error inserting data:", e)
+            logger.exception("Error inserting data:", str(e))
+            return {'status': 'error', 'error': str(e)}

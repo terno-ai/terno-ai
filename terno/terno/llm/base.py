@@ -33,6 +33,10 @@ class BaseLLM(ABC):
     def get_response(self, query) -> dict:
         pass
 
+    @abstractmethod
+    def csv_llm_response(self, messages):
+        pass
+
 
 class LLMFactory:
     @staticmethod

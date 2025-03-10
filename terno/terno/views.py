@@ -411,23 +411,43 @@ def file_upload(request):
             organisation=organisation).exists():
             return HttpResponseForbidden("You do not belong to this organisation.")
 
-        ds_id = request.POST.get('dsId')
-        datasource = models.DataSource.objects.get(id=ds_id)
-        if not models.OrganisationDataSource.objects.filter(
-            organisation=organisation,
-            datasource=datasource
-        ).exists():
-            return HttpResponseForbidden("You do not have access to this datasource.")
-
         try:
+            total_existing_ds = models.OrganisationDataSource.objects.filter(organisation=organisation).count()
+            display_name = f"{organisation.name}_ds_{total_existing_ds + 1}"
+            user_sqlite_path = settings.USER_SQLITE_PATH
+            file_name = display_name + '.sqlite'
+            sqlite_url = 'sqlite:///' + user_sqlite_path + file_name
+            
+            datasource = models.DataSource.objects.create(
+                type='sqlite',
+                connection_str=sqlite_url,
+                display_name=display_name,
+                enabled=True
+            )
+
+            models.OrganisationDataSource.objects.create(
+                organisation=organisation,
+                datasource=datasource
+            )
+
             for file in files:
-                file_metadata = utils.parsing_csv_file(request.user, file, organisation)
-                table, sqlite_url = utils.write_sqlite_from_json(file_metadata, datasource)
-                utils.add_data_sqlite(sqlite_url, file_metadata, table, file)
-                datasource.connection_str = sqlite_url
-                datasource.save()
-                logger.info(f"File Uploaded Successfully: {file_metadata}")
+                file_metadata_response = utils.parsing_csv_file(request.user, file, organisation)
+                if file_metadata_response['status'] == 'error':
+                    return JsonResponse({'status': 'error', 'error': file_metadata_response['error']})
+                print("THIS is the llm response", file_metadata_response['response'])
+
+                sqlite_write_response = utils.write_sqlite_from_json(file_metadata_response['response'], sqlite_url)
+                if sqlite_write_response['status'] == 'error':
+                    return JsonResponse({'status': 'error', 'error': sqlite_write_response['error']})
+
+                add_data_response = utils.add_data_sqlite(sqlite_write_response['sqlite_url'],
+                                                          file_metadata_response['response'],
+                                                          sqlite_write_response['table'], file,datasource)
+                if add_data_response['status'] == 'error':
+                    return JsonResponse({'status': 'error', 'error': add_data_response['error']})
+            
+            logger.info(f"File Uploaded Successfully: {file_metadata_response['response']}")
             return JsonResponse({'status': 'success', 'message': 'Files uploaded successfully'}, status=200)
         except Exception as e:
-            return JsonResponse({'status': 'error', 'error': e}, status=200)
+            return JsonResponse({'status': 'error', 'error': str(e)}, status=200)
     return JsonResponse({'status': 'error', 'error': 'Invalid request'}, status=400)
