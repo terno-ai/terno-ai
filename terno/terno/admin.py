@@ -5,6 +5,8 @@ import terno.models as models
 from django.shortcuts import get_object_or_404
 from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
+from allauth.account.adapter import get_adapter
+from django import forms
 
 admin.site.unregister(models.Group)
 admin.site.unregister(models.User)
@@ -43,8 +45,26 @@ class GroupAdmin(DefaultGroupAdmin):
         super().save_model(request, obj, form, change)
 
 
+class UserRegisterForm(forms.ModelForm):
+    email = forms.EmailField(
+        required=True, widget=forms.EmailInput(
+            attrs={"autofocus": True,
+            "placeholder": "Enter your email"}))
+
+    class Meta:
+        model = models.User
+        fields = ['email']
+
+
 @admin.register(models.User)
 class UserAdmin(DefaultUserAdmin):
+    add_form = UserRegisterForm
+    add_fieldsets = (
+        (None, {
+            "classes": ("wide",),
+            "fields": ("email",),
+        }),
+    )
 
     def get_user_organisation(self, request):
         organisation = models.Organisation.objects.get(id=request.org_id)
@@ -84,12 +104,19 @@ class UserAdmin(DefaultUserAdmin):
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
     def save_model(self, request, obj, form, change):
+        user = models.User.objects.filter(email=obj.email).first()
+        if user:
+            obj.pk = user.pk
+            for field in form.changed_data:
+                setattr(user, field, getattr(obj, field))
+            obj = user
+        else:
+            obj.username = get_adapter().generate_unique_username([obj.email])
         super().save_model(request, obj, form, change)
-        if not change:
-            org_id = request.org_id
-            organisation = get_object_or_404(models.Organisation, id=org_id)
-            if not models.OrganisationUser.objects.filter(organisation=organisation, user=obj).exists():
-                models.OrganisationUser.objects.create(organisation=organisation, user=obj)
+        org_id = request.org_id
+        organisation = get_object_or_404(models.Organisation, id=org_id)
+        if not models.OrganisationUser.objects.filter(organisation=organisation, user=obj).exists():
+            models.OrganisationUser.objects.create(organisation=organisation, user=obj)
 
 
 class OrganisationFilterMixin:
