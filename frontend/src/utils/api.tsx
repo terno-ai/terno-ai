@@ -19,9 +19,12 @@ export const endpoints = {
   getUserDetails: () => `${API_BASE_URL}/get-user-details`,
   getConsoleSQL: () => `${API_BASE_URL}/console/`,
   checkUserExists: () => `${API_BASE_URL}/check-user`,
+  fileUpload: () => `${API_BASE_URL}/file-upload`,
   login: () => `${API_BASE_URL}/_allauth/browser/v1/auth/login`,
-  requestPasswordReset: () => `${API_BASE_URL}/_allauth/browser/v1/auth/password/request`,
-  resetPassword: () => `${API_BASE_URL}/_allauth/browser/v1/auth/password/reset`,
+  requestPasswordReset: () =>
+    `${API_BASE_URL}/_allauth/browser/v1/auth/password/request`,
+  resetPassword: () =>
+    `${API_BASE_URL}/_allauth/browser/v1/auth/password/reset`,
   logout: () => `${API_BASE_URL}/_allauth/browser/v1/auth/session`,
 };
 
@@ -37,16 +40,23 @@ export const sendMessage = async (prompt: string, datasourceId: string) => {
       body: JSON.stringify({ prompt: prompt, datasourceId: datasourceId }),
     });
     if (!response.ok) {
-      return { status: 'error', error: `Error: ${response.status} - ${response.statusText}` };
+      return {
+        status: "error",
+        error: `Error: ${response.status} - ${response.statusText}`,
+      };
     }
     const result = await response.json();
     return result;
   } catch (error: any) {
-    return { status: 'error', error: error.message };
+    return { status: "error", error: error.message };
   }
 };
 
-export const executeSQL = async (sql: string, datasourceId: string, page: number) => {
+export const executeSQL = async (
+  sql: string,
+  datasourceId: string,
+  page: number
+) => {
   const csrfToken = getCsrfToken();
   try {
     const response = await fetch(endpoints.executeSQL(), {
@@ -55,47 +65,54 @@ export const executeSQL = async (sql: string, datasourceId: string, page: number
         "Content-Type": "application/json",
         "X-CSRFToken": csrfToken || "",
       },
-      body: JSON.stringify({ sql: sql, datasourceId: datasourceId, page:page}),
+      body: JSON.stringify({
+        sql: sql,
+        datasourceId: datasourceId,
+        page: page,
+      }),
     });
     if (!response.ok) {
-      return { status: 'error', error: `Error: ${response.status} - ${response.statusText}` };
+      return {
+        status: "error",
+        error: `Error: ${response.status} - ${response.statusText}`,
+      };
     }
     const result = await response.json();
     return result;
   } catch (error: any) {
-    return { status: 'error', error: error.message };
+    return { status: "error", error: error.message };
   }
 };
 
-export const exportSQLResult = async (sql:string, datasourceId: string) => {
+export const exportSQLResult = async (sql: string, datasourceId: string) => {
   const csrfToken = getCsrfToken();
   const response = await fetch(endpoints.exportSQLResult(), {
-    method:"POST",
-    headers:{
+    method: "POST",
+    headers: {
       "Content-Type": "application/json",
       "X-CSRFToken": csrfToken || "",
     },
-    body: JSON.stringify({ sql: sql, datasourceId: datasourceId}),
+    body: JSON.stringify({ sql: sql, datasourceId: datasourceId }),
   });
 
-  const contentDisposition = response.headers.get('Content-Disposition')
-  let fileName = 'Query_Results'
-  if (contentDisposition){
+  const contentDisposition = response.headers.get("Content-Disposition");
+  let fileName = "Query_Results";
+  if (contentDisposition) {
     const match = contentDisposition.match(/filename="?(.+)"?/);
-    if (match && match[1]){
-      fileName = match[1].trim()
+    if (match && match[1]) {
+      fileName = match[1].trim();
     }
   }
 
   const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName!;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-}
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName!;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+};
 
 export const getDatasources = async () => {
   const csrfToken = getCsrfToken();
@@ -123,7 +140,7 @@ export const getTables = async (datasourceId: string) => {
   return result;
 };
 
-export const getUserDetails =  async () => {
+export const getUserDetails = async () => {
   const csrfToken = getCsrfToken();
   const response = await fetch(endpoints.getUserDetails(), {
     method: "GET",
@@ -136,7 +153,12 @@ export const getUserDetails =  async () => {
   return result;
 };
 
-export const sendConsoleMessage = async (datasourceId: string, systemPrompt: string, assistantMessage: string, userPrompt: string) => {
+export const sendConsoleMessage = async (
+  datasourceId: string,
+  systemPrompt: string,
+  assistantMessage: string,
+  userPrompt: string
+) => {
   const csrfToken = getCsrfToken();
   const response = await fetch(endpoints.getConsoleSQL(), {
     method: "POST",
@@ -148,7 +170,7 @@ export const sendConsoleMessage = async (datasourceId: string, systemPrompt: str
       datasourceId: datasourceId,
       systemPrompt: systemPrompt,
       assistantMessage: assistantMessage,
-      userPrompt: userPrompt
+      userPrompt: userPrompt,
     }),
   });
   const result = await response.json();
@@ -167,7 +189,7 @@ export const checkUserExists = async (data: any) => {
   });
   const result = await response.json();
   return result;
-}
+};
 
 export const login = async (data: any) => {
   const csrfToken = getCsrfToken();
@@ -181,7 +203,7 @@ export const login = async (data: any) => {
   });
   const result = await response.json();
   return result;
-}
+};
 
 export const requestPasswordReset = async (data: any) => {
   const csrfToken = getCsrfToken();
@@ -195,7 +217,7 @@ export const requestPasswordReset = async (data: any) => {
   });
   const result = await response.json();
   return result;
-}
+};
 
 export const resetPassword = async (data: any) => {
   const csrfToken = getCsrfToken();
@@ -209,7 +231,7 @@ export const resetPassword = async (data: any) => {
   });
   const result = await response.json();
   return result;
-}
+};
 
 export const logout = async () => {
   const csrfToken = getCsrfToken();
@@ -222,4 +244,18 @@ export const logout = async () => {
   });
   const result = await response.json();
   return result;
-}
+};
+
+export const fileUpload = async (formData: FormData) => {
+  const csrfToken = getCsrfToken();
+
+  const response = await fetch(endpoints.fileUpload(), {
+    method: "POST",
+    headers: {
+      "X-CSRFToken": csrfToken || "",
+    },
+    body: formData,
+  });
+  const result = await response.json();
+  return result;
+};

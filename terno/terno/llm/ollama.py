@@ -1,3 +1,4 @@
+import json
 from terno.llm import BaseLLM
 import ollama
 
@@ -34,3 +35,14 @@ class OllamaLLM(BaseLLM):
         model = self.get_model_instance()
         response = model.chat(model=self.model_name, messages=messages)
         return {'generated_sql': response['message']['content']}
+    
+    def csv_llm_response(self, messages):
+        model = self.get_model_instance()
+        response = model.chat(model=self.model_name, messages=messages)
+        generated_csv_schema = response['message']['content']
+        generated_csv_schema = generated_csv_schema.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        print("This is generated schema", generated_csv_schema)
+        generated_csv_schema_json = json.loads(generated_csv_schema)
+        print("This is generated schema Json", generated_csv_schema)
+        return generated_csv_schema_json
+

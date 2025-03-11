@@ -1,3 +1,4 @@
+import io
 import terno.models as models
 from django.contrib.auth.models import Group, Permission
 from sqlshield.shield import Session
@@ -18,6 +19,8 @@ from terno.llm.base import NoSufficientCreditsException, NoDefaultLLMException
 from subscription.models import LLMCredit
 from subscription.utils import deduct_llm_credits
 from django.conf import settings
+import terno.llm as llms
+from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, Float, Boolean
 
 
 logger = logging.getLogger(__name__)
@@ -197,10 +200,12 @@ def get_admin_config_object(datasource, roles):
     return all_group_tables, group_columns
 
 
-def console_llm_response(user, messages):
+def console_llm_response(user, human_prompt):
     try:
-        llm, is_default_llm = LLMFactory.create_llm()
-        response = llm.get_response(messages)
+        organisation = models.OrganisationUser.objects.get(user=user).organisation
+        llm, is_default_llm = LLMFactory.create_llm(organisation)
+        message = llm.create_message_for_llm(system_prompt="You are a helpful assistant skilled in data analysis and schema inference.", ai_prompt="", human_prompt=human_prompt)
+        response = llm.get_response(message)
         response_sql = response
     except NoSufficientCreditsException as e:
         logger.exception(e)
@@ -326,10 +331,10 @@ def generate_mdb(datasource):
     return mdb
 
 
-def generate_native_sql(mDb, user_sql):
+def generate_native_sql(mDb, user_sql, dialect):
     sess = Session(mDb, '')
     try:
-        native_sql = sess.generateNativeSQL(user_sql)
+        native_sql = sess.generateNativeSQL(user_sql, dialect)
         return {
             'status': 'success',
             'native_sql': native_sql
@@ -450,3 +455,153 @@ def disable_default_llm():
         for org_llm in organisation_llms:
             org_llm.llm.enabled = False
             org_llm.llm.save()
+
+
+def count_non_null(row):
+    return sum(1 for value in row if value.strip())
+
+
+def sample_data_for_llm(file, no_of_rows):
+    file.seek(0)
+    reader = csv.reader(io.StringIO(file.read().decode('utf-8')))
+    data = list(reader)
+
+    columns = data[0]
+    num_columns = len(columns)
+    rows = data[0:]
+    null_counts_column = {col: 0 for col in columns}
+    for row in rows:
+        for i, value in enumerate(row):
+            if not value.strip():  
+                null_counts_column[columns[i]] += 1
+
+    rows_with_count = [(index, count_non_null(row), row) for index, row in enumerate(rows)]
+    rows_sorted = sorted(rows_with_count, key=lambda x: (-x[1], x[0])) 
+    top_five_rows = [row for _, _, row in rows_sorted[:no_of_rows]]
+
+    return top_five_rows, num_columns, null_counts_column
+
+def csv_llm_response(user, prompt, organisation):
+    llm, is_default_llm = llms.LLMFactory().create_llm(organisation)
+    message = llm.create_message_for_llm(system_prompt="You are a helpful assistant skilled in data analysis and schema inference.", ai_prompt="", human_prompt=prompt)
+    response = llm.csv_llm_response(message)
+    return response
+
+
+def parsing_csv_file(user, file, organisation):
+    try:
+        sample_data, num_columns, null_values_count_in_columns = sample_data_for_llm(file,5)
+
+        json_response_format = {
+            "table_name": "table_name_here",
+            "columns": [
+                {
+                    "name": "column_name_1",
+                    "type": "data type here",
+                    "nullable": "true or false",
+                    "description": "Short description here."
+                },
+                {
+                    "name": "column_name_2",
+                    "type": "data type here",
+                    "nullable": "true or false",
+                    "description": "Short description here."
+                }
+            ],
+            "header_row": "True or false"
+        }
+
+        prompt = f"""
+        You are given a DataFrame sample in tabular form:
+
+        {sample_data}
+
+        Analyze the DataFrame and determine the most appropriate table name based on its structure and contents.
+        - Examine the column names and data patterns in the provided sample.
+        - Based on the observed data, infer a suitable name for the table that best represents its purpose.
+        - Ensure the table name is meaningful, concise, and aligns with standard database naming conventions.
+        - Table name should be in lowercase and snake_case format.
+
+        Analyze each column based on this DataFrame sample. For each column, provide:
+        - The count of columns in the DataFrame is {num_columns}. Make sure the order of columns is preserved.
+        - Column names can be present in first row, if not Suggest human friendly column names for every column.
+        - Column names should be in lowercase and snake_case format.
+        - If column names are present set header_row to true otherwise false. 
+        - Data type (choose from: INT, SMALLINT, BIGINT, DECIMAL, FLOAT, CHAR, VARCHAR, DATE, TIMESTAMP)
+        - Nullable status : If null count for that column is greater than 0 then it is nullable otherwise not : The null counts for each column are as follows: {null_values_count_in_columns}.
+        - A short and clear description (one sentence maximum) of the content in each column.
+
+        Respond strictly in the JSON format shown below without any explanations or markdown formatting. JSON format:
+
+        {json_response_format}
+        """
+        response = csv_llm_response(user, prompt,organisation)
+        print(response)
+        return {'status': 'success', 'response': response}
+    except Exception as e:
+        return {'status': 'error', 'error': str(e)}
+
+
+def write_sqlite_from_json(data, sqlite_url):
+    try:
+        type_mapping = {
+            'INT': Integer,
+            'SMALLINT': Integer,
+            'BIGINT': Integer,
+            'VARCHAR': String,
+            'FLOAT': Float,
+            'BOOLEAN': Boolean
+        }
+        engine = create_engine(sqlite_url, echo=True)
+        metadata = MetaData()
+        columns = []
+        for col in data['columns']:
+            col_name = col['name']
+            col_type = type_mapping.get(col['type'], String)
+
+            if col_name.lower() == 'id':
+                column = Column(col_name, col_type, primary_key=True, nullable=col['nullable'],
+                                comment=col.get('description', ''), quote=False)
+            else:
+                column = Column(col_name, col_type, nullable=col['nullable'],
+                                comment=col.get('description', ''), quote=False)
+            columns.append(column)
+
+        table = Table(data['table_name'], metadata, quote=False, *columns)
+        metadata.create_all(engine)
+        return {'status': 'success', 'table': table, 'sqlite_url': sqlite_url}
+    except Exception as e:
+        return {'status': 'error', 'error': str(e)}
+
+
+def add_data_sqlite(sqlite_url, data, table, file,data_source):
+    engine = create_engine(sqlite_url, echo=True)
+    with engine.connect() as connection:
+        trans = connection.begin()
+        try:
+            file.seek(0)
+            reader = csv.reader(file.read().decode('utf-8').splitlines())
+
+            if data.get('header_row', True):
+                header = next(reader, None)
+
+            for row in reader:
+                ordered_row = {}
+                for index, col in enumerate(data['columns']):
+                    col_name = col['name']
+                    value = row[index] if index < len(row) else None
+                    if col['type'] == 'int':
+                        ordered_row[col_name] = int(value) if value else None
+                    elif col['type'] == 'float':
+                        ordered_row[col_name] = float(value) if value else None
+                    else:
+                        ordered_row[col_name] = value
+                connection.execute(table.insert().values(**ordered_row))
+            trans.commit()
+            data_source.save()
+            trans.close()
+            return {'status': 'success'}
+        except Exception as e:
+            trans.rollback()
+            logger.exception("Error inserting data:", str(e))
+            return {'status': 'error', 'error': str(e)}

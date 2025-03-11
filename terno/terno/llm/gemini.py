@@ -1,3 +1,4 @@
+import json
 from .base import BaseLLM
 import google.generativeai as genai
 
@@ -80,3 +81,29 @@ class GeminiLLM(BaseLLM):
         response = response.text.strip().removeprefix("```sql").removesuffix("```")
 
         return {'generated_sql': response}
+    
+
+    def csv_llm_response(self, messages):
+        system_prompt = messages[0]['parts'][0]
+        messages = messages[1:]
+        genai.configure(api_key=self.api_key)
+        model = self.get_model_instance(system_prompt)
+        response = model.generate_content(
+            contents=messages,
+            generation_config=dict(
+                {
+                    "temperature": self.temperature,
+                    "top_p": self.top_p,
+                    "max_output_tokens": self.max_tokens,
+                    "top_k": self.top_k,
+                    **self.custom_parameters
+                }
+            ),
+        )
+
+        generated_csv_schema = response.text
+        generated_csv_schema = generated_csv_schema.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        print("This is generated schema", generated_csv_schema)
+        generated_csv_schema_json = json.loads(generated_csv_schema)
+        print("This is generated schema Json", generated_csv_schema)
+        return generated_csv_schema_json

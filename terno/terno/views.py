@@ -226,7 +226,8 @@ def execute_sql(request):
 
     mDB = utils.prepare_mdb(datasource, roles)
 
-    native_sql_response = utils.generate_native_sql(mDB, user_sql)
+    native_sql_response = utils.generate_native_sql(
+        mDB, user_sql, datasource.dialect_name)
 
     if native_sql_response['status'] == 'error':
         return JsonResponse({
@@ -287,7 +288,8 @@ def export_sql_result(request):
 
     mDB = utils.prepare_mdb(datasource, roles)
 
-    native_sql_response = utils.generate_native_sql(mDB, user_sql)
+    native_sql_response = utils.generate_native_sql(
+        mDB, user_sql, datasource.dialect_name)
 
     if native_sql_response['status'] == 'error':
         return JsonResponse({
@@ -349,9 +351,18 @@ def get_tables(request, datasource_id):
 @login_required
 def get_user_details(request):
     user = request.user
+    org_id = request.org_id
+    organisation = models.Organisation.objects.get(id=org_id)
+
+    if not models.OrganisationUser.objects.filter(
+            user=request.user,
+            organisation=organisation).exists():
+        return HttpResponseForbidden("You do not belong to this organisation.")
+
     return JsonResponse({
         'id': user.id,
-        'username': user.username
+        'username': user.username,
+        'is_admin': organisation.owner == user
     })
 
 
@@ -387,3 +398,56 @@ def sso_login(request):
             redirect_url += '/admin/terno/llmconfiguration'
         return HttpResponseRedirect(redirect_url)
     return HttpResponseForbidden
+
+
+def file_upload(request):
+    if request.method == 'POST':
+        files = request.FILES.getlist('files')
+        org_id = request.org_id
+        organisation = models.Organisation.objects.get(id=org_id)
+
+        if not models.OrganisationUser.objects.filter(
+            user=request.user,
+            organisation=organisation).exists():
+            return HttpResponseForbidden("You do not belong to this organisation.")
+
+        try:
+            total_existing_ds = models.OrganisationDataSource.objects.filter(organisation=organisation).count()
+            display_name = f"{organisation.name}_ds_{total_existing_ds + 1}"
+            user_sqlite_path = settings.USER_SQLITE_PATH
+            file_name = display_name + '.sqlite'
+            sqlite_url = 'sqlite:///' + user_sqlite_path + file_name
+            
+            datasource = models.DataSource.objects.create(
+                type='sqlite',
+                connection_str=sqlite_url,
+                display_name=display_name,
+                enabled=True
+            )
+
+            models.OrganisationDataSource.objects.create(
+                organisation=organisation,
+                datasource=datasource
+            )
+
+            for file in files:
+                file_metadata_response = utils.parsing_csv_file(request.user, file, organisation)
+                if file_metadata_response['status'] == 'error':
+                    return JsonResponse({'status': 'error', 'error': file_metadata_response['error']})
+                print("THIS is the llm response", file_metadata_response['response'])
+
+                sqlite_write_response = utils.write_sqlite_from_json(file_metadata_response['response'], sqlite_url)
+                if sqlite_write_response['status'] == 'error':
+                    return JsonResponse({'status': 'error', 'error': sqlite_write_response['error']})
+
+                add_data_response = utils.add_data_sqlite(sqlite_write_response['sqlite_url'],
+                                                          file_metadata_response['response'],
+                                                          sqlite_write_response['table'], file,datasource)
+                if add_data_response['status'] == 'error':
+                    return JsonResponse({'status': 'error', 'error': add_data_response['error']})
+            
+            logger.info(f"File Uploaded Successfully: {file_metadata_response['response']}")
+            return JsonResponse({'status': 'success', 'message': 'Files uploaded successfully'}, status=200)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'error': str(e)}, status=200)
+    return JsonResponse({'status': 'error', 'error': 'Invalid request'}, status=400)

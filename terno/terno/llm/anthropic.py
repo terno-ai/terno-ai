@@ -1,3 +1,4 @@
+import json
 import anthropic
 from .base import BaseLLM
 
@@ -59,3 +60,25 @@ class AnthropicLLM(BaseLLM):
             )
         response = response.content.strip().removeprefix("```sql").removesuffix("```")
         return {'generated_sql': response}
+
+
+    def csv_llm_response(self, messages):
+        model = self.get_model_instance()
+
+        response = model.messages.create(
+            model=self.model_name,
+                max_tokens=self.max_tokens,
+                temperature=self.temperature,
+                system=self.system_message,
+                messages=messages,
+                top_p=self.top_p,
+                top_k=self.top_k,
+                **self.custom_parameters
+        )
+
+        generated_csv_schema = response.content
+        generated_csv_schema = generated_csv_schema.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        print("This is generated schema", generated_csv_schema)
+        generated_csv_schema_json = json.loads(generated_csv_schema)
+        print("This is generated schema Json", generated_csv_schema)
+        return generated_csv_schema_json
