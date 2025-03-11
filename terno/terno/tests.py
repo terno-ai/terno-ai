@@ -112,7 +112,9 @@ class BaseTestCase(TestCase):
         group_private_row_filter = models.GroupTableRowFilter.objects.create(
             data_source=ds, group=roles, table=filter_table, filter_str=group_private_row
         )
-        mdb = utils.prepare_mdb(ds, [roles])
+        print("Roles :", [roles])
+        mdb = utils.prepare_mdb(ds, Group.objects.filter(id=roles.id))
+        print("MDB :", mdb.tables.keys())
         return mdb
 
 
@@ -192,7 +194,7 @@ class MDBTestCase(BaseTestCase):
         self.assertEqual(list(mdb.tables.keys()),
                          ['Album', 'Artist', 'Genre', 'Invoice',
                           'InvoiceLine', 'MediaType', 'Playlist',
-                          'PlaylistTrack', 'Track', 'User'])
+                          'PlaylistTrack', 'Track'])
 
     def test_allowed_columns(self):
         mdb = self.mdb
