@@ -337,7 +337,7 @@ class GenerateExecuteNativeSQLTestCase(BaseTestCase):
                          "('No such table found.', 'InvalidTable')")
 
     def test_execute_native_sql(self):
-        datasource = models.DataSource.objects.get(display_name='test_db')
+        datasource = models.DataSource.objects.filter(display_name='test_db').first()
         native_sql = 'SELECT * FROM (SELECT AlbumId AS AlbumId, Title AS Title, ArtistId AS ArtistId FROM Album);'
         result = utils.execute_native_sql(datasource, native_sql, 1, 25)
 
@@ -388,10 +388,10 @@ class SubstituteTestCase(BaseTestCase):
 
         self.assertEqual(response, expected_response)
 
-class FileUploadTestCase(TestCase):
+class FileUploadTestCase(BaseTestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username='testuser', password='12345')
-        #self.organisation = models.OrganisationUser.objects.get(user=self.user).organisation
+        self.user = super().create_user()
+        self.organisation, _ = super().create_organisation(self.user)
         self.test_csv_file = "test_data.csv"
         self.data = [
                         ["id", "name", "email", "age", "is_active"],
@@ -408,8 +408,10 @@ class FileUploadTestCase(TestCase):
             writer.writerows(self.data)
         return self.test_csv_file
     
-    @mock.patch("terno.utils.console_llm_response")
+    @mock.patch("terno.utils.csv_llm_response")
     def test_file_upload(self, mock_llm_response):
+
+
         # Create a test CSV file
         mock_llm_response.return_value = {
                 "message": "File Uploaded Successfully",
@@ -439,9 +441,8 @@ class FileUploadTestCase(TestCase):
 
         test_file = self.generate_test_csv()
         with open(self.test_csv_file, "rb") as test_file:
-            response = utils.parsing_csv_file(self.user, test_file)
-
-        self.assertEqual(response['message'], "File Uploaded Successfully")
-        self.assertEqual(response['generated_sql'], mock_llm_response.return_value["generated_sql"])
+            response = utils.parsing_csv_file(self.user, test_file, self.organisation)
+        self.assertEqual(response['response']['message'], "File Uploaded Successfully")
+        self.assertEqual(response['response']['generated_sql'], mock_llm_response.return_value["generated_sql"])
 
         mock_llm_response.assert_called_once()

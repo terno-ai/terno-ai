@@ -1,0 +1,6 @@
+id,name,email,age,is_active
+1,Alice,alice@example.com,25,True
+2,Bob,bob@example.com,30,False
+3,Charlie,charlie@example.com,28,True
+4,David,david@example.com,35,False
+5,Eve,eve@example.com,,True
