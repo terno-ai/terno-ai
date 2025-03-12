@@ -1,5 +1,3 @@
-import os
-from venv import logger
 from terno.models import Organisation, OrganisationUser, DataSource, OrganisationDataSource
 from api.utils import get_user_name
 from django.contrib.auth.models import User
@@ -14,7 +12,9 @@ from django.contrib.auth import logout
 import subscription.models as subs_models
 import terno.utils as utils
 import terno.models as models
+import logging
 
+logger = logging.getLogger(__name__)
 
 @csrf_exempt
 def get_org_details(request):
