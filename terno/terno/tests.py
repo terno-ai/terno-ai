@@ -11,7 +11,10 @@ import terno.llm as llms
 from terno.pipeline.pipeline import Pipeline
 from terno.pipeline.step import Step
 import csv
+from subscription.models import LLMCredit
+from terno.models import Organisation, OrganisationUser, OrganisationDataSource
 import io
+import sqlite3
 
 # Ensure the settings module is set
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'terno.settings')
@@ -24,13 +27,39 @@ class BaseTestCase(TestCase):
     def create_datasource(self, display_name='test_db'):
         datasource = models.DataSource.objects.create(
             display_name=display_name, type='default',
-            connection_str='sqlite:///../chinook.db',
-            enabled=True
+            connection_str='sqlite:///../Chinook_Sqlite.sqlite',
+            enabled=True,
+            
         )
         return datasource
 
+    def create_organisationdatasource(self, datasource, organisation):
+        OrganisationDataSource.objects.create(
+            organisation=organisation,
+            datasource=datasource
+        )
+
+    def create_organisation(self, user, org_name="Test Organisation", subdomain="terno-root"):
+
+        llm_credit, _ = LLMCredit.objects.get_or_create(owner=user, credit = 10)
+
+        organisation = Organisation.objects.create(
+            name=org_name,
+            subdomain=subdomain,
+            owner=user,
+            llm_credit=llm_credit,
+            is_active=True
+        )
+
+        OrganisationUser.objects.get_or_create(user=user, organisation=organisation)
+
+        return organisation, user
+
     def create_mdb(self, ds_display_name='test_db', roles='sales'):
+        user = self.create_user()
         ds = self.create_datasource()
+        organisation, _ = self.create_organisation(user)
+        self.create_organisationdatasource(ds, organisation)
         roles = Group.objects.create(name=roles)
 
         # Setting private tables for all
@@ -83,13 +112,15 @@ class BaseTestCase(TestCase):
         group_private_row_filter = models.GroupTableRowFilter.objects.create(
             data_source=ds, group=roles, table=filter_table, filter_str=group_private_row
         )
-        mdb = utils.prepare_mdb(ds, [roles])
+        print("Roles :", [roles])
+        mdb = utils.prepare_mdb(ds, Group.objects.filter(id=roles.id))
+        print("MDB :", mdb.tables.keys())
         return mdb
 
 
 class DBEngineTestCase(TestCase):
     def setUp(self):
-        self.connection_string = "sqlite:///../chinook.db"
+        self.connection_string = "sqlite:///../Chinook_Sqlite.sqlite"
         self.bigquery_connection_string = "bigquery://project/dataset"
         self.credentials_info = {
             "type": "service_account",
@@ -100,7 +131,7 @@ class DBEngineTestCase(TestCase):
         engine = utils.create_db_engine('sqlite', self.connection_string)
         with engine.connect():
             self.assertEqual(engine.dialect.name, 'sqlite')
-            self.assertEqual(str(engine.dialect.server_version_info), '(3, 46, 1)')
+            self.assertEqual(str(engine.dialect.server_version_info), str(tuple(map(int, sqlite3.sqlite_version.split('.')))))
 
     @patch('terno.utils.sqlalchemy.create_engine')
     def test_create_db_engine_bigquery(self, mock_create_engine):
@@ -163,7 +194,7 @@ class MDBTestCase(BaseTestCase):
         self.assertEqual(list(mdb.tables.keys()),
                          ['Album', 'Artist', 'Genre', 'Invoice',
                           'InvoiceLine', 'MediaType', 'Playlist',
-                          'PlaylistTrack', 'Track', 'User'])
+                          'PlaylistTrack', 'Track'])
 
     def test_allowed_columns(self):
         mdb = self.mdb
@@ -189,13 +220,14 @@ class LLMTestCase(BaseTestCase):
 
         llm = llms.LLMFactory().create_llm()
         response = llm.get_response(messages='messages')
-        self.assertEqual(response, "SELECT 1")
+        self.assertEqual(response['generated_sql'], "SELECT 1")
 
 
 class LLMResponseTestCase(BaseTestCase):
     def setUp(self):
         self.user = super().create_user()
         self.datasource = super().create_datasource()
+        self.organisation, _ = super().create_organisation(self.user)
         self.user_query = "Show me all albums"
         self.db_schema = "CREATE TABLE Album (AlbumId INTEGER, Title NVARCHAR(160), ArtistId INTEGER)"
 
@@ -205,16 +237,14 @@ class LLMResponseTestCase(BaseTestCase):
     def test_llm_response_success(self, mock_get_response,
                                   mock_create_pipeline, mock_create_llm):
         mock_llm = MagicMock(spec=llms.BaseLLM)
-        mock_create_llm.return_value = mock_llm
+        mock_create_llm.return_value = (mock_llm, True)
 
         mock_pipeline = MagicMock(spec=Pipeline)
         mock_create_pipeline.return_value = mock_pipeline
-
-        mock_get_response.return_value = [["SELECT * FROM Album"]]
-
+    
+        mock_get_response.return_value =[[{'status': 'success', "generated_sql": "SELECT * FROM Album"}]]
         response = utils.llm_response(self.user, self.user_query,
-                                      self.db_schema, self.datasource)
-
+                                      self.db_schema, self.organisation, self.datasource)
         self.assertEqual(response['status'], 'success')
         self.assertEqual(response['generated_sql'], "SELECT * FROM Album")
         mock_create_llm.assert_called_once()
@@ -227,7 +257,7 @@ class LLMResponseTestCase(BaseTestCase):
     def test_llm_response_error(self, mock_create_llm):
         mock_create_llm.side_effect = Exception("LLM Error")
 
-        response = utils.llm_response(self.user, self.user_query, self.db_schema, self.datasource)
+        response = utils.llm_response(self.user, self.user_query, self.db_schema, self.organisation ,  self.datasource)
 
         self.assertEqual(response['status'], 'error')
         self.assertIn('LLM Error', response['error'])
@@ -307,7 +337,7 @@ class GenerateExecuteNativeSQLTestCase(BaseTestCase):
                          "('No such table found.', 'InvalidTable')")
 
     def test_execute_native_sql(self):
-        datasource = models.DataSource.objects.get(display_name='test_db')
+        datasource = models.DataSource.objects.filter(display_name='test_db').first()
         native_sql = 'SELECT * FROM (SELECT AlbumId AS AlbumId, Title AS Title, ArtistId AS ArtistId FROM Album);'
         result = utils.execute_native_sql(datasource, native_sql, 1, 25)
 
@@ -358,10 +388,10 @@ class SubstituteTestCase(BaseTestCase):
 
         self.assertEqual(response, expected_response)
 
-class FileUploadTestCase(TestCase):
+class FileUploadTestCase(BaseTestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username='testuser', password='12345')
-        #self.organisation = models.OrganisationUser.objects.get(user=self.user).organisation
+        self.user = super().create_user()
+        self.organisation, _ = super().create_organisation(self.user)
         self.test_csv_file = "test_data.csv"
         self.data = [
                         ["id", "name", "email", "age", "is_active"],
@@ -378,8 +408,10 @@ class FileUploadTestCase(TestCase):
             writer.writerows(self.data)
         return self.test_csv_file
     
-    @mock.patch("terno.utils.console_llm_response")
+    @mock.patch("terno.utils.csv_llm_response")
     def test_file_upload(self, mock_llm_response):
+
+
         # Create a test CSV file
         mock_llm_response.return_value = {
                 "message": "File Uploaded Successfully",
@@ -409,9 +441,8 @@ class FileUploadTestCase(TestCase):
 
         test_file = self.generate_test_csv()
         with open(self.test_csv_file, "rb") as test_file:
-            response = utils.parsing_csv_file(self.user, test_file)
-
-        self.assertEqual(response['message'], "File Uploaded Successfully")
-        self.assertEqual(response['generated_sql'], mock_llm_response.return_value["generated_sql"])
+            response = utils.parsing_csv_file(self.user, test_file, self.organisation)
+        self.assertEqual(response['response']['message'], "File Uploaded Successfully")
+        self.assertEqual(response['response']['generated_sql'], mock_llm_response.return_value["generated_sql"])
 
         mock_llm_response.assert_called_once()

@@ -15,3 +15,6 @@ class FakeLLM(BaseLLM):
     def get_response(self, messages) -> dict:
         self.get_model_instance()
         return {'generated_sql': "SELECT 1"}
+
+    def csv_llm_response(self, messages):
+        return {"generated_csv_schema": "mock_schema"}
