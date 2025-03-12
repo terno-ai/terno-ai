@@ -412,23 +412,32 @@ def file_upload(request):
             return HttpResponseForbidden("You do not belong to this organisation.")
 
         try:
-            total_existing_ds = models.OrganisationDataSource.objects.filter(organisation=organisation).count()
-            display_name = f"{organisation.name}_ds_{total_existing_ds + 1}"
-            user_sqlite_path = settings.USER_SQLITE_PATH
-            file_name = display_name + '.sqlite'
-            sqlite_url = 'sqlite:///' + user_sqlite_path + file_name
-            
-            datasource = models.DataSource.objects.create(
-                type='sqlite',
-                connection_str=sqlite_url,
-                display_name=display_name,
-                enabled=True
-            )
+            datasource_id = request.POST.get('dsId')
+            print("THIS IS THE DATASOURCE ID", datasource_id)
 
-            models.OrganisationDataSource.objects.create(
-                organisation=organisation,
-                datasource=datasource
-            )
+            if datasource_id:
+                datasource = models.OrganisationDataSource.objects.get(datasource=datasource_id, organisation=organisation)
+                sqlite_url = datasource.datasource.connection_str  
+                print("THIS IS THE SQLITE URL", sqlite_url)
+                adding_file_to_existing_datasource = True 
+            else:
+                total_existing_ds = models.OrganisationDataSource.objects.filter(organisation=organisation).count()
+                display_name = f"{organisation.name}_ds_{total_existing_ds + 1}"
+                user_sqlite_path = settings.USER_SQLITE_PATH
+                file_name = display_name + '.sqlite'
+                sqlite_url = 'sqlite:///' + user_sqlite_path + file_name
+                
+                datasource = models.DataSource.objects.create(
+                    type='sqlite',
+                    connection_str=sqlite_url,
+                    display_name=display_name,
+                    enabled=True
+                )
+
+                models.OrganisationDataSource.objects.create(
+                    organisation=organisation,
+                    datasource=datasource
+                )
 
             for file in files:
                 file_metadata_response = utils.parsing_csv_file(request.user, file, organisation)
@@ -445,6 +454,9 @@ def file_upload(request):
                                                           sqlite_write_response['table'], file,datasource)
                 if add_data_response['status'] == 'error':
                     return JsonResponse({'status': 'error', 'error': add_data_response['error']})
+                
+                if(adding_file_to_existing_datasource):
+                    datasource.datasource.save()
             
             logger.info(f"File Uploaded Successfully: {file_metadata_response['response']}")
             return JsonResponse({'status': 'success', 'message': 'Files uploaded successfully'}, status=200)
