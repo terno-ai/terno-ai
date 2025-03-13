@@ -15,6 +15,9 @@ from subscription.models import LLMCredit
 from terno.models import Organisation, OrganisationUser, OrganisationDataSource
 import io
 import sqlite3
+from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, Float, insert, inspect
+from io import BytesIO
+import csv
 
 # Ensure the settings module is set
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'terno.settings')
@@ -54,7 +57,20 @@ class BaseTestCase(TestCase):
         OrganisationUser.objects.get_or_create(user=user, organisation=organisation)
 
         return organisation, user
-
+    
+    def create_test_table(self, sqlite_url):
+        engine = create_engine(sqlite_url, echo=True)
+        metadata = MetaData()
+        table = Table(
+            'test_table', metadata,
+            Column('id', Integer, primary_key=True),
+            Column('name', String),
+            Column('age', Integer),
+            Column('score', Float)
+        )
+        metadata.create_all(engine)
+        return table
+   
     def create_mdb(self, ds_display_name='test_db', roles='sales'):
         user = self.create_user()
         ds = self.create_datasource()
@@ -194,7 +210,7 @@ class MDBTestCase(BaseTestCase):
         self.assertEqual(list(mdb.tables.keys()),
                          ['Album', 'Artist', 'Genre', 'Invoice',
                           'InvoiceLine', 'MediaType', 'Playlist',
-                          'PlaylistTrack', 'Track'])
+                          'PlaylistTrack', 'Track', 'invalid_table', 'test_table'])
 
     def test_allowed_columns(self):
         mdb = self.mdb
@@ -446,3 +462,84 @@ class FileUploadTestCase(BaseTestCase):
         self.assertEqual(response['response']['generated_sql'], mock_llm_response.return_value["generated_sql"])
 
         mock_llm_response.assert_called_once()
+
+class WriteSQLiteTestCase(BaseTestCase):
+    def test_valid_table_creation(self):
+        data = {
+            'table_name': 'test_table',
+            'columns': [
+                {'name': 'id', 'type': 'INT', 'nullable': False},
+                {'name': 'name', 'type': 'VARCHAR', 'nullable': False},
+                {'name': 'age', 'type': 'INT', 'nullable': True}
+            ]
+        }
+        sqlite_url = "sqlite:///../Chinook_Sqlite.sqlite"
+        result = utils.write_sqlite_from_json(data, sqlite_url)
+        
+        self.assertEqual(result['status'], 'success')
+        engine = create_engine(sqlite_url)
+        inspector = inspect(engine)
+        self.assertIn('test_table', inspector.get_table_names())
+
+
+    def test_no_columns(self):
+        data = {
+            'table_name': 'empty_table',
+            'columns': []
+        }
+        sqlite_url = "sqlite:///../Chinook_Sqlite.sqlite"
+        result = utils.write_sqlite_from_json(data, sqlite_url)
+        
+        self.assertEqual(result['status'], 'error')
+        self.assertIn("error", result)
+
+    def test_duplicate_column_names(self):
+        data = {
+            'table_name': 'duplicate_table',
+            'columns': [
+                {'name': 'id', 'type': 'INT', 'nullable': False},
+                {'name': 'id', 'type': 'VARCHAR', 'nullable': True}
+            ]
+        }
+        sqlite_url = "sqlite:///../Chinook_Sqlite.sqlite"
+        result = utils.write_sqlite_from_json(data, sqlite_url)
+        
+        self.assertEqual(result['status'], 'error')
+        self.assertIn("error", result)        
+
+
+
+
+
+class AddDataSQLiteTestCase(BaseTestCase):
+    def setUp(self):
+        self.sqlite_url = "sqlite:///../Chinook_Sqlite.sqlite"
+        self.table = self.create_test_table(self.sqlite_url)
+        self.test_csv_file = "test_data.csv"
+        self.data = {
+            'header_row': True,
+            'columns': [
+                {'name': 'id', 'type': 'int'},
+                {'name': 'name', 'type': 'string'},
+                {'name': 'age', 'type': 'int'},
+                {'name': 'score', 'type': 'float'}
+            ]
+        }
+        self.data_source = MockDataSource()
+
+    def test_valid_data_insert(self):
+        csv_data = self.test_csv_file 
+        file = BytesIO(csv_data.encode('utf-8'))
+        result = utils.add_data_sqlite(self.sqlite_url, self.data, self.table, file, self.data_source)
+        
+        print("test_valid_data_insert" , result)
+        self.assertEqual(result['status'], 'success')
+
+    
+    
+
+class MockDataSource:
+    def save(self):
+        pass
+
+
