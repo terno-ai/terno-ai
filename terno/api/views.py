@@ -63,6 +63,12 @@ def get_org_details(request):
             if created:
                 llm_credit.credit = settings.FREE_LLM_CREDITS
                 llm_credit.save()
+            
+            if Organisation.objects.filter(owner=user, name=org_name).exists():
+                return JsonResponse(
+                    {"status": "error", "message": "Organisation with this name already exists!"}, status=200
+                )
+
             organisation = Organisation.objects.create(
                 name=org_name, subdomain=subdomain, owner=user,
                 llm_credit=llm_credit, is_active=True)
