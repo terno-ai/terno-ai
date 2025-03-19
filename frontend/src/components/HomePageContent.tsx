@@ -7,6 +7,7 @@ import { FaCopy, FaDownload, FaPlay, FaArrowUp, FaArrowDown } from "react-icons/
 import { DataSourceContext } from "./ui/datasource-context";
 import PaginatedList from "./TablePagination";
 import Navbar from "./Navbar";
+import { Button } from "./ui/Button";
 
 
 
@@ -157,6 +158,23 @@ const HomePageContent = () => {
             {/* {isPending ? "Wait" : "Run"} */}
             {loading ? "Wait" : "Run"}
             <FaPlay className="ml-1" />
+          </button>
+        </div>
+        <div className="my-2 flex flex-row gap-2">
+          <button
+            className="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-full"
+          >
+            Show me purchases made by customers in canada
+          </button>
+          <button
+            className="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-full"
+          >
+            Show me albums by artist
+          </button>
+          <button
+            className="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-full"
+          >
+            Rock music by artist
           </button>
         </div>
         <div className="mt-10">
