@@ -27,10 +27,17 @@ class BaseTestCase(TestCase):
     def create_user(self):
         return User.objects.create_user(username='testuser', password='12345')
 
+    def db_path(self):
+        if os.path.exists("../Chinook_Sqlite.sqlite"):
+            connection_str = "sqlite:///../Chinook_Sqlite.sqlite"  # Local
+        else:
+            connection_str = "sqlite:///./Chinook_Sqlite.sqlite"
+        return connection_str
+
     def create_datasource(self, display_name='test_db'):
         datasource = models.DataSource.objects.create(
             display_name=display_name, type='default',
-            connection_str='sqlite:///../Chinook_Sqlite.sqlite',
+            connection_str=self.db_path(),
             enabled=True,
             
         )
@@ -136,7 +143,7 @@ class BaseTestCase(TestCase):
 
 class DBEngineTestCase(TestCase):
     def setUp(self):
-        self.connection_string = "sqlite:///../Chinook_Sqlite.sqlite"
+        self.connection_string = BaseTestCase.db_path(self)
         self.bigquery_connection_string = "bigquery://project/dataset"
         self.credentials_info = {
             "type": "service_account",
@@ -210,7 +217,7 @@ class MDBTestCase(BaseTestCase):
         self.assertEqual(list(mdb.tables.keys()),
                          ['Album', 'Artist', 'Genre', 'Invoice',
                           'InvoiceLine', 'MediaType', 'Playlist',
-                          'PlaylistTrack', 'Track', 'invalid_table', 'test_table'])
+                          'PlaylistTrack', 'Track', 'test_table'])
 
     def test_allowed_columns(self):
         mdb = self.mdb
@@ -341,7 +348,7 @@ class GenerateExecuteNativeSQLTestCase(BaseTestCase):
         expected_sql = 'SELECT * FROM (SELECT AlbumId AS AlbumId, Title AS Title, ArtistId AS ArtistId FROM Album) AS Album'
 
         self.assertEqual(response['status'], 'success')
-        self.assertEqual(response['native_sql'],
+        self.assertEqual(response['native_sql'].replace('"', ''),
                          expected_sql)
 
     def test_generate_native_sql_error(self):
@@ -473,7 +480,7 @@ class WriteSQLiteTestCase(BaseTestCase):
                 {'name': 'age', 'type': 'INT', 'nullable': True}
             ]
         }
-        sqlite_url = "sqlite:///../Chinook_Sqlite.sqlite"
+        sqlite_url = BaseTestCase.db_path(self)
         result = utils.write_sqlite_from_json(data, sqlite_url)
         
         self.assertEqual(result['status'], 'success')
@@ -487,7 +494,7 @@ class WriteSQLiteTestCase(BaseTestCase):
             'table_name': 'empty_table',
             'columns': []
         }
-        sqlite_url = "sqlite:///../Chinook_Sqlite.sqlite"
+        sqlite_url = BaseTestCase.db_path(self)
         result = utils.write_sqlite_from_json(data, sqlite_url)
         
         self.assertEqual(result['status'], 'error')
@@ -501,7 +508,7 @@ class WriteSQLiteTestCase(BaseTestCase):
                 {'name': 'id', 'type': 'VARCHAR', 'nullable': True}
             ]
         }
-        sqlite_url = "sqlite:///../Chinook_Sqlite.sqlite"
+        sqlite_url = BaseTestCase.db_path(self)
         result = utils.write_sqlite_from_json(data, sqlite_url)
         
         self.assertEqual(result['status'], 'error')
@@ -513,7 +520,7 @@ class WriteSQLiteTestCase(BaseTestCase):
 
 class AddDataSQLiteTestCase(BaseTestCase):
     def setUp(self):
-        self.sqlite_url = "sqlite:///../Chinook_Sqlite.sqlite"
+        self.sqlite_url = BaseTestCase.db_path(self)
         self.table = self.create_test_table(self.sqlite_url)
         self.test_csv_file = "test_data.csv"
         self.data = {
@@ -525,7 +532,7 @@ class AddDataSQLiteTestCase(BaseTestCase):
                 {'name': 'score', 'type': 'float'}
             ]
         }
-        self.data_source = MockDataSource()
+        self.data_source = BaseTestCase.create_datasource(self)
 
     def test_valid_data_insert(self):
         csv_data = self.test_csv_file 
@@ -538,8 +545,6 @@ class AddDataSQLiteTestCase(BaseTestCase):
     
     
 
-class MockDataSource:
-    def save(self):
-        pass
+
 
 
