@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -8,7 +8,7 @@ import {
   AlertDialogTitle,
 } from "../components/ui/AlertDialog";
 import CSRFToken from "../utils/csrftoken";
-import { fileUpload } from "../utils/api";
+import { fileUpload, getDatasourceName } from "../utils/api";
 
 const Uploadfiles = ({
   open,
@@ -22,6 +22,7 @@ const Uploadfiles = ({
   const [files, setFiles] = useState<FileList | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [dsName, setDsName] = useState("");
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = e.target.files;
@@ -49,6 +50,28 @@ const Uploadfiles = ({
     setOpen(false);
   };
 
+  useEffect(() => {
+    if (open && dsId) {
+      const fetchDatasourceName = async () => {
+        try {
+          const response = await getDatasourceName(dsId);
+          console.log("This is the name of database", response.datasource_name);
+          console.log("This is type of database", response.type);
+
+          if (response.type && response.type !== "sqlite") {
+            setDsName("Creating a new DataSource");
+          } else {
+            setDsName(response.datasource_name || "Unknown DataSource");
+          }
+        } catch (err) {
+          console.error("Error fetching datasource name:", err);
+          setDsName("Unknown DataSource");
+        }
+      };
+      fetchDatasourceName();
+    }
+  }, [open, dsId]);
+
   return (
     <AlertDialog
       open={open}
@@ -59,7 +82,7 @@ const Uploadfiles = ({
       <AlertDialogContent className="bg-white m-2">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-center">
-            Add CSV File
+            Add CSV File for {dsName || "Loading..."}
           </AlertDialogTitle>
           <AlertDialogDescription>
             <div className="w-[400px]">
