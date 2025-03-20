@@ -1,3 +1,5 @@
+[![codecov](https://codecov.io/gh/terno-ai/terno-ai/graph/badge.svg?token=J9K3H77UOZ)](https://codecov.io/gh/terno-ai/terno-ai)
+
 # Terno AI
 
 Terno AI is an open-source, enterprise-grade Text-to-SQL solution that ensures accuracy, security, and performance when querying databases using natural language. It integrates domain knowledge management and SQL sanitization to generate safe and optimized queries.
