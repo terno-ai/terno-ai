@@ -422,13 +422,13 @@ def file_upload(request):
 
         try:
             datasource_id = request.POST.get('dsId')
-            print("THIS IS THE DATASOURCE ID", datasource_id)
-            datasource = models.OrganisationDataSource.objects.get(datasource=datasource_id, organisation=organisation)
+            print("Datasource Id", datasource_id)
+            if datasource_id:
+                datasource = models.OrganisationDataSource.objects.get(datasource=datasource_id, organisation=organisation)
 
-            if datasource.datasource.type == 'sqlite':
-                
+            if datasource_id and datasource.datasource.type == 'sqlite':
                 sqlite_url = datasource.datasource.connection_str  
-                print("THIS IS THE SQLITE URL", sqlite_url)
+                print("Sqlite Url", sqlite_url)
                 adding_file_to_existing_datasource = True 
             else:
                 total_existing_ds = models.OrganisationDataSource.objects.filter(organisation=organisation).count()
