@@ -132,12 +132,20 @@ def get_datasources(request):
         return HttpResponseForbidden("You do not belong to this organisation.")
 
     datasources = models.DataSource.objects.filter(
-            enabled=True,
-            organisationdatasource__organisation=organisation
-        )
-    data = [{'name': d.display_name, 'id': d.id} for d in datasources]
+        enabled=True,
+        organisationdatasource__organisation=organisation
+    )
+    data = []
+    for ds in datasources:
+        suggestions = models.DatasourceSuggestions.objects.filter(
+            data_source=ds).values_list('suggestion', flat=True)
+        data.append({
+            'id': ds.id,
+            'name': ds.display_name,
+            'suggestions': list(suggestions)
+        })
     return JsonResponse({
-        'datasources': data
+        'datasources': data,
     })
 
 
