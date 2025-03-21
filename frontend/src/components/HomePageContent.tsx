@@ -123,26 +123,24 @@ const HomePageContent = () => {
             onClick={handleSendMessage}
             disabled={loading}
           >
-            {loading ? 'Wait': <FaArrowRight />}
+            {loading ? "Wait" : <FaArrowRight />}
           </button>
         </div>
-        <div className="my-2 flex flex-row gap-2">
-          <button
-            className="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-full"
-          >
-            Show me purchases made by customers in canada
-          </button>
-          <button
-            className="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-full"
-          >
-            Show me albums by artist
-          </button>
-          <button
-            className="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-full"
-          >
-            Rock music by artist
-          </button>
-        </div>
+        {ds.suggestions && (
+          <div className="my-2 flex flex-row flex-wrap gap-2">
+            {ds.suggestions.map((s) => (
+              <button
+                onClick={() => {
+                  setInputText(s);
+                  handleSendMessage();
+                }}
+                className="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-full"
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="mt-10">
           <div className="mt-4 mb-1 font-medium text-lg">Generated Query</div>
           <div className="flex align-center justify-center border focus-within:ring-1 focus-within:ring-sky-300">
@@ -159,7 +157,7 @@ const HomePageContent = () => {
               onClick={() => handleQueryExecute(1)}
               disabled={loading}
             >
-              {loading ? 'Wait': 'Execute'}
+              {loading ? "Wait" : "Execute"}
               <FaPlay className="ml-1" />
             </button>
           </div>
@@ -167,36 +165,41 @@ const HomePageContent = () => {
         <div>
           <div className="flex items-center justify-between">
             <div className=" mt-6 font-medium text-lg text-left">Result</div>
-            {tableData.row_count > 0 &&
-            <div className=" mb-1 flex space-x-2 items-center justify-end">
-              <button
-                className="inline-flex h-9 items-center rounded-md bg-sky-50 hover:bg-sky-200 mt-4 px-10 font-medium text-cyan-600 hover:opacity-100"
-                onClick={() => handleQueryResultExport()}
-              >
-                {exporting ? 'Exporting' : 'Export'}
-                <FaDownload className="ml-1" />
-              </button>
-              <button
-                className="inline-flex h-9 items-center rounded-md bg-sky-50 hover:bg-sky-200 mt-4 px-10 font-medium text-cyan-600 hover:opacity-100"
-                onClick={() => handleCopy()}
-              >
-                {isCopied ? 'Copied' : 'Copy'}
-                <FaCopy className="ml-1" />
-              </button>
-            </div>
-            }
+            {tableData.row_count > 0 && (
+              <div className=" mb-1 flex space-x-2 items-center justify-end">
+                <button
+                  className="inline-flex h-9 items-center rounded-md bg-sky-50 hover:bg-sky-200 mt-4 px-10 font-medium text-cyan-600 hover:opacity-100"
+                  onClick={() => handleQueryResultExport()}
+                >
+                  {exporting ? "Exporting" : "Export"}
+                  <FaDownload className="ml-1" />
+                </button>
+                <button
+                  className="inline-flex h-9 items-center rounded-md bg-sky-50 hover:bg-sky-200 mt-4 px-10 font-medium text-cyan-600 hover:opacity-100"
+                  onClick={() => handleCopy()}
+                >
+                  {isCopied ? "Copied" : "Copy"}
+                  <FaCopy className="ml-1" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
         <div className="max-h-[200px]">
           <SqlError error={sqlError} />
-          <RenderTable columns={tableData.columns} data={tableData.data}/>
-          {loadPaginate && !loading &&
-            <><PaginatedList totalPages={tableData.total_pages} onSelect={handleQueryExecute} />
+          <RenderTable columns={tableData.columns} data={tableData.data} />
+          {loadPaginate && !loading && (
+            <>
+              <PaginatedList
+                totalPages={tableData.total_pages}
+                onSelect={handleQueryExecute}
+              />
               <div className="text-center m-2">{tableData.row_count} Rows</div>
-              </>}
-          </div>
+            </>
+          )}
         </div>
       </div>
+    </div>
   );
 };
 
