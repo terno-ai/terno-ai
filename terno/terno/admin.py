@@ -436,3 +436,14 @@ class SystemPromptsAdmin(OrganisationFilterMixin, admin.ModelAdmin):
         'data_source': 'organisationdatasource__organisation',
     }
     organisation_list_filter_field_names = ['data_source__organisationdatasource__organisation']
+
+@admin.register(models.DatasourceSuggestions)
+class DatasourceSuggestionsAdmin(OrganisationFilterMixin, admin.ModelAdmin):
+    list_display = ['data_source', 'suggestion']
+    organisation_related_field_names = ['data_source__organisationdatasource__organisation']
+    list_filter = [DataSourceFilter]
+    search_fields = ['data_source__display_name', 'suggestion']
+    organisation_foreignkey_field_names = {
+        'data_source': 'organisationdatasource__organisation',
+    }
+    organisation_list_filter_field_names = ['data_source__organisationdatasource__organisation']

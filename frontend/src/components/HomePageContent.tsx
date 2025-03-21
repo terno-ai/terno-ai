@@ -7,7 +7,6 @@ import { FaCopy, FaDownload, FaPlay, FaArrowUp, FaArrowDown } from "react-icons/
 import { DataSourceContext } from "./ui/datasource-context";
 import PaginatedList from "./TablePagination";
 import Navbar from "./Navbar";
-import { Button } from "./ui/Button";
 
 
 
