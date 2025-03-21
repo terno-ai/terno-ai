@@ -130,10 +130,7 @@ const HomePageContent = () => {
           <div className="my-2 flex flex-row flex-wrap gap-2">
             {ds.suggestions.map((s) => (
               <button
-                onClick={() => {
-                  setInputText(s);
-                  handleSendMessage();
-                }}
+                onClick={() => setInputText(s)}
                 className="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-full"
               >
                 {s}
