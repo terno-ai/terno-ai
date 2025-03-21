@@ -342,8 +342,11 @@ def get_tables(request, datasource_id):
             'column_data': column_data
         }
         table_data.append(result)
+    suggestions = models.DatasourceSuggestions.objects.filter(
+            data_source=datasource).values_list('suggestions', flat=True)
     return JsonResponse({
         'status': 'success',
+        'suggestions': suggestions,
         'table_data': table_data
     })
 

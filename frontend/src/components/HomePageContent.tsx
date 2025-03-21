@@ -8,7 +8,6 @@ import { FaArrowRight, FaCopy, FaDownload, FaPlay } from "react-icons/fa6";
 import { DataSourceContext } from "./ui/datasource-context";
 import PaginatedList from "./TablePagination";
 import Navbar from "./Navbar";
-import { Button } from "./ui/Button";
 
 interface TableData {
   columns: string[];
