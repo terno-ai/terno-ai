@@ -24,14 +24,20 @@ const SchemaPane = () => {
   const [filteredData, setFilteredData] = useState<TableData[]>([]);
   const [open, setOpen] = useState(false);
   const [user] = useUserDetails();
-  const { ds } = useContext(DataSourceContext);
+  const { ds, setDs } = useContext(DataSourceContext);
 
-  const handleSelect = async (value: string) => {
+  const handleSelect = async (value: string, type: string) => {
+    if (value === "create-new") {
+      setDs({ id: "", name: "New Data Source", type: "sqlite" });
+      return;
+    }
     const response = await getTables(value);
     if (response["status"] == "success") {
       setOriginalTables(response["table_data"]);
       setFilteredData(response["table_data"]);
     }
+
+    setDs({ id: value, name: ds.name, type });
   };
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,19 +53,17 @@ const SchemaPane = () => {
     <div className="mt-8">
       <div className="flex flex-row justify-center items-center gap-2">
         <DataSourceDropDown onSelect={handleSelect} />
-        {user.is_admin ? (
+        {user.is_admin && (ds.type === "sqlite" || ds.id === "") ? (
           <a
-          className="p-2 cursor-pointer rounded-md border border-slate-400"
-          onClick={() => setOpen(true)}
-        >
-          <UploadIcon />
-          <Uploadfiles
-            open={open}
-            setOpen={setOpen}
-            dsId={ds.id}
-          />
-        </a>
-        ): <></>}
+            className="p-2 cursor-pointer rounded-md border border-slate-400"
+            onClick={() => setOpen(true)}
+          >
+            <UploadIcon />
+            <Uploadfiles open={open} setOpen={setOpen} dsId={ds.id} />
+          </a>
+        ) : (
+          <></>
+        )}
       </div>
       <div className="mt-4 font-bold text-lg">Allowed Tables</div>
       <input

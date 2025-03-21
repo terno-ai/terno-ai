@@ -135,7 +135,7 @@ def get_datasources(request):
             enabled=True,
             organisationdatasource__organisation=organisation
         )
-    data = [{'name': d.display_name, 'id': d.id} for d in datasources]
+    data = [{'name': d.display_name, 'id': d.id, 'type': d.type} for d in datasources]
     return JsonResponse({
         'datasources': data
     })
