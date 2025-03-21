@@ -14,15 +14,28 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Cache Apt Dependencies
+      id: apt-cache
+      uses: actions/cache@v3
+      with:
+        path: /var/cache/apt
+        key: apt-cache-v1
+
     - name: Install Git and MySQL Dependencies
+      if: steps.apt-cache.outputs.cache-hit != 'true'
       run: |
         apt-get update
-        apt-get install -y git
-        apt install -y build-essential pkg-config libmariadb-dev
-        apt install -y libpq-dev
-        apt-get install -y curl
+        apt-get install -y git default-libmysqlclient-dev libpq-dev pkg-config
 
+    - name: Cache Python Dependencies
+      id: pip-cache
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: pip-cache-v1-${{ hashFiles('requirements.txt') }}
+      
     - name: Install Dependencies
+      if: steps.pip-cache.outputs.cache-hit != 'true'
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
