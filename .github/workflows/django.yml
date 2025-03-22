@@ -14,15 +14,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Cache Apt Dependencies
-      id: apt-cache
-      uses: actions/cache@v3
-      with:
-        path: /var/cache/apt
-        key: apt-cache-v1
-
     - name: Install Git and MySQL Dependencies
-      if: steps.apt-cache.outputs.cache-hit != 'true'
       run: |
         apt-get update
         apt-get upgrade -y
@@ -44,8 +36,9 @@ jobs:
     - name: Run Tests
       env:
         SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      working-directory: ./terno
       run: |
-        coverage run terno/manage.py test terno && coverage report --fail-under=65 && coverage xml
+        coverage run manage.py test terno && coverage report --fail-under=65 && coverage xml
 
     - name: Report to CodeCov
       env:
