@@ -248,6 +248,9 @@ class DataSourceAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     search_fields = ['display_name', 'type']
     organisation_related_field_names = ['organisationdatasource__organisation']
 
+    def get_readonly_fields(self, request, obj=None):
+        return ['connection_str'] if obj and obj.type in ['generic', 'sqlite'] else []
+    
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
         org_id = request.org_id
@@ -432,17 +435,6 @@ class SystemPromptsAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     organisation_related_field_names = ['data_source__organisationdatasource__organisation']
     list_filter = [DataSourceFilter]
     search_fields = ['data_source__display_name', 'system_prompt']
-    organisation_foreignkey_field_names = {
-        'data_source': 'organisationdatasource__organisation',
-    }
-    organisation_list_filter_field_names = ['data_source__organisationdatasource__organisation']
-
-@admin.register(models.DatasourceSuggestions)
-class DatasourceSuggestionsAdmin(OrganisationFilterMixin, admin.ModelAdmin):
-    list_display = ['data_source', 'suggestion']
-    organisation_related_field_names = ['data_source__organisationdatasource__organisation']
-    list_filter = [DataSourceFilter]
-    search_fields = ['data_source__display_name', 'suggestion']
     organisation_foreignkey_field_names = {
         'data_source': 'organisationdatasource__organisation',
     }
