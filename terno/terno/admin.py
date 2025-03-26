@@ -243,7 +243,7 @@ class LLMConfigurationAdmin(OrganisationFilterMixin, admin.ModelAdmin):
 
 @admin.register(models.DataSource)
 class DataSourceAdmin(OrganisationFilterMixin, admin.ModelAdmin):
-    list_display = ['display_name', 'type', 'enabled', 'dialect_name', 'dialect_version', 'connection_str']
+    list_display = ['display_name', 'type', 'enabled', 'dialect_name', 'dialect_version', 'masked_connection_str']
     list_filter = ['enabled', 'type']
     search_fields = ['display_name', 'type']
     organisation_related_field_names = ['organisationdatasource__organisation']
@@ -251,7 +251,33 @@ class DataSourceAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         return ['connection_str'] if obj and obj.type in ['generic', 'sqlite'] else []
     
+    def _get_obj_from_request(self, request):
+        try:
+            object_id = request.resolver_match.kwargs.get('object_id')
+            if object_id:
+                return self.model.objects.get(pk=object_id)
+        except Exception:
+            return None
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
+
+        obj = self._get_obj_from_request(request)
+
+        if db_field.name == 'connection_str' and obj and obj.dialect_name == 'sqlite':
+            formfield.initial = '*****'
+        return formfield
+    
+    def masked_connection_str(self, obj):
+        if obj.dialect_name == 'sqlite':
+            return '*****'
+        return obj.connection_str or '-'
+    masked_connection_str.short_description = 'Connection Str'
+
     def save_model(self, request, obj, form, change):
+        if 'connection_str' in form.cleaned_data and form.cleaned_data['connection_str'] == '*****':
+            form.cleaned_data['connection_str'] = obj.connection_str
+
         super().save_model(request, obj, form, change)
         org_id = request.org_id
         organisation = get_object_or_404(models.Organisation, id=org_id)
