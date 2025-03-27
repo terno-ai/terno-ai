@@ -1,3 +1,4 @@
+import re
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as DefaultUserAdmin
 from django.contrib.auth.admin import GroupAdmin as DefaultGroupAdmin
@@ -240,9 +241,35 @@ class LLMConfigurationAdmin(OrganisationFilterMixin, admin.ModelAdmin):
 
         super().save_model(request, obj, form, change)
 
+class DataSourceAdminForm(forms.ModelForm):
+    class Meta:
+        model = models.DataSource
+        fields = '__all__'
+
+    def clean(self):
+        cleaned_data = super().clean()
+        source_type = cleaned_data.get('type')
+        conn_str = cleaned_data.get('connection_str')
+
+        print("DEBUG — CLEAN CALLED:", source_type, conn_str, self.instance.pk)
+
+        if not self.instance.pk and source_type and source_type.lower() == 'generic' and conn_str:
+            raise forms.ValidationError("You cannot manually enter a connection string for Generic sources.")
+        
+        if (
+            conn_str and
+            re.match(r'^sqlite:\/\/\/', conn_str.strip(), re.IGNORECASE) and
+            source_type and source_type.lower() != 'generic'
+        ):
+            raise forms.ValidationError("SQLite connection strings are only allowed with Generic type.")
+        
+        return cleaned_data
+
+
 
 @admin.register(models.DataSource)
 class DataSourceAdmin(OrganisationFilterMixin, admin.ModelAdmin):
+    form = DataSourceAdminForm
     list_display = ['display_name', 'type', 'enabled', 'dialect_name', 'dialect_version', 'masked_connection_str']
     list_filter = ['enabled', 'type']
     search_fields = ['display_name', 'type']
