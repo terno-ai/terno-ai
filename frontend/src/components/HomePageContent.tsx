@@ -1,13 +1,14 @@
 import "../index.css";
 import { executeSQL, exportSQLResult, sendMessage } from "../utils/api";
-import { lazy, Suspense, useContext, useRef, useState } from "react";
+import { lazy, Suspense, useContext, useRef, useState, useTransition, useEffect } from "react";
 import RenderTable from "./RenderTable";
-const SqlEditor = lazy(() => import("./SqlEditor"))
 import SqlError from "./SqlError";
-import { FaArrowRight, FaCopy, FaDownload, FaPlay } from "react-icons/fa6";
+import { FaCopy, FaDownload, FaPlay, FaArrowUp, FaArrowDown } from "react-icons/fa6";
 import { DataSourceContext } from "./ui/datasource-context";
 import PaginatedList from "./TablePagination";
 import Navbar from "./Navbar";
+
+
 
 interface TableData {
   columns: string[];
@@ -21,14 +22,34 @@ const HomePageContent = () => {
   const [inputText, setInputText] = useState("");
   const [generatedQueryText, setGeneratedQueryText] = useState("");
   const [tableData, setTableData] = useState<TableData>({
-    columns: [], data: [], row_count: 0, total_pages: 0});
+    columns: [], data: [], row_count: 0, total_pages: 0
+  });
   const [sqlError, setSqlError] = useState("");
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [height, setHeight] = useState('auto');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [loadPaginate, setLoadPaginate] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const SqlEditor = lazy(() => import("./SqlEditor"));
 
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, []);
+
+  const toggleExpand = () => {
+    startTransition(() => {
+      setIsExpanded((prev) => !prev);
+    });
+  };
+  const expandOnly = () => {
+    startTransition(() => {
+      setIsExpanded(true);
+    });
+  };
   const handleSendMessage = async () => {
     setLoading(true);
     setSqlError("");
@@ -65,48 +86,50 @@ const HomePageContent = () => {
     if (textareaRef.current) {
       const content = textareaRef.current.value;
 
-    if (content.length === 0) {
+      if (content.length === 0) {
         setHeight('auto');
-        }
-    const currentScrollHeight = textareaRef.current.scrollHeight;
-    const maxHeight = 5 * parseFloat(getComputedStyle(textareaRef.current).lineHeight || '1.5');
-    const newHeight = Math.min(currentScrollHeight, maxHeight); 
+      }
+      const currentScrollHeight = textareaRef.current.scrollHeight;
+      const maxHeight = 5 * parseFloat(getComputedStyle(textareaRef.current).lineHeight || '1.5');
+      const newHeight = Math.min(currentScrollHeight, maxHeight);
 
-    if (`${newHeight}px` !== height) {
+      if (`${newHeight}px` !== height) {
         setHeight(`${newHeight}px`);
       }
     }
   };
 
   const [isCopied, setIsCopied] = useState(false);
-    const handleCopy = async () => {
+  const handleCopy = async () => {
     const tableString = `${tableData.columns.join("\t")}
       ${tableData.data
         .map((row) =>
-        tableData.columns
-        .map((col) => `${row[col]}`).join("\t"))
+          tableData.columns
+            .map((col) => `${row[col]}`).join("\t"))
         .join("\n")}`;
-      try {
-        await navigator.clipboard.writeText(tableString);
-        setIsCopied(true);
-        setTimeout(() => setIsCopied(false), 2000);
-          } catch (error) {
-          console.error("Failed to copy text: ", error);
-          }
-      };
+    try {
+      await navigator.clipboard.writeText(tableString);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (error) {
+      console.error("Failed to copy text: ", error);
+    }
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
-        handleSendMessage();
-        e.preventDefault();
+      e.preventDefault();
+      if(!inputText.trim()) return;
+      handleSendMessage();
+      expandOnly();
     }
   };
 
   return (
-    <div className="min-w-[300px] h-screen inline-flex flex-col pb-10 px-[15px] overflow-y-auto">
+    <div className=" max-h-screen inline-flex flex-col flex-grow pb-10 px-[15px] overflow-y-auto ">
       <Navbar />
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between gap-5 p-2.5 px-5 rounded-md bg-slate-100 hover:drop-shadow-sm focus-within:ring-1 focus-within:ring-sky-500 focus-within:hover:drop-shadow-none">
+      <div className="w-full max-w-4xl mx-auto">
+        <div className="flex flex-grow items-center w-full border-2 gap-5 p-2.5 px-5 rounded-md hover:drop-shadow-sm border-gray-400 focus-within:ring-2 focus-within:ring-sky-500 focus-within:hover:drop-shadow-none focus-within:border-transparent">
           <textarea
             onInput={handleInput}
             ref={textareaRef}
@@ -115,71 +138,90 @@ const HomePageContent = () => {
             onChange={(e) => setInputText(e.target.value)}
             onKeyDown={handleKeyDown}
             rows={3}
-            className="w-full p-1 bg-transparent border-none outline-none rounded-md resize-none overflow-y-auto"
+            className="flex-grow w-full min-w-0 p-2 bg-transparent border-none outline-none rounded-md resize-none overflow-y-auto sm:text-sm md:text-base "
             style={{ height }}
           />
+
+        </div>
+        <div className="flex flex-row align-center justify-end">
           <button
-            className="p-2 border text-cyan-500 border-cyan-500 rounded-full items-center justify-center hover:bg-gray-200"
-            onClick={handleSendMessage}
-            disabled={loading}
+            className="inline-flex h-10 items-center justify-center rounded-md border bg-cyan-500 hover:bg-cyan-600 mt-4 px-10 font-medium text-white"
+            onClick={() => {
+              handleSendMessage();
+              expandOnly();
+            }}
+            disabled={isPending}
           >
-            {loading ? 'Wait': <FaArrowRight />}
+            Run
+            <FaPlay className="ml-1" />
           </button>
         </div>
         <div className="mt-10">
-          <div className="mt-4 mb-1 font-medium text-lg">Generated Query</div>
-          <div className="flex align-center justify-center border focus-within:ring-1 focus-within:ring-sky-300">
-            <Suspense fallback={<div className="p-5">Loading Editor...</div>}>
-              <SqlEditor
-                value={generatedQueryText}
-                onChange={(value: string) => setGeneratedQueryText(value)}
-              />
-            </Suspense>
-          </div>
-          <div className="flex flex-row align-center justify-end">
+          <div className="mt-6 w-full max-w-4xl mx-auto">
             <button
-              className="text-right inline-flex h-10 items-center justify-center rounded-md border bg-cyan-500 hover:bg-cyan-600 mt-4 px-10 font-medium text-white transition-colors hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 focus:ring-offset-slate-50"
-              onClick={() => handleQueryExecute(1)}
-              disabled={loading}
+              className="flex items-center justify-between w-full px-4 py-2 text-lg font-medium bg-gray-100 border rounded-md hover:bg-gray-200"
+              onClick={toggleExpand}
             >
-              {loading ? 'Wait': 'Execute'}
-              <FaPlay className="ml-1" />
+              Generated Query
+              {isExpanded ? <FaArrowUp /> : <FaArrowDown />}
             </button>
           </div>
+          {isExpanded && (<div className="w-full max-w-4xl mx-auto transition-all duration-300 ease-in-out">
+            <div className="flex items-center justify-center border focus-within:ring-1 focus-within:ring-sky-300">
+              <Suspense fallback={<div className="p-5">Loading Editor...</div>}>
+                <SqlEditor
+                  value={generatedQueryText}
+                  onChange={(value: string) => setGeneratedQueryText(value)}
+                />
+              </Suspense>
+            </div>
+
+            <div className="flex flex-row align-center justify-end">
+              <button
+                className="text-right inline-flex h-10 items-center justify-center rounded-md border bg-gray-500 hover:bg-cyan-600 mt-4 px-10 font-medium text-white transition-colors hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 focus:ring-offset-slate-50"
+                onClick={() => handleQueryExecute(1)}
+                disabled={loading}
+              >
+                {loading ? 'Wait' : 'Execute'}
+                <FaPlay className="ml-1" />
+              </button>
+            </div>
+          </div>)}
+
         </div>
         <div>
           <div className="flex items-center justify-between">
             <div className=" mt-6 font-medium text-lg text-left">Result</div>
             {tableData.row_count > 0 &&
-            <div className=" mb-1 flex space-x-2 items-center justify-end">
-              <button
-                className="inline-flex h-9 items-center rounded-md bg-sky-50 hover:bg-sky-200 mt-4 px-10 font-medium text-cyan-600 hover:opacity-100"
-                onClick={() => handleQueryResultExport()}
-              >
-                {exporting ? 'Exporting' : 'Export'}
-                <FaDownload className="ml-1" />
-              </button>
-              <button
-                className="inline-flex h-9 items-center rounded-md bg-sky-50 hover:bg-sky-200 mt-4 px-10 font-medium text-cyan-600 hover:opacity-100"
-                onClick={() => handleCopy()}
-              >
-                {isCopied ? 'Copied' : 'Copy'}
-                <FaCopy className="ml-1" />
-              </button>
-            </div>
+              <div className=" mb-1 flex space-x-2 items-center justify-end">
+                <button
+                  className="inline-flex h-9 items-center rounded-md bg-sky-50 hover:bg-sky-200 mt-4 px-10 font-medium text-cyan-600 hover:opacity-100"
+                  onClick={() => handleQueryResultExport()}
+                >
+                  {exporting ? 'Exporting' : 'Export'}
+                  <FaDownload className="ml-1" />
+                </button>
+                <button
+                  className="inline-flex h-9 items-center rounded-md bg-sky-50 hover:bg-sky-200 mt-4 px-10 font-medium text-cyan-600 hover:opacity-100"
+                  onClick={() => handleCopy()}
+                >
+                  {isCopied ? 'Copied' : 'Copy'}
+                  <FaCopy className="ml-1" />
+                </button>
+              </div>
             }
           </div>
         </div>
         <div className="max-h-[200px]">
           <SqlError error={sqlError} />
-          <RenderTable columns={tableData.columns} data={tableData.data}/>
+          <RenderTable columns={tableData.columns} data={tableData.data} />
           {loadPaginate && !loading &&
             <><PaginatedList totalPages={tableData.total_pages} onSelect={handleQueryExecute} />
               <div className="text-center m-2">{tableData.row_count} Rows</div>
-              </>}
-          </div>
+            </>}
         </div>
       </div>
+    </div>
   );
 };
 
