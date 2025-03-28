@@ -39,17 +39,60 @@ You need to do this in a careful, step-by-step process to ensure accurate and me
   - The output should be formatted as JSON with a structure like:
   
 ```json
-{
+{{
+  "table_name": "actual_table_name",
+  "table_public_name": "User-friendly Table Name",
+  "table_description": "A detailed explanation of what this table stores and how it fits into the broader database. Include its primary purpose, relationships with other tables (if applicable), and where it is typically used in queries or applications., limited to around 20 words.",
+  "columns": [
+    {{
+      "column_name": "actual_column_name",
+      "column_public_name": "User-friendly Column Name",
+      "column_description": "A meaningful description of this column. Explain what information it holds, what type of data it contains, and its purpose in the table. If it is a foreign key, specify the referenced table, limited to around 10 words."
+    }},
+    ...
+  ]
+}}
+"""
+
+table_description_ai_prompt = """You will be provided with a complete database schema, table schema, and metadata for a specific table, including column statistics and sample rows. Use this information to generate descriptions of the table and its columns. Follow the structured step-by-step approach outlined in the prompt.
+
+Here is the database schema:
+<<DATABASE SCHEMA START>>
+{database_schema}
+<<DATABASE SCHEMA END>>
+
+Here is the table schema in SQL format:
+<<TABLE SCHEMA SQL START>>
+{table_schema_sql}
+<<TABLE SCHEMA SQL END>>
+
+Here is the structured table schema with metadata:
+<<TABLE SCHEMA STRUCTURED START>>
+{table_schema_json}
+<<TABLE SCHEMA STRUCTURED END>>
+
+Your task:
+- Analyze both representations of the table schema to understand its structure.
+- Utilize column statistics and sample rows to generate meaningful descriptions.
+- Generate a JSON object in the required structure.
+- Ensure descriptions are clear, concise, and meaningful.
+- Base descriptions strictly on the provided schema and metadata without assumptions.
+
+Output:
+Your response must strictly adhere to the JSON format without any extra text.
+
+```json
+{{
   "table_name": "actual_table_name",
   "table_public_name": "User-friendly Table Name",
   "table_description": "A concise and meaningful description of the table, limited to around 10 words.",
   "columns": [
-    {
+    {{
       "column_name": "actual_column_name",
       "column_public_name": "User-friendly Column Name",
       "column_description": "A concise and meaningful description of the column, limited to around 5 words."
-    },
+    }},
     ...
   ]
-}
+}}
 """
