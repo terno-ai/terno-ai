@@ -19,9 +19,10 @@ def load_metadata(datasource):
             datasource.dialect_version = str(engine.dialect.server_version_info)
             datasource.save(update_fields=['dialect_name', 'dialect_version'])
 
-    inspector = sqlalchemy.inspect(engine)
+    metadata = sqlalchemy.MetaData()
+    metadata.reflect(bind=engine)
 
-    mdb = MDatabase.from_inspector(inspector)
+    mdb = MDatabase.from_inspector(metadata)
 
     for tbl_name, tbl in mdb.tables.items():
         existing_tables = Table.objects.filter(
