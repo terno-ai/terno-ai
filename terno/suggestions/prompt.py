@@ -42,12 +42,12 @@ You need to do this in a careful, step-by-step process to ensure accurate and me
 {{
   "table_name": "actual_table_name",
   "table_public_name": "User-friendly Table Name",
-  "table_description": "A detailed explanation of what this table stores and how it fits into the broader database. Include its primary purpose, relationships with other tables (if applicable), and where it is typically used in queries or applications., limited to around 20 words.",
+  "table_description": "A detailed explanation of what this table stores and how it fits into the broader database. Include its primary purpose, relationships with other tables (if applicable), and where it is typically used in queries or applications., limited to around 10 words.",
   "columns": [
     {{
       "column_name": "actual_column_name",
       "column_public_name": "User-friendly Column Name",
-      "column_description": "A meaningful description of this column. Explain what information it holds, what type of data it contains, and its purpose in the table. If it is a foreign key, specify the referenced table, limited to around 10 words."
+      "column_description": "A meaningful description of this column. Explain what information it holds, what type of data it contains, and its purpose in the table. If it is a foreign key, specify the referenced table, limited to around 5 words."
     }},
     ...
   ]
