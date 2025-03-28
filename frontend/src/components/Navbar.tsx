@@ -13,6 +13,7 @@ import {
 } from "../components/ui/DropdownMenu";
 import { ChevronDown, LogOut } from "lucide-react";
 import { FaBars } from "react-icons/fa";
+import { FaArrowUpRightFromSquare  } from "react-icons/fa6";
 import { useSidebar } from "../pages/HomePage";
 
 const Navbar = () => {
@@ -73,6 +74,20 @@ const Navbar = () => {
             <div className="font-light">{user.username}</div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onSelect={(e) => {e.preventDefault()}}
+            className="hover:bg-slate-100"
+          >
+            <div className="w-full">
+              <button
+                onClick={() => window.open(("/admin"))}
+                className="flex w-full gap-2 items-center cursor-pointer"
+              >
+                <FaArrowUpRightFromSquare />
+                <span>Admin</span>
+              </button>
+            </div>
+          </DropdownMenuItem>
           <DropdownMenuItem
             onSelect={(e) => {e.preventDefault()}}
             className="hover:bg-slate-100"

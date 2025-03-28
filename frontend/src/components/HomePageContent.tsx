@@ -19,7 +19,7 @@ interface TableData {
 
 const HomePageContent = () => {
   const { ds } = useContext(DataSourceContext);
-  const [inputText, setInputText] = useState("");
+  //const [inputText, setInputText] = useState("");
   const [generatedQueryText, setGeneratedQueryText] = useState("");
   const [tableData, setTableData] = useState<TableData>({
     columns: [], data: [], row_count: 0, total_pages: 0
@@ -33,6 +33,7 @@ const HomePageContent = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isPending, startTransition] = useTransition();
   const SqlEditor = lazy(() => import("./SqlEditor"));
+  const inputRef = useRef("");
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -53,7 +54,7 @@ const HomePageContent = () => {
   const handleSendMessage = async () => {
     setLoading(true);
     setSqlError("");
-    const response = await sendMessage(inputText, ds.id);
+    const response = await sendMessage(inputRef.current, ds.id);
     if (response["status"] == "success") {
       setGeneratedQueryText(response["generated_sql"]);
     } else {
@@ -118,8 +119,9 @@ const HomePageContent = () => {
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
+      console.log("Coming Here!!")
       e.preventDefault();
-      if(!inputText.trim()) return;
+      if(!inputRef.current.trim()) return;
       handleSendMessage();
       expandOnly();
     }
@@ -134,8 +136,8 @@ const HomePageContent = () => {
             onInput={handleInput}
             ref={textareaRef}
             placeholder="Enter a prompt here"
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
+            defaultValue={inputRef.current}
+            onChange={(e) => (inputRef.current = e.target.value)}
             onKeyDown={handleKeyDown}
             rows={3}
             className="flex-grow w-full min-w-0 p-2 bg-transparent border-none outline-none rounded-md resize-none overflow-y-auto sm:text-sm md:text-base "
@@ -150,9 +152,10 @@ const HomePageContent = () => {
               handleSendMessage();
               expandOnly();
             }}
-            disabled={isPending}
+            disabled={loading || isPending}
           >
-            Run
+            {/* {isPending ? "Wait" : "Run"} */}
+            {loading ? "Wait" : "Run"}
             <FaPlay className="ml-1" />
           </button>
         </div>
