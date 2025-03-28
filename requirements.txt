@@ -1,5 +1,5 @@
 Django==5.1.1
-sqlshield==0.0.14
+sqlshield==0.0.15
 sqlalchemy==2.0.30
 openai==1.35.3
 sqlglot==25.3.0
