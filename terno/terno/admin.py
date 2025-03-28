@@ -251,8 +251,6 @@ class DataSourceAdminForm(forms.ModelForm):
         source_type = cleaned_data.get('type')
         conn_str = cleaned_data.get('connection_str')
 
-        print("DEBUG — CLEAN CALLED:", source_type, conn_str, self.instance.pk)
-  
         if (
             conn_str and
             re.match(r'^sqlite:\/\/\/', conn_str.strip(), re.IGNORECASE) and
@@ -273,8 +271,9 @@ class DataSourceAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     organisation_related_field_names = ['organisationdatasource__organisation']
 
     def get_readonly_fields(self, request, obj=None):
-        return ['connection_str'] if obj and obj.type in ['generic', 'sqlite'] else []
-    
+        return ['masked_connection_str_readonly'] if obj and obj.type in ['generic', 'sqlite'] else []
+
+
     def _get_obj_from_request(self, request):
         try:
             object_id = request.resolver_match.kwargs.get('object_id')
@@ -282,6 +281,7 @@ class DataSourceAdmin(OrganisationFilterMixin, admin.ModelAdmin):
                 return self.model.objects.get(pk=object_id)
         except Exception:
             return None
+
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
@@ -291,12 +291,14 @@ class DataSourceAdmin(OrganisationFilterMixin, admin.ModelAdmin):
         if db_field.name == 'connection_str' and obj and obj.dialect_name == 'sqlite':
             formfield.initial = '*****'
         return formfield
-    
+
+
     def masked_connection_str(self, obj):
         if obj.dialect_name == 'sqlite':
             return '*****'
         return obj.connection_str or '-'
     masked_connection_str.short_description = 'Connection Str'
+
 
     def formfield_for_choice_field(self, db_field, request, **kwargs):
         formfield = super().formfield_for_choice_field(db_field, request, **kwargs)
@@ -307,6 +309,27 @@ class DataSourceAdmin(OrganisationFilterMixin, admin.ModelAdmin):
                 if value.lower() != 'generic'
             ]
         return formfield
+    
+
+    def masked_connection_str_readonly(self, obj):
+        return '*******'
+    masked_connection_str_readonly.short_description = 'Connection Str'
+
+    def get_fields(self, request, obj=None):
+        fields = super().get_fields(request, obj)
+        if obj and obj.dialect_name == 'sqlite' and 'connection_str' in fields:
+            fields = ['masked_connection_str_readonly' if f == 'connection_str' else f for f in fields]
+        return fields
+    
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+
+        if obj and obj.dialect_name == 'sqlite':
+            class MaskedForm(form):
+                class Meta(form.Meta):
+                    fields = [f for f in form.base_fields if f != 'connection_str']           
+            return MaskedForm
+        return form
 
 
     def save_model(self, request, obj, form, change):
