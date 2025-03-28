@@ -252,10 +252,7 @@ class DataSourceAdminForm(forms.ModelForm):
         conn_str = cleaned_data.get('connection_str')
 
         print("DEBUG — CLEAN CALLED:", source_type, conn_str, self.instance.pk)
-
-        if not self.instance.pk and source_type and source_type.lower() == 'generic' and conn_str:
-            raise forms.ValidationError("You cannot manually enter a connection string for Generic sources.")
-        
+  
         if (
             conn_str and
             re.match(r'^sqlite:\/\/\/', conn_str.strip(), re.IGNORECASE) and
@@ -300,6 +297,17 @@ class DataSourceAdmin(OrganisationFilterMixin, admin.ModelAdmin):
             return '*****'
         return obj.connection_str or '-'
     masked_connection_str.short_description = 'Connection Str'
+
+    def formfield_for_choice_field(self, db_field, request, **kwargs):
+        formfield = super().formfield_for_choice_field(db_field, request, **kwargs)
+
+        if db_field.name == 'type' and not request.user.is_superuser:
+            formfield.choices = [
+                (value, label) for value, label in formfield.choices
+                if value.lower() != 'generic'
+            ]
+        return formfield
+
 
     def save_model(self, request, obj, form, change):
         if 'connection_str' in form.cleaned_data and form.cleaned_data['connection_str'] == '*****':
