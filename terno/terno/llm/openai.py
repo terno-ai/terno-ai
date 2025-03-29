@@ -115,4 +115,14 @@ class OpenAILLM(BaseLLM):
         print("This is generated schema Json", generated_csv_schema)
         return generated_csv_schema_json
 
-       
+    def ask(self, prompt):
+        model = self.get_model_instance()
+        messages = self.create_message_for_llm('', '', prompt)
+        return model.chat.completions.create(
+                model=self.model_name,
+                messages=messages,
+                temperature=self.temperature,
+                max_tokens=self.max_tokens,
+                top_p=self.top_p,
+                **self.custom_parameters
+            )

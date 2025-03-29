@@ -42,7 +42,7 @@ const Navbar = () => {
   }
 
   return (
-    <div className="flex items-center justify-between text-xl p-5">
+    <div className="flex items-center justify-between text-xl p-2">
       <div className="inline-flex items-center">
         <img src={terno} className="logo h-[40px]" alt="Terno logo" />
         <p className="font-semibold">Terno AI</p>
