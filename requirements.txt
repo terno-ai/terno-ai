@@ -17,3 +17,4 @@ pyjwt==2.10.1
 django-allauth==65.3.0
 django-allauth[socialaccount]
 psycopg2==2.9.10
+celery==5.4.0
