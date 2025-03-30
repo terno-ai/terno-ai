@@ -94,6 +94,10 @@ Ex. To allow access to group `Groceries` access to the restricted category_ids a
 )
 ```
 
+## Celery
+1. Run rabbitmq for message broker
+2. `celery -A mysite worker --loglevel=info`
+
 ## 🤝 Contributing
 
 We welcome contributions! Feel free to open an issue or submit a pull request
