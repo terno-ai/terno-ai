@@ -350,9 +350,13 @@ def get_tables(request, datasource_id):
             'column_data': column_data
         }
         table_data.append(result)
+        suggestions = models.DatasourceSuggestions.objects.filter(
+            data_source=datasource).values_list('suggestions', flat=True)
+        console.log("Suggestion In Views", suggestions)
     return JsonResponse({
         'status': 'success',
-        'table_data': table_data
+        'table_data': table_data,
+        'suggestions': list(suggestions)
     })
 
 
