@@ -37,6 +37,7 @@ const HomePageContent = () => {
     value: "", 
     element: null
   });
+  
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -122,11 +123,16 @@ const HomePageContent = () => {
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
-      console.log("Coming Here!!")
       e.preventDefault();
       if(!inputRef.current.value.trim()) return;
       handleSendMessage();
       expandOnly();
+    }
+  };
+
+  const setText = () => {
+    if (textareaRef.current) {
+      textareaRef.current.value = inputRef.current.value;
     }
   };
 
@@ -157,8 +163,7 @@ const HomePageContent = () => {
                   if (inputRef.current) {
                     inputRef.current.value = s;
                   }
-                  handleSendMessage();
-                  expandOnly();
+                  setText();
                 }}
                   className="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-full"
                 >
