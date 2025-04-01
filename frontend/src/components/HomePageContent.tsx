@@ -3,7 +3,7 @@ import { executeSQL, exportSQLResult, sendMessage } from "../utils/api";
 import { lazy, Suspense, useContext, useRef, useState, useTransition, useEffect } from "react";
 import RenderTable from "./RenderTable";
 import SqlError from "./SqlError";
-import { FaCopy, FaDownload, FaPlay, FaArrowUp, FaArrowDown } from "react-icons/fa6";
+import { FaCopy, FaDownload, FaPlay, FaArrowUp, FaArrowDown} from "react-icons/fa6";
 import { DataSourceContext } from "./ui/datasource-context";
 import PaginatedList from "./TablePagination";
 import Navbar from "./Navbar";
@@ -33,7 +33,10 @@ const HomePageContent = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isPending, startTransition] = useTransition();
   const SqlEditor = lazy(() => import("./SqlEditor"));
-  const inputRef = useRef("");
+  const inputRef = useRef<{ value: string; element: HTMLTextAreaElement | null }>({
+    value: "", 
+    element: null
+  });
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -54,7 +57,7 @@ const HomePageContent = () => {
   const handleSendMessage = async () => {
     setLoading(true);
     setSqlError("");
-    const response = await sendMessage(inputRef.current, ds.id);
+    const response = await sendMessage(inputRef.current.value, ds.id);
     if (response["status"] == "success") {
       setGeneratedQueryText(response["generated_sql"]);
     } else {
@@ -119,9 +122,8 @@ const HomePageContent = () => {
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
-      console.log("Coming Here!!")
       e.preventDefault();
-      if(!inputRef.current.trim()) return;
+      if(!inputRef.current.value.trim()) return;
       handleSendMessage();
       expandOnly();
     }
@@ -136,8 +138,8 @@ const HomePageContent = () => {
             onInput={handleInput}
             ref={textareaRef}
             placeholder="Enter a prompt here"
-            defaultValue={inputRef.current}
-            onChange={(e) => (inputRef.current = e.target.value)}
+            defaultValue={inputRef.current.value}
+            onChange={(e) => (inputRef.current.value = e.target.value)}
             onKeyDown={handleKeyDown}
             rows={3}
             className="flex-grow w-full min-w-0 p-2 bg-transparent border-none outline-none rounded-md resize-none overflow-y-auto sm:text-sm md:text-base "
@@ -154,24 +156,20 @@ const HomePageContent = () => {
             }}
             disabled={loading || isPending}
           >
-<<<<<<< HEAD
-<<<<<<< HEAD
-            {loading ? "Wait" : <FaArrowRight />}
-=======
-            Run
-=======
-            {/* {isPending ? "Wait" : "Run"} */}
+            
             {loading ? "Wait" : "Run"}
->>>>>>> a37120e (Responsive, Hamburger Button and Other UI Changes)
             <FaPlay className="ml-1" />
->>>>>>> 9242a03 (Responsive, Hamburger Button and Other UI Changes)
           </button>
         </div>
         {ds.suggestions && (
           <div className="my-2 flex flex-row flex-wrap gap-2">
             {ds.suggestions.map((s) => (
               <button
-                onClick={() => setInputText(s)}
+              onClick={() => {
+                if (inputRef.current) {
+                  inputRef.current.value = s;
+                }
+              }}
                 className="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-full"
               >
                 {s}
@@ -185,13 +183,8 @@ const HomePageContent = () => {
               className="flex items-center justify-between w-full px-4 py-2 text-lg font-medium bg-gray-100 border rounded-md hover:bg-gray-200"
               onClick={toggleExpand}
             >
-<<<<<<< HEAD
-              {loading ? "Wait" : "Execute"}
-              <FaPlay className="ml-1" />
-=======
               Generated Query
               {isExpanded ? <FaArrowUp /> : <FaArrowDown />}
->>>>>>> 9242a03 (Responsive, Hamburger Button and Other UI Changes)
             </button>
           </div>
           {isExpanded && (<div className="w-full max-w-4xl mx-auto transition-all duration-300 ease-in-out">
@@ -220,46 +213,29 @@ const HomePageContent = () => {
         <div>
           <div className="flex items-center justify-between">
             <div className=" mt-6 font-medium text-lg text-left">Result</div>
-<<<<<<< HEAD
-            {tableData.row_count > 0 && (
-=======
             {tableData.row_count > 0 &&
->>>>>>> 9242a03 (Responsive, Hamburger Button and Other UI Changes)
               <div className=" mb-1 flex space-x-2 items-center justify-end">
                 <button
                   className="inline-flex h-9 items-center rounded-md bg-sky-50 hover:bg-sky-200 mt-4 px-10 font-medium text-cyan-600 hover:opacity-100"
                   onClick={() => handleQueryResultExport()}
                 >
-<<<<<<< HEAD
-                  {exporting ? "Exporting" : "Export"}
-=======
                   {exporting ? 'Exporting' : 'Export'}
->>>>>>> 9242a03 (Responsive, Hamburger Button and Other UI Changes)
                   <FaDownload className="ml-1" />
                 </button>
                 <button
                   className="inline-flex h-9 items-center rounded-md bg-sky-50 hover:bg-sky-200 mt-4 px-10 font-medium text-cyan-600 hover:opacity-100"
                   onClick={() => handleCopy()}
                 >
-<<<<<<< HEAD
-                  {isCopied ? "Copied" : "Copy"}
-                  <FaCopy className="ml-1" />
-                </button>
-              </div>
-            )}
-=======
                   {isCopied ? 'Copied' : 'Copy'}
                   <FaCopy className="ml-1" />
                 </button>
               </div>
             }
->>>>>>> 9242a03 (Responsive, Hamburger Button and Other UI Changes)
           </div>
         </div>
         <div className="max-h-[200px]">
           <SqlError error={sqlError} />
           <RenderTable columns={tableData.columns} data={tableData.data} />
-<<<<<<< HEAD
           {loadPaginate && !loading && (
             <>
               <PaginatedList
@@ -269,12 +245,10 @@ const HomePageContent = () => {
               <div className="text-center m-2">{tableData.row_count} Rows</div>
             </>
           )}
-=======
           {loadPaginate && !loading &&
             <><PaginatedList totalPages={tableData.total_pages} onSelect={handleQueryExecute} />
               <div className="text-center m-2">{tableData.row_count} Rows</div>
             </>}
->>>>>>> 9242a03 (Responsive, Hamburger Button and Other UI Changes)
         </div>
       </div>
     </div>
