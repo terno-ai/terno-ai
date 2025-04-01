@@ -33,7 +33,10 @@ const HomePageContent = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isPending, startTransition] = useTransition();
   const SqlEditor = lazy(() => import("./SqlEditor"));
-  const inputRef = useRef("");
+  const inputRef = useRef<{ value: string; element: HTMLTextAreaElement | null }>({
+    value: "", 
+    element: null
+  });
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -54,7 +57,7 @@ const HomePageContent = () => {
   const handleSendMessage = async () => {
     setLoading(true);
     setSqlError("");
-    const response = await sendMessage(inputRef.current, ds.id);
+    const response = await sendMessage(inputRef.current.value, ds.id);
     if (response["status"] == "success") {
       setGeneratedQueryText(response["generated_sql"]);
     } else {
@@ -121,7 +124,7 @@ const HomePageContent = () => {
     if (e.key === 'Enter' && !e.shiftKey) {
       console.log("Coming Here!!")
       e.preventDefault();
-      if(!inputRef.current.trim()) return;
+      if(!inputRef.current.value.trim()) return;
       handleSendMessage();
       expandOnly();
     }
@@ -136,8 +139,8 @@ const HomePageContent = () => {
             onInput={handleInput}
             ref={textareaRef}
             placeholder="Enter a prompt here"
-            defaultValue={inputRef.current}
-            onChange={(e) => (inputRef.current = e.target.value)}
+            defaultValue={inputRef.current.value}
+            onChange={(e) => (inputRef.current.value = e.target.value)}
             onKeyDown={handleKeyDown}
             rows={3}
             className="flex-grow w-full min-w-0 p-2 bg-transparent border-none outline-none rounded-md resize-none overflow-y-auto sm:text-sm md:text-base "
@@ -145,7 +148,25 @@ const HomePageContent = () => {
           />
 
         </div>
-        <div className="flex flex-row align-center justify-end">
+        <div className="flex flex-row align-center justify-between">
+          {ds.suggestions && (
+            <div className="mt-5 my-2 flex flex-row flex-wrap gap-2">
+              {ds.suggestions.map((s) => (
+                <button
+                onClick={() => {
+                  if (inputRef.current) {
+                    inputRef.current.value = s;
+                  }
+                  handleSendMessage();
+                  expandOnly();
+                }}
+                  className="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-full"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          )}
           <button
             className="inline-flex h-10 items-center justify-center rounded-md border bg-cyan-500 hover:bg-cyan-600 mt-4 px-10 font-medium text-white"
             onClick={() => {
@@ -159,23 +180,7 @@ const HomePageContent = () => {
             <FaPlay className="ml-1" />
           </button>
         </div>
-        <div className="my-2 flex flex-row gap-2">
-          <button
-            className="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-full"
-          >
-            Show me purchases made by customers in canada
-          </button>
-          <button
-            className="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-full"
-          >
-            Show me albums by artist
-          </button>
-          <button
-            className="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-full"
-          >
-            Rock music by artist
-          </button>
-        </div>
+        
         <div className="mt-10">
           <div className="mt-6 w-full max-w-4xl mx-auto">
             <button
@@ -234,7 +239,7 @@ const HomePageContent = () => {
         </div>
         <div className="max-h-[200px]">
           <SqlError error={sqlError} />
-          <RenderTable columns={tableData.columns} data={tableData.data} />
+          <RenderTable columns={tableData.columns} data={tableData.data}/>
           {loadPaginate && !loading &&
             <><PaginatedList totalPages={tableData.total_pages} onSelect={handleQueryExecute} />
               <div className="text-center m-2">{tableData.row_count} Rows</div>
