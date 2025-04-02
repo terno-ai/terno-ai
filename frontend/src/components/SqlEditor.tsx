@@ -24,17 +24,19 @@ const SqlEditor = ({ ...props }) => {
   }, [ds]);
 
   useEffect(() => {
-    const cursorLayer = document.querySelector(".ace_hidden-cursors");
-    if (cursorLayer) {
-      cursorLayer.classList.add("opacity-0");
-    }
+    setTimeout(() => {
+      const cursorLayer = document.querySelector(".ace_hidden-cursors");
+      if (cursorLayer) {
+        cursorLayer.classList.add("opacity-0");
+      }
+    }, 500);
   }, []);
   
   useEffect(() => {
     if (editorRef.current) {
       editorRef.current.editor.focus();
     }
-  }, [props.value]); 
+  }, []); 
 
   return (
     <AceEditor
@@ -44,12 +46,12 @@ const SqlEditor = ({ ...props }) => {
       theme="chrome"
       name="sql-editor"
       // onLoad={onLoad}
+      value={props.value || ""}
       onChange={props.onChange}
       fontSize={14}
       showPrintMargin={true}
       showGutter={true}
       highlightActiveLine={true}
-      value={props.value || ""}
       setOptions={{
         enableBasicAutocompletion: true,
         enableLiveAutocompletion: true,
