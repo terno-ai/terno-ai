@@ -22,6 +22,13 @@ const SqlEditor = ({ ...props }) => {
     addCompleter(customCompleter);
   }, [ds]);
 
+  useEffect(() => {
+    const cursorLayer = document.querySelector(".ace_hidden-cursors");
+    if (cursorLayer) {
+      cursorLayer.classList.add("opacity-0");
+    }
+  }, []);
+  
   return (
     <AceEditor
       className={props.className}
@@ -34,7 +41,7 @@ const SqlEditor = ({ ...props }) => {
       showPrintMargin={true}
       showGutter={true}
       highlightActiveLine={true}
-      value={props.value}
+      value={props.value || ""}
       setOptions={{
         enableBasicAutocompletion: true,
         enableLiveAutocompletion: true,
@@ -42,8 +49,9 @@ const SqlEditor = ({ ...props }) => {
         showLineNumbers: true,
         tabSize: 2,
       }}
-      width="900px"
+      width="100%"
       height="200px"
+      style={{ backgroundColor: "#F2F2F2" }}        
     />
   );
 };
