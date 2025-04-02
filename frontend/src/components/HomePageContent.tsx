@@ -19,8 +19,6 @@ interface TableData {
 
 const HomePageContent = () => {
   const { ds } = useContext(DataSourceContext);
-  //const [inputText, setInputText] = useState("");
-  const [generatedQueryText, setGeneratedQueryText] = useState("");
   const [tableData, setTableData] = useState<TableData>({
     columns: [], data: [], row_count: 0, total_pages: 0
   });
@@ -37,6 +35,7 @@ const HomePageContent = () => {
     value: "", 
     element: null
   });
+  const generatedQueryText = useRef<{ value: string }>({ value: "" });
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -59,7 +58,7 @@ const HomePageContent = () => {
     setSqlError("");
     const response = await sendMessage(inputRef.current.value, ds.id);
     if (response["status"] == "success") {
-      setGeneratedQueryText(response["generated_sql"]);
+      generatedQueryText.current.value = response["generated_sql"];
     } else {
       setSqlError(response["error"]);
     }
@@ -70,7 +69,7 @@ const HomePageContent = () => {
     setLoading(true);
     setSqlError("");
     setTableData({ columns: [], data: [], row_count: 0, total_pages: 0 });
-    const response = await executeSQL(generatedQueryText, ds.id, page);
+    const response = await executeSQL(generatedQueryText.current.value, ds.id, page);
     if (response["status"] == "success") {
       setTableData(response["table_data"]);
       setLoadPaginate(true);
@@ -82,7 +81,7 @@ const HomePageContent = () => {
 
   const handleQueryResultExport = async () => {
     setExporting(true);
-    await exportSQLResult(generatedQueryText, ds.id);
+    await exportSQLResult(generatedQueryText.current.value, ds.id);
     setExporting(false);
   };
 
@@ -128,6 +127,12 @@ const HomePageContent = () => {
       expandOnly();
     }
   };
+  
+  const setText = () => {
+    if (textareaRef.current) {
+      textareaRef.current.value = inputRef.current.value;
+    }
+  };
 
   return (
     <div className=" max-h-screen inline-flex flex-col flex-grow pb-10 px-[15px] overflow-y-auto ">
@@ -147,7 +152,24 @@ const HomePageContent = () => {
           />
 
         </div>
-        <div className="flex flex-row align-center justify-end">
+        <div className="flex flex-row align-center justify-between">
+          {ds.suggestions && (
+            <div className="mt-5 my-2 flex flex-row flex-wrap gap-2">
+              {ds.suggestions.map((s) => (
+                <button
+                onClick={() => {
+                  if (inputRef.current) {
+                    inputRef.current.value = s;
+                  }
+                  setText();
+                }}
+                  className="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-full"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          )}
           <button
             className="inline-flex h-10 items-center justify-center rounded-md border bg-cyan-500 hover:bg-cyan-600 mt-4 px-10 font-medium text-white"
             onClick={() => {
@@ -161,22 +183,7 @@ const HomePageContent = () => {
             <FaPlay className="ml-1" />
           </button>
         </div>
-        {ds.suggestions && (
-          <div className="my-2 flex flex-row flex-wrap gap-2">
-            {ds.suggestions.map((s) => (
-              <button
-              onClick={() => {
-                if (inputRef.current) {
-                  inputRef.current.value = s;
-                }
-              }}
-                className="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-full"
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-        )}
+        
         <div className="mt-10">
           <div className="mt-6 w-full max-w-4xl mx-auto">
             <button
@@ -191,8 +198,8 @@ const HomePageContent = () => {
             <div className="flex items-center justify-center border focus-within:ring-1 focus-within:ring-sky-300">
               <Suspense fallback={<div className="p-5">Loading Editor...</div>}>
                 <SqlEditor
-                  value={generatedQueryText}
-                  onChange={(value: string) => setGeneratedQueryText(value)}
+                  value={generatedQueryText.current.value || ""}
+                  onChange={(value: string) => (generatedQueryText.current.value = value)}
                 />
               </Suspense>
             </div>
@@ -245,10 +252,7 @@ const HomePageContent = () => {
               <div className="text-center m-2">{tableData.row_count} Rows</div>
             </>
           )}
-          {loadPaginate && !loading &&
-            <><PaginatedList totalPages={tableData.total_pages} onSelect={handleQueryExecute} />
-              <div className="text-center m-2">{tableData.row_count} Rows</div>
-            </>}
+          
         </div>
       </div>
     </div>
