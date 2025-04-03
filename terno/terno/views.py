@@ -14,6 +14,9 @@ import jwt
 from django.contrib.auth.models import User
 from urllib.parse import unquote
 from allauth.account.utils import perform_login
+from terno.agent.spider_agent.agent import PromptAgent
+from terno.agent.spider_agent.env import TernoShieldEnv
+from terno.llm import LLMFactory
 
 
 logger = logging.getLogger(__name__)
@@ -173,6 +176,12 @@ def get_sql(request):
 
     mDB = utils.prepare_mdb(datasource, roles)
     schema_generated = mDB.generate_schema()
+
+    agent = PromptAgent()
+    env = TernoShieldEnv(datasource, mDB)
+    llm, is_default_llm = LLMFactory.create_llm(organisation)
+    agent.set_env_and_task(env=env, task=question, llm=llm)
+    done, result_output = agent.run()
     llm_response = utils.llm_response(
         request.user, question, schema_generated, organisation, datasource)
 

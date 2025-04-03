@@ -126,3 +126,15 @@ class OpenAILLM(BaseLLM):
                 top_p=self.top_p,
                 **self.custom_parameters
             )
+
+    def ask_message(self, messages):
+        model = self.get_model_instance()
+        response = model.chat.completions.create(
+            model=self.model_name,
+            messages=messages,
+            temperature=self.temperature,
+            max_tokens=self.max_tokens,
+            top_p=self.top_p,
+            **self.custom_parameters
+        )
+        return response.choices[0].message.content

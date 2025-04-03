@@ -5,13 +5,38 @@ from terno.models import Organisation
 
 
 class DBSchema:
-    def __init__(self, database):
+    def __init__(self, database_name: str):
         self.name = "DBSchema"
-        self.database = database
+        self.database_name = database_name
 
     def execute(self, tool_input: dict) -> str:
-        print('Executing DBSchema', tool_input)
-        return self.database.generate_schema()
+        """Simulates retrieving the database schema."""
+        # In a real implementation, you would connect to the database here
+        # and retrieve the schema.  For this example, we'll return a mock schema.
+        print(f"DBSchema called with: {tool_input}")
+        mock_schema = {
+            "tables": [
+                {
+                    "name": "users",
+                    "columns": [
+                        {"name": "user_id", "type": "INTEGER", "primary_key": True},
+                        {"name": "name", "type": "TEXT"},
+                        {"name": "location", "type": "TEXT"},
+                    ],
+                },
+                {
+                    "name": "sales",
+                    "columns": [
+                        {"name": "sale_id", "type": "INTEGER", "primary_key": True},
+                        {"name": "user_id", "type": "INTEGER", "foreign_key": "users.user_id"},
+                        {"name": "product_id", "type": "INTEGER"},
+                        {"name": "amount", "type": "REAL"},
+                        {"name": "sale_date", "type": "TEXT"},
+                    ],
+                },
+            ],
+        }
+        return json.dumps(mock_schema)
 
 
 class GenerateSQL:
@@ -19,6 +44,10 @@ class GenerateSQL:
         self.name = "GenerateSQL"
 
     def execute(self, tool_input: dict) -> str:
+        """Simulates generating an SQL query."""
+        # In a real implementation, you would use an LLM or a more sophisticated
+        # method to generate the SQL query based on the user's question
+        # and the database schema.
         print(f"GenerateSQL called with: {tool_input}")
         user_question = tool_input.get("question", "")
         if "schema" in tool_input and "canada" in user_question.lower():
@@ -48,6 +77,9 @@ class ExecuteSQL:
         self.database_name = database_name
 
     def execute(self, tool_input: dict) -> str:
+        """Simulates executing an SQL query against a database."""
+        # In a real implementation, you would connect to the database here
+        # and execute the query. For this example, we'll return mock results.
         print(f"ExecuteSQL called with: {tool_input}")
         sql_query = tool_input.get("sql", "")
         if "Canada" in sql_query:
@@ -88,16 +120,14 @@ class Agent:
         self.memory: List[str] = []
         self.state = 'IDLE'
         self.tools = [DBSchema(database=database), GenerateSQL(), ExecuteSQL(database=database)]
-        self.steps = []
         self.max_steps = 5
         self.current_step = 0
         self.next_step_prompt: str = ''
 
-    def run(self, user_prompt: str) -> str:
-        self.memory.append(f"User: {user_prompt}")
+    def run(self, request: str) -> str:
+        self.memory.append(f"User: {request}")
         self.state = 'RUNNING'
-        results = []
-        observation = self.system_prompt + user_prompt
+        results: List[str] = []
         while self.state != 'FINISHED' and self.current_step < self.max_steps:
             self.current_step += 1
             print(f"\n--- Step {self.current_step} ---")
@@ -112,12 +142,24 @@ class Agent:
         return "\n".join(results)
 
     def step(self) -> str:
+        """
+        Executes a single step in the agent's workflow: think and act.
+
+        Returns:
+            A string describing the result of the step.
+        """
         should_act = self.think()
         if not should_act:
             return "Thinking complete - no action needed"
         return self.act()
 
     def think(self) -> bool:
+        """
+        Processes the current state (memory) and decides the next action using an LLM.
+
+        Returns:
+            True if an action should be taken, False otherwise.
+        """
         prompt = self.system_prompt + "\n"
         prompt += "\n".join(self.memory)  # Include conversation history
         prompt += f"\n{self.next_step_prompt}\n" #add next step prompt
@@ -147,6 +189,13 @@ class Agent:
             return False
 
     def act(self) -> str:
+        """
+        Executes the action decided by the think method.
+
+        Returns:
+            A string describing the result of the action.
+        """
+        # Extract action and input from the last LLM response (stored in memory)
         last_response = self.memory[-1]
         action_name = last_response.split("Action: ")[1].split("\n")[0]
         action_input_str = last_response.split("Action Input: ")[1].split("\n")[0]
