@@ -7,6 +7,7 @@ from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
 from allauth.account.adapter import get_adapter
 from django import forms
+from suggestions.tasks import generate_table_and_column_descriptions_task
 
 admin.site.unregister(models.Group)
 admin.site.unregister(models.User)
@@ -269,6 +270,43 @@ class TableAdmin(OrganisationFilterMixin, admin.ModelAdmin):
         'data_source' : 'organisationdatasource__organisation'
     }
     organisation_list_filter_field_names = ['data_source__organisationdatasource__organisation']
+    actions = ['generate_descriptions_for_selected_tables']
+
+    def generate_descriptions_for_selected_tables(self, request, queryset):
+        """
+        Admin action to enqueue a Celery task for generating table descriptions.
+        """
+        tables_by_datasource_org = {}
+
+        # Group tables by (datasource_id, organisation_id)
+        for table in queryset:
+            data_source = table.data_source
+            org_ds = models.OrganisationDataSource.objects.filter(datasource=data_source).first()
+            if not org_ds:
+                self.message_user(
+                    request,
+                    f"DataSource {data_source.id} does not have an associated organisation.",
+                    level='error'
+                )
+                continue
+
+            organisation = org_ds.organisation
+            key = (data_source.id, organisation.id)
+            if key not in tables_by_datasource_org:
+                tables_by_datasource_org[key] = []
+            tables_by_datasource_org[key].append(table.name)
+
+        # Enqueue tasks for each datasource-organisation pair
+        for (datasource_id, org_id), table_names in tables_by_datasource_org.items():
+            generate_table_and_column_descriptions_task.delay(datasource_id, org_id, table_names)
+
+        self.message_user(
+            request,
+            f"Task has been queued for {len(tables_by_datasource_org)} datasource(s).",
+            level='info'
+        )
+
+    generate_descriptions_for_selected_tables.short_description = "Generate descriptions for selected tables and their columns."
 
 
 @admin.register(models.PrivateTableSelector)

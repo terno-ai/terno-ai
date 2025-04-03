@@ -19,13 +19,13 @@ You need to do this in a careful, step-by-step process to ensure accurate and me
     - Data freshness: If available, check when this table was last updated.
     - Data volume: If row count is provided, consider how frequently this table is accessed and stored.
 
-### Step 4: Generate the Table-Level Description
+### Step 4: Generate the Table-Level Name and Description
   - Create a **concise yet meaningful** description of the table, explaining:
     - The purpose of the table and what kind of data it stores.
     - How it connects with other tables (if applicable).
     - Where and how this table might be used in real-world applications.
 
-### Step 5: Generate Column-Level Descriptions
+### Step 5: Generate Column-Level Name and Descriptions
   - For each column, generate a short but **informative** description that includes:
     - What the column represents and its significance.
     - Whether it is a key column (primary or foreign key).
@@ -37,24 +37,24 @@ You need to do this in a careful, step-by-step process to ensure accurate and me
 ### Step 6: Ensure Concise and Clear Output
   - The descriptions should be **concise and readable**, avoiding overly technical jargon.
   - The output should be formatted as JSON with a structure like:
-  
+
 ```json
 {{
   "table_name": "actual_table_name",
-  "table_public_name": "User-friendly Table Name",
-  "table_description": "A detailed explanation of what this table stores and how it fits into the broader database. Include its primary purpose, relationships with other tables (if applicable), and where it is typically used in queries or applications., limited to around 10 words.",
+  "table_public_name": "A human-friendly name representing what this table stores in real-world terms.",
+  "table_description": "A detailed explanation of what this table stores and how it fits into the broader database. Include its primary purpose, relationships with other tables (if applicable), and where it is typically used in queries or applications., limited to around 20 words.",
   "columns": [
     {{
       "column_name": "actual_column_name",
-      "column_public_name": "User-friendly Column Name",
-      "column_description": "A meaningful description of this column. Explain what information it holds, what type of data it contains, and its purpose in the table. If it is a foreign key, specify the referenced table, limited to around 5 words."
+      "column_public_name": "A human-friendly name for this column based on what it represents.",
+      "column_description": "A meaningful description of this column. Explain what information it holds, what type of data it contains, and its purpose in the table. If it is a foreign key, specify the referenced table, limited to around 10 words."
     }},
     ...
   ]
 }}
 """
 
-table_description_ai_prompt = """You will be provided with a complete database schema, table schema, and metadata for a specific table, including column statistics and sample rows. Use this information to generate descriptions of the table and its columns. Follow the structured step-by-step approach outlined in the prompt.
+table_description_ai_prompt = """You will be provided with a complete database schema, table schema, and metadata for a specific table, including column statistics and sample rows. Use this information to generate descriptions of the table and its columns. Follow the structured step-by-step approach outlined above.
 
 Here is the database schema:
 <<DATABASE SCHEMA START>>
@@ -73,6 +73,7 @@ Here is the structured table schema with metadata:
 
 Your task:
 - Analyze both representations of the table schema to understand its structure.
+- **Generate human-friendly names** for the table and columns that better represent their real-world meaning.
 - Utilize column statistics and sample rows to generate meaningful descriptions.
 - Generate a JSON object in the required structure.
 - Ensure descriptions are clear, concise, and meaningful.
@@ -84,13 +85,13 @@ Your response must strictly adhere to the JSON format without any extra text.
 ```json
 {{
   "table_name": "actual_table_name",
-  "table_public_name": "User-friendly Table Name",
-  "table_description": "A concise and meaningful description of the table, limited to around 10 words.",
+  "table_public_name": "A human-friendly name representing what this table stores in real-world terms.",
+  "table_description": "A detailed explanation of what this table stores and how it fits into the broader database. Include its primary purpose, relationships with other tables (if applicable), and where it is typically used in queries or applications., limited to around 20 words.",
   "columns": [
     {{
       "column_name": "actual_column_name",
-      "column_public_name": "User-friendly Column Name",
-      "column_description": "A concise and meaningful description of the column, limited to around 5 words."
+      "column_public_name": "A human-friendly name for this column based on what it represents.",
+      "column_description": "A meaningful description of this column. Explain what information it holds, what type of data it contains, and its purpose in the table. If it is a foreign key, specify the referenced table, limited to around 10 words."
     }},
     ...
   ]

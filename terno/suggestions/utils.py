@@ -1,7 +1,7 @@
 import terno.utils as terno_utils
 import terno.models as terno_models
 from suggestions import prompt as prompt_template
-from sqlalchemy import MetaData, Table, select, func, text, inspect
+from sqlalchemy import MetaData, Table, select, func, text, inspect, case
 from sqlalchemy.sql.sqltypes import DateTime, Date, TIMESTAMP
 from sqlalchemy.sql import column
 from sqlalchemy.types import Integer, Float, Numeric, BigInteger, SmallInteger, DECIMAL, String, Text, Enum, DateTime, Date, TIMESTAMP
@@ -10,6 +10,7 @@ import logging
 from terno.llm.base import NoSufficientCreditsException, NoDefaultLLMException
 from subscription.utils import deduct_llm_credits
 import json
+from django.utils.timezone import now
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +35,7 @@ def get_column_stats(conn, table_inspector, Mtable_name, column_name, cardinalit
     # **Batch Query Execution for row_count, null_count, and cardinality**
     row_null_card_query = select(
         func.count().label("row_count"),
-        func.count().filter(col.is_(None)).label("null_count"),
+        func.sum(case((col.is_(None), 1), else_=0)).label("null_count"),  # Works in all dialects
         func.count(func.distinct(col)).label("cardinality")
     ).select_from(table_inspector)
 
@@ -69,8 +70,8 @@ def get_column_stats(conn, table_inspector, Mtable_name, column_name, cardinalit
     # **Optimized String Column Stats**
     elif isinstance(col.type, (String, Text, Enum)):
         if stats["cardinality"] <= cardinality_limit:
-            unique_values_query = select(col).distinct().limit(cardinality_limit)
-            stats["unique_values"] = [row[0] for row in conn.execute(unique_values_query).fetchall()]
+            unique_values_query = select(col, func.count()).group_by(col).limit(cardinality_limit)
+            stats["unique_values"] = [{"value": row[0], "count": row[1]} for row in conn.execute(unique_values_query).fetchall()]
         else:
             top_values_query = select(col, func.count()).group_by(col).order_by(func.count().desc()).limit(5)
             stats["top_values"] = [{"value": row[0], "count": row[1]} for row in conn.execute(top_values_query).fetchall()]
@@ -102,7 +103,6 @@ def get_column_stats(conn, table_inspector, Mtable_name, column_name, cardinalit
 
 
 def get_sample_rows(conn, table_inspector, n=10):
-    print("Table created")
     # Finding primary key to order table in descending manner so we can extract latest records
     latest_column = None
     for col in table_inspector.columns:
@@ -134,12 +134,14 @@ def generate_table_detailed_schema(conn, Mtable_name, Mtable_obj):
     columns = Mtable_obj.columns
     prompt = f"Table Name: {Mtable_name}\n\n"
 
+    return_dict = {'sample_rows': None, 'unique_values': {}, prompt: ''}
+
     prompt += "\nThis table consists of the following columns:\n"
 
     for col, col_obj in columns.items():
         print("Column", col)
         stats = get_column_stats(conn, table_inspector, Mtable_name, col)
-
+        #print("Stats", stats)
         prompt += f"\nColumn Name: {col}\n"
         prompt += f"Data Type: {col_obj.type}\n"
         prompt += f"Column Constraints: "
@@ -167,11 +169,18 @@ def generate_table_detailed_schema(conn, Mtable_name, Mtable_obj):
 
         if "unique_values" in stats:
             prompt += "All unique Values in Column:\n"
-            prompt += ", ".join(map(str, stats["unique_values"])) + "\n"
+            return_dict['unique_values'][col] = {}
+            return_dict['unique_values'][col]['unique_value_type'] = 'unique'
+            for item in stats["unique_values"]:
+                prompt += f"Value: {item['value']}, Occurrences: {item['count']}\n"
+                return_dict['unique_values'][col][item['value']] = item['count']
         elif "top_values" in stats:
             prompt += "Most Frequent Values:\n"
+            return_dict['unique_values'][col] = {}
+            return_dict['unique_values'][col]['unique_value_type'] = 'top'
             for item in stats["top_values"]:
                 prompt += f"Value: {item['value']}, Occurrences: {item['count']}\n"
+                return_dict['unique_values'][col][item['value']] = item['count']
         if "min_date" in stats:
             prompt += f"Date Range in Column: From {stats['min_date']} to {stats['max_date']} spanning {stats['date_range']} days\n"
             if stats.get("most_frequent_date"):
@@ -179,6 +188,8 @@ def generate_table_detailed_schema(conn, Mtable_name, Mtable_obj):
 
     # Convert sample rows into structured text
     if sample_rows:
+        return_dict['sample_rows'] = {"column_order": list(columns.keys()),
+                                    "sample_rows": []}
         prompt += "\nBelow are some sample rows from the table:\n"
         prompt += "=" * 80 + "\n"  # Header Separator
 
@@ -188,22 +199,21 @@ def generate_table_detailed_schema(conn, Mtable_name, Mtable_obj):
 
         for i, row in enumerate(sample_rows, start=1):
             formatted_row = [f'"{value}"' if "\n" in str(value) else str(value) for value in row]
+            return_dict['sample_rows']['sample_rows'].append(formatted_row)
             prompt += f"Row {i}: " + " | ".join(formatted_row) + "\n"
             prompt += "-" * 80 + "\n"  # Row Separator
 
-    else:
-        prompt += "No sample data available.\n"
-
-    return prompt
+    return_dict['prompt'] = prompt
+    return return_dict
 
 
-def generate_table_description(datasource_id, org_id, input_table_name='', update_model=False):
+def generate_table_and_column_description(datasource_id, org_id, input_table_names=[], update_model=True, overwrite=False):
     print("Function called")
 
     datasource = terno_models.DataSource.objects.get(
             id=datasource_id,
             enabled=True)   # Make this function directly take datasource as input
-    organisation = terno_models.Organisation.objects.get(org_id=org_id)
+    organisation = terno_models.Organisation.objects.get(id=org_id)
     mDB = terno_utils.generate_mdb(datasource)
     schema_generated = mDB.generate_schema()
     Mtables = mDB.get_table_dict()
@@ -211,13 +221,20 @@ def generate_table_description(datasource_id, org_id, input_table_name='', updat
                               credentials_info=datasource.connection_json)
     conn = engine.connect()
     table_descriptions = {}
+    print("Start generating table desc")
     try:
         for Mtable_name, Mtable_obj in Mtables.items():
-            # if input_table_name != '' and Mtable_name != input_table_name:
-            #     continue
+            if input_table_names != [] and Mtable_name not in input_table_names:
+                continue
+            terno_table = terno_models.Table.objects.get(name=Mtable_name)
+            if not overwrite and terno_table.description is not None:
+                print("Table description already there")
+                continue
             print("Table found")
             table_schema_sql = Mtable_obj.generate_schema()
-            table_schema_stats = generate_table_detailed_schema(conn, Mtable_name, Mtable_obj)
+            table_schema_stats_dict = generate_table_detailed_schema(conn, Mtable_name, Mtable_obj)
+            print("Return dict,", table_schema_stats_dict)
+            table_schema_stats = table_schema_stats_dict['prompt']
             system_prompt = prompt_template.table_description_system_prompt.format(
                 dialect_name=datasource.dialect_name,
                 dialect_version=datasource.dialect_version)
@@ -230,10 +247,10 @@ def generate_table_description(datasource_id, org_id, input_table_name='', updat
                 llm, is_default_llm = LLMFactory.create_llm(organisation)
                 messages = [llm.get_role_specific_message(system_prompt, 'system'),
                             llm.get_role_specific_message(ai_prompt, 'assistant')]
-                print("/n/nSystem")
-                print(system_prompt)
-                print("/n/nAssistant")
-                print(ai_prompt)
+                #print("/n/nSystem")
+                #print(system_prompt)
+                #print("/n/nAssistant")
+                #print(ai_prompt)
                 response = llm.get_response(messages)
             except NoSufficientCreditsException as e:
                 logger.exception(e)
@@ -250,12 +267,29 @@ def generate_table_description(datasource_id, org_id, input_table_name='', updat
             #     except Exception as e:
             #         logger.exception(e)
             #         terno_utils.disable_default_llm()
-            print("For table  {Mtable_name}")
+            # print(f"For table  {Mtable_name}")
             res = json.loads(response['generated_sql'])
+            if isinstance(res, dict) and len(res) == 1:
+                res = list(res.values())[0]
             if update_model:
-                pass
-            else:
-                table_descriptions[Mtable_name] = res
+                terno_table.public_name = res.get("table_name")
+                terno_table.description = res.get("table_description")
+                terno_table.sample_rows = table_schema_stats_dict['sample_rows']
+                terno_table.description_updated_at = now()
+                terno_table.save()
+                terno_table_columns = {col.name: col for col in terno_models.TableColumn.objects.filter(table=terno_table)}
+                print(table_schema_stats_dict['unique_values'])
+                for col in res["columns"]:
+                    terno_table_col = terno_table_columns[col["column_name"]]
+                    print("Got column name", terno_table_col.name)
+                    terno_table_col.public_name = col["column_public_name"]
+                    terno_table_col.description = col["column_description"]
+                    if col["column_name"] in table_schema_stats_dict['unique_values'].keys():
+                        terno_table_col.unique_categories = table_schema_stats_dict['unique_values'][col["column_name"]]
+                    print("Updated col")
+                    terno_table_col.save()
+
+            table_descriptions[Mtable_name] = res
         return table_descriptions
     except Exception as e:
         print(e)

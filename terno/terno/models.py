@@ -121,6 +121,8 @@ class Table(models.Model):
     public_name = models.CharField(max_length=255, null=True, blank=True)
     data_source = models.ForeignKey(DataSource, on_delete=models.CASCADE)
     description = models.CharField(max_length=300, null=True, blank=True)
+    sample_rows = models.JSONField(null=True, blank=True)
+    description_updated_at = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.data_source.display_name} - {self.name}"
@@ -132,6 +134,8 @@ class TableColumn(models.Model):
     public_name = models.CharField(max_length=255, null=True, blank=True)
     table = models.ForeignKey(Table, on_delete=models.CASCADE)
     data_type = models.CharField(max_length=50, blank=True)
+    description = models.CharField(max_length=300, null=True, blank=True)
+    unique_categories = models.JSONField(default=dict, null=True, blank=True)
 
     def __str__(self):
         return f"{self.table} - {self.name}"
