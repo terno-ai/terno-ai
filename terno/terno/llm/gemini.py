@@ -104,7 +104,6 @@ class GeminiLLM(BaseLLM):
                 {
                     "temperature": self.temperature,
                     "top_p": self.top_p,
-                    "max_output_tokens": self.max_tokens,
                     "top_k": self.top_k,
                     **self.custom_parameters
                 }

@@ -26,6 +26,7 @@ export const endpoints = {
   resetPassword: () =>
     `${API_BASE_URL}/_allauth/browser/v1/auth/password/reset`,
   logout: () => `${API_BASE_URL}/_allauth/browser/v1/auth/session`,
+  getDatasourceName: (dsId: string) => `${API_BASE_URL}/datasources/${dsId}/`,
 };
 
 export const sendMessage = async (prompt: string, datasourceId: string) => {
@@ -257,5 +258,21 @@ export const fileUpload = async (formData: FormData) => {
     body: formData,
   });
   const result = await response.json();
+  return result;
+};
+
+export const getDatasourceName = async (dsId: string) => {
+  const csrfToken = getCsrfToken();
+
+  const response = await fetch(endpoints.getDatasourceName(dsId), {
+    method: "GET",
+    headers: {
+      "X-CSRFToken": csrfToken || "",
+      "Content-Type": "application/json",
+    },
+  });
+
+  const result = await response.json();
+  console.log(result);
   return result;
 };

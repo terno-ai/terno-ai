@@ -305,3 +305,8 @@ class PromptLog(models.Model):
 class SystemPrompts(models.Model):
     data_source = models.ForeignKey(DataSource, on_delete=models.CASCADE)
     system_prompt = models.TextField(blank=True, null=True)
+
+
+class DatasourceSuggestions(models.Model):
+    data_source = models.ForeignKey(DataSource, on_delete=models.CASCADE)
+    suggestion = models.TextField(blank=True, null=True)

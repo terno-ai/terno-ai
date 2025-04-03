@@ -132,12 +132,20 @@ def get_datasources(request):
         return HttpResponseForbidden("You do not belong to this organisation.")
 
     datasources = models.DataSource.objects.filter(
-            enabled=True,
-            organisationdatasource__organisation=organisation
-        )
-    data = [{'name': d.display_name, 'id': d.id} for d in datasources]
+        enabled=True,
+        organisationdatasource__organisation=organisation
+    )
+    data = []
+    for ds in datasources:
+        suggestions = models.DatasourceSuggestions.objects.filter(
+            data_source=ds).values_list('suggestion', flat=True)
+        data.append({
+            'id': ds.id,
+            'name': ds.display_name,
+            'suggestions': list(suggestions)
+        })
     return JsonResponse({
-        'datasources': data
+        'datasources': data,
     })
 
 
@@ -342,9 +350,12 @@ def get_tables(request, datasource_id):
             'column_data': column_data
         }
         table_data.append(result)
+        suggestions = models.DatasourceSuggestions.objects.filter(
+            data_source=datasource).values_list('suggestion', flat=True)
     return JsonResponse({
         'status': 'success',
-        'table_data': table_data
+        'table_data': table_data,
+        'suggestions': list(suggestions)
     })
 
 
@@ -400,6 +411,15 @@ def sso_login(request):
     return HttpResponseForbidden
 
 
+def get_datasource_name(request, ds_id):
+    org_id = request.org_id
+    organisation = models.Organisation.objects.get(id=org_id)
+    datasource = models.OrganisationDataSource.objects.get(datasource=ds_id, organisation=organisation)
+    print("THIS IS THE DATASOURCE ID", datasource.datasource.display_name)
+    return JsonResponse({'datasource_name': datasource.datasource.display_name,
+                         'type' : datasource.datasource.type})
+
+
 def file_upload(request):
     if request.method == 'POST':
         files = request.FILES.getlist('files')
@@ -413,12 +433,13 @@ def file_upload(request):
 
         try:
             datasource_id = request.POST.get('dsId')
-            print("THIS IS THE DATASOURCE ID", datasource_id)
-
+            print("Datasource Id", datasource_id)
             if datasource_id:
                 datasource = models.OrganisationDataSource.objects.get(datasource=datasource_id, organisation=organisation)
+
+            if datasource_id and datasource.datasource.type == 'sqlite':
                 sqlite_url = datasource.datasource.connection_str  
-                print("THIS IS THE SQLITE URL", sqlite_url)
+                print("Sqlite Url", sqlite_url)
                 adding_file_to_existing_datasource = True 
             else:
                 total_existing_ds = models.OrganisationDataSource.objects.filter(organisation=organisation).count()
