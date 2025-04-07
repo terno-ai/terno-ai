@@ -60,7 +60,7 @@ class AnthropicLLM(BaseLLM):
         model = self.get_model_instance()
         response = model.messages.create(
                 model=self.model_name,
-                max_tokens=self.max_tokens,
+                # max_tokens=self.max_tokens,
                 temperature=self.temperature,
                 system=self.system_message,
                 messages=messages,
