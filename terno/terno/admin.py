@@ -9,6 +9,7 @@ from django.utils.translation import gettext_lazy as _
 from allauth.account.adapter import get_adapter
 from django import forms
 from suggestions.tasks import generate_table_and_column_descriptions_task
+from django.db.models import F
 
 admin.site.unregister(models.Group)
 admin.site.unregister(models.User)
@@ -443,6 +444,11 @@ class TableColumnAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     organisation_list_filter_field_names = ['table__data_source__organisationdatasource__organisation']
 
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.annotate(data_source_id=F('table__data_source_id'))
+
+
 @admin.register(models.ForeignKey)
 class ForeignKeyAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     list_display = ['constrained_table', 'constrained_columns',
@@ -460,6 +466,10 @@ class ForeignKeyAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     organisation_list_filter_field_names = [
         'referred_table__data_source__organisationdatasource__organisation'
         ]
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.annotate(data_source_id=F('referred_table__data_source_id'))
     # search_fields = ['name', 'public_name', 'table__name', 'table__data_source']
 
 
