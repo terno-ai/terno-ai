@@ -210,7 +210,7 @@ def get_column_stats(conn, table_inspector, Mtable_name, column_name, cardinalit
             logger.warning(f"Most frequent date query failed for {Mtable_name}.{column_name}: {e}")
             stats["most_frequent_date"] = None
 
-    logger.info(f"Stats: {stats}")
+    logger.debug(f"Stats: {stats}")
     return stats
 
 
@@ -352,7 +352,7 @@ def generate_table_and_column_description(datasource_id, input_table_names=None,
                 if input_table_names and Mtable_name not in input_table_names:
                     continue
 
-                terno_table = terno_models.Table.objects.get(name=Mtable_name)
+                terno_table = terno_models.Table.objects.get(name=Mtable_name, data_source=datasource)
 
                 if not overwrite and terno_table.description is not None:
                     logger.info(f"Skipping {Mtable_name} — already has a description.")
