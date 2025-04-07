@@ -9,4 +9,5 @@ export default defineConfig({
     assetsDir: 'terno-ai-assets',
   },
   plugins: [react()],
+  
 })
