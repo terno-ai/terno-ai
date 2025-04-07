@@ -40,12 +40,12 @@ You need to do this in a careful, step-by-step process to ensure accurate and me
 
 ```json
 {{
-  "table_name": "actual_table_name",
+  "table_name": "Name of the actual table as in db schema.",
   "table_public_name": "A human-friendly name representing what this table stores in real-world terms.",
   "table_description": "A detailed explanation of what this table stores and how it fits into the broader database. Include its primary purpose, relationships with other tables (if applicable), and where it is typically used in queries or applications., limited to around 20 words.",
   "columns": [
     {{
-      "column_name": "actual_column_name",
+      "column_name": "Name of the actual column as in db schema.",
       "column_public_name": "A human-friendly name for this column based on what it represents.",
       "column_description": "A meaningful description of this column. Explain what information it holds, what type of data it contains, and its purpose in the table. If it is a foreign key, specify the referenced table, limited to around 10 words."
     }},
@@ -73,7 +73,7 @@ Here is the structured table schema with metadata:
 
 Your task:
 - Analyze both representations of the table schema to understand its structure.
-- **Generate human-friendly names** for the table and columns that better represent their real-world meaning.
+- Generate human-friendly public names for the table and columns that better represent their real-world meaning and store them in the variable table_public_name and column_public name. 
 - Utilize column statistics and sample rows to generate meaningful descriptions.
 - Generate a JSON object in the required structure.
 - Ensure descriptions are clear, concise, and meaningful.
@@ -84,16 +84,20 @@ Your response must strictly adhere to the JSON format without any extra text.
 
 ```json
 {{
-  "table_name": "actual_table_name",
+  "table_name": "Name of the actual table as in db schema.",
   "table_public_name": "A human-friendly name representing what this table stores in real-world terms.",
   "table_description": "A detailed explanation of what this table stores and how it fits into the broader database. Include its primary purpose, relationships with other tables (if applicable), and where it is typically used in queries or applications., limited to around 20 words.",
   "columns": [
     {{
-      "column_name": "actual_column_name",
+      "column_name": "Exact column name from db schema. It MUST be one of the values from {column_list}.",
       "column_public_name": "A human-friendly name for this column based on what it represents.",
       "column_description": "A meaningful description of this column. Explain what information it holds, what type of data it contains, and its purpose in the table. If it is a foreign key, specify the referenced table, limited to around 10 words."
     }},
-    ...
+    ...// Repeat for each column
   ]
 }}
+Strict output instructions/guidelines to follow:
+- Use `table_name` for each column exactly as in the schema
+- Use `column_name` for each column exactly as in the schema and {column_list} — do NOT modify or infer.
+- Generate `table_public_name` and `column_public_name` for human readability.
 """

@@ -270,6 +270,27 @@ class DataSourceAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     list_filter = ['enabled', 'type']
     search_fields = ['display_name', 'type']
     organisation_related_field_names = ['organisationdatasource__organisation']
+    actions = ['generate_descriptions_for_datasource']
+
+    def generate_descriptions_for_datasource(self, request, queryset):
+        if queryset.count() != 1:
+            self.message_user(request, "Please select exactly one DataSource.", level='error')
+            return
+
+        datasource = queryset.first()
+
+        task = generate_table_and_column_descriptions_task.delay(
+            datasource_id=datasource.id,
+        )
+
+        self.message_user(
+            request,
+            f"Table and column description generation task queued for DataSource '{datasource.id}'. Descriptions will take time to generate.",
+            level='info'
+        )
+
+    generate_descriptions_for_datasource.short_description = "Generate table and their column descriptions"
+
 
     def get_readonly_fields(self, request, obj=None):
         return ['masked_connection_str_readonly'] if obj and obj.type in ['generic', 'sqlite'] else []
@@ -363,33 +384,26 @@ class TableAdmin(OrganisationFilterMixin, admin.ModelAdmin):
         """
         Admin action to enqueue a Celery task for generating table descriptions.
         """
-        tables_by_datasource_org = {}
+        tables_by_datasource = {}
 
-        # Group tables by (datasource_id, organisation_id)
+        # Group tables by datasource_id
         for table in queryset:
             data_source = table.data_source
-            org_ds = models.OrganisationDataSource.objects.filter(datasource=data_source).first()
-            if not org_ds:
-                self.message_user(
-                    request,
-                    f"DataSource {data_source.id} does not have an associated organisation.",
-                    level='error'
-                )
-                continue
+            key = data_source.id
+            if key not in tables_by_datasource:
+                tables_by_datasource[key] = []
+            tables_by_datasource[key].append(table.name)
 
-            organisation = org_ds.organisation
-            key = (data_source.id, organisation.id)
-            if key not in tables_by_datasource_org:
-                tables_by_datasource_org[key] = []
-            tables_by_datasource_org[key].append(table.name)
-
-        # Enqueue tasks for each datasource-organisation pair
-        for (datasource_id, org_id), table_names in tables_by_datasource_org.items():
-            generate_table_and_column_descriptions_task.delay(datasource_id, org_id, table_names)
+        # Enqueue tasks for each datasource group
+        for datasource_id, table_names in tables_by_datasource.items():
+            generate_table_and_column_descriptions_task.delay(
+                datasource_id,
+                table_names,
+            )
 
         self.message_user(
             request,
-            f"Task has been queued for {len(tables_by_datasource_org)} datasource(s).",
+            f"Table and column description generation task has been queued for {len(queryset)} tables. Descriptions will take time to generate.",
             level='info'
         )
 
