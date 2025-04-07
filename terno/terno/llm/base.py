@@ -26,6 +26,10 @@ class BaseLLM(ABC):
         pass
 
     @abstractmethod
+    def get_role_specific_message(self, message, role):
+        pass
+
+    @abstractmethod
     def create_message_for_llm(self, system_prompt, ai_prompt, human_prompt):
         pass
 

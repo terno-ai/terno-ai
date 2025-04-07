@@ -9,6 +9,9 @@ class FakeLLM(BaseLLM):
     def get_model_instance(self):
         pass
 
+    def get_role_specific_message(self, message, role):
+        return {}
+
     def create_message_for_llm(self, system_prompt, ai_prompt, human_prompt):
         return []
 

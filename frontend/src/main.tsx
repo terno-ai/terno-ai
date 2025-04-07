@@ -6,6 +6,7 @@ import Home from "./pages/HomePage";
 import Settings from "./pages/Settings";
 import Console from "./pages/Console";
 import { lazy, Suspense } from "react";
+import Recommendations from "./pages/Recommendations";
 const ProviderCallback = lazy(() => import("./pages/ProviderCallback"));
 const RequestPasswordReset = lazy(() => import("./pages/RequestPasswordReset"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
@@ -15,6 +16,10 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: <Home />,
+  },
+  {
+    path: "recommendations",
+    element: <Recommendations />,
   },
   {
     path: "settings",

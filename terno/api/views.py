@@ -13,6 +13,7 @@ import subscription.models as subs_models
 import terno.utils as utils
 import terno.models as models
 import logging
+import suggestions.tasks as suggestion_tasks
 
 logger = logging.getLogger(__name__)
 
@@ -170,9 +171,13 @@ def add_datasource(request):
     )
     main_domain = settings.MAIN_DOMAIN
     redirect_url = f"https://{organisation.subdomain}.{main_domain}"
+
+    # Generate table and column Descriptions
+    # suggestion_tasks.generate_table_and_column_descriptions_task(datasource_id=datasource.id)
+
     return JsonResponse({
         'status': 'success',
-        'message': 'Added the DataSource successfully',
+        'message': 'Added the DataSource successfully. Table and column description generation is queued.',
         'redirect_url': redirect_url}, status=200)
 
 

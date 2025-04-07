@@ -8,6 +8,7 @@ from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
 from allauth.account.adapter import get_adapter
 from django import forms
+from suggestions.tasks import generate_table_and_column_descriptions_task
 
 admin.site.unregister(models.Group)
 admin.site.unregister(models.User)
@@ -269,6 +270,27 @@ class DataSourceAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     list_filter = ['enabled', 'type']
     search_fields = ['display_name', 'type']
     organisation_related_field_names = ['organisationdatasource__organisation']
+    actions = ['generate_descriptions_for_datasource']
+
+    def generate_descriptions_for_datasource(self, request, queryset):
+        if queryset.count() != 1:
+            self.message_user(request, "Please select exactly one DataSource.", level='error')
+            return
+
+        datasource = queryset.first()
+
+        task = generate_table_and_column_descriptions_task.delay(
+            datasource_id=datasource.id,
+        )
+
+        self.message_user(
+            request,
+            f"Table and column description generation task queued for DataSource '{datasource.id}'. Descriptions will take time to generate.",
+            level='info'
+        )
+
+    generate_descriptions_for_datasource.short_description = "Generate table and their column descriptions"
+
 
     def get_readonly_fields(self, request, obj=None):
         return ['masked_connection_str_readonly'] if obj and obj.type in ['generic', 'sqlite'] else []
@@ -356,6 +378,36 @@ class TableAdmin(OrganisationFilterMixin, admin.ModelAdmin):
         'data_source' : 'organisationdatasource__organisation'
     }
     organisation_list_filter_field_names = ['data_source__organisationdatasource__organisation']
+    actions = ['generate_descriptions_for_selected_tables']
+
+    def generate_descriptions_for_selected_tables(self, request, queryset):
+        """
+        Admin action to enqueue a Celery task for generating table descriptions.
+        """
+        tables_by_datasource = {}
+
+        # Group tables by datasource_id
+        for table in queryset:
+            data_source = table.data_source
+            key = data_source.id
+            if key not in tables_by_datasource:
+                tables_by_datasource[key] = []
+            tables_by_datasource[key].append(table.name)
+
+        # Enqueue tasks for each datasource group
+        for datasource_id, table_names in tables_by_datasource.items():
+            generate_table_and_column_descriptions_task.delay(
+                datasource_id,
+                table_names,
+            )
+
+        self.message_user(
+            request,
+            f"Table and column description generation task has been queued for {len(queryset)} tables. Descriptions will take time to generate.",
+            level='info'
+        )
+
+    generate_descriptions_for_selected_tables.short_description = "Generate descriptions for selected tables and their columns."
 
 
 @admin.register(models.PrivateTableSelector)
