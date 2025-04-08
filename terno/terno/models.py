@@ -96,20 +96,16 @@ class DataSource(models.Model):
     connection_json = models.JSONField(
         null=True, blank=True,
         help_text="JSON key file contents for authentication")
+    description = models.TextField(
+        max_length=1024, null=True, blank=True, default='',
+        help_text="Give description of your datasource/schema.")
+    enabled = models.BooleanField(default=True)
     dialect_name = models.CharField(
         max_length=20, null=True, blank=True, default='',
         help_text="Auto-generated on save")
     dialect_version = models.CharField(
         max_length=20, null=True, blank=True, default='',
         help_text="Auto-generated on save")
-    description = models.TextField(
-        max_length=1024, null=True, blank=True, default='',
-        help_text="Give description of your datasource/schema.")
-    dialect_name = models.CharField(max_length=20, default='',
-                                    null=True, blank=True)
-    dialect_version = models.CharField(max_length=20, default='',
-                                       null=True, blank=True)
-    enabled = models.BooleanField(default=True)
 
     def __str__(self):
         return self.display_name
@@ -310,3 +306,12 @@ class SystemPrompts(models.Model):
 class DatasourceSuggestions(models.Model):
     data_source = models.ForeignKey(DataSource, on_delete=models.CASCADE)
     suggestion = models.TextField(blank=True, null=True)
+
+
+class Conversation(models.Model):
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
+
+
+class Chat(models.Model):
+    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)
+    
