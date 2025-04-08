@@ -1,4 +1,5 @@
 import io
+import re
 import terno.models as models
 from django.contrib.auth.models import Group, Permission
 from sqlshield.shield import Session
@@ -541,6 +542,8 @@ def parsing_csv_file(user, file, organisation):
     except Exception as e:
         return {'status': 'error', 'error': str(e)}
 
+def is_quoted_name(col_name):
+        return re.match(r'^[0-9]', col_name) or re.search(r'[^a-zA-Z0-9_]', col_name)
 
 def write_sqlite_from_json(data, sqlite_url):
     try:
@@ -561,13 +564,13 @@ def write_sqlite_from_json(data, sqlite_url):
 
             if col_name.lower() == 'id':
                 column = Column(col_name, col_type, primary_key=True, nullable=col['nullable'],
-                                comment=col.get('description', ''), quote=False)
+                                comment=col.get('description', ''), quote=is_quoted_name(col_name))
             else:
                 column = Column(col_name, col_type, nullable=col['nullable'],
-                                comment=col.get('description', ''), quote=False)
+                                comment=col.get('description', ''), quote=is_quoted_name(col_name))
             columns.append(column)
 
-        table = Table(data['table_name'], metadata, quote=False, *columns)
+        table = Table(data['table_name'], metadata, quote=True, *columns)
         metadata.create_all(engine)
         return {'status': 'success', 'table': table, 'sqlite_url': sqlite_url}
     except Exception as e:
