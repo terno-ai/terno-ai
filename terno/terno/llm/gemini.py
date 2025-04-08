@@ -54,6 +54,16 @@ class GeminiLLM(BaseLLM):
 
         return model
 
+    def get_role_specific_message(self, message, role):
+        if role == 'system':
+            return {"role": "system", "parts": [message]}
+        elif role == 'assistant':
+            return {"role": "model", "parts": [message]}
+        elif role == 'user':
+            return {"role": "user", "parts": [message]}
+        else:
+            raise Exception("Invalid role")
+
     def create_message_for_llm(self, system_prompt, ai_prompt, human_prompt):
         messages = [{'role': 'system', 'parts': [system_prompt]},
                     {'role': 'model', 'parts': [ai_prompt]},
@@ -71,14 +81,14 @@ class GeminiLLM(BaseLLM):
                 {
                     "temperature": self.temperature,
                     "top_p": self.top_p,
-                    "max_output_tokens": self.max_tokens,
+                    # "max_output_tokens": self.max_tokens,
                     "top_k": self.top_k,
                     **self.custom_parameters
                 }
             ),
         )
 
-        response = response.text.strip().removeprefix("```sql").removesuffix("```")
+        response = response.text.strip().removeprefix("```json").removeprefix("```sql").removesuffix("```")
 
         return {'generated_sql': response}
     
@@ -94,7 +104,6 @@ class GeminiLLM(BaseLLM):
                 {
                     "temperature": self.temperature,
                     "top_p": self.top_p,
-                    "max_output_tokens": self.max_tokens,
                     "top_k": self.top_k,
                     **self.custom_parameters
                 }

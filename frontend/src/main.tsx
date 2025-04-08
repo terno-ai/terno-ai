@@ -7,6 +7,7 @@ import Settings from "./pages/Settings";
 import Console from "./pages/Console";
 import { lazy, Suspense } from "react";
 import ChatPage from "./pages/ChatPage";
+import Recommendations from "./pages/Recommendations";
 const ProviderCallback = lazy(() => import("./pages/ProviderCallback"));
 const RequestPasswordReset = lazy(() => import("./pages/RequestPasswordReset"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
@@ -20,6 +21,10 @@ const router = createBrowserRouter([
   {
     path: "chat",
     element: <ChatPage />,
+  },
+  {
+    path: "recommendations",
+    element: <Recommendations />,
   },
   {
     path: "settings",

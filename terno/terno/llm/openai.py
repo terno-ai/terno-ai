@@ -7,9 +7,10 @@ class OpenAILLM(BaseLLM):
     o_series_models = ['o1', 'o1-2024-12-17',
                        'o1-preview', 'o1-preview-2024-09-12',
                        'o1-mini', 'o1-mini-2024-09-12',
-                       'o3-mini', 'o3-mini-2025-01-31']
+                       'o3-mini', 'o3-mini-2025-01-31',
+                       'o1-pro', 'o1-pro-2025-03-19']
     """O series models configuration."""
-    model_name: str = "gpt-3.5-turbo"
+    model_name: str = "gpt-4o"
     """Model name to use.
 
     You can use the
@@ -46,6 +47,17 @@ class OpenAILLM(BaseLLM):
         )
         return client
 
+    def get_role_specific_message(self, message, role):
+        if role == 'system':
+            return {"role": "system", "content": message}
+        elif role == 'assistant':
+            return {"role": "assistant", "content": message}
+        elif role == 'user':
+            return {"role": "user", "content": message}
+        else:
+            raise Exception("Invalid role")
+
+
     def create_message_for_llm(self, system_prompt, ai_prompt, human_prompt):
         messages = [
             {"role": "system", "content": system_prompt},
@@ -69,14 +81,14 @@ class OpenAILLM(BaseLLM):
                 model=self.model_name,
                 messages=messages,
                 temperature=self.temperature,
-                max_tokens=self.max_tokens,
+                # max_tokens=self.max_tokens,
                 top_p=self.top_p,
                 **self.custom_parameters
             )
 
         return_dict = {}
         generated_sql = response.choices[0].message.content
-        return_dict['generated_sql'] = generated_sql.strip().removeprefix("```sql").removeprefix("```").removesuffix("```").strip()
+        return_dict['generated_sql'] = generated_sql.strip().removeprefix("```json").removeprefix("```sql").removeprefix("```").removesuffix("```").strip()
 
         try:
             return_dict['input_tokens'] = response.usage.prompt_tokens
@@ -103,7 +115,6 @@ class OpenAILLM(BaseLLM):
                 model=self.model_name,
                 messages=messages,
                 temperature=self.temperature,
-                max_tokens=self.max_tokens,
                 top_p=self.top_p,
                 **self.custom_parameters
             )

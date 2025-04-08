@@ -1,3 +1,4 @@
+import re
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as DefaultUserAdmin
 from django.contrib.auth.admin import GroupAdmin as DefaultGroupAdmin
@@ -7,6 +8,8 @@ from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
 from allauth.account.adapter import get_adapter
 from django import forms
+from suggestions.tasks import generate_table_and_column_descriptions_task
+from django.db.models import F
 
 admin.site.unregister(models.Group)
 admin.site.unregister(models.User)
@@ -240,15 +243,122 @@ class LLMConfigurationAdmin(OrganisationFilterMixin, admin.ModelAdmin):
 
         super().save_model(request, obj, form, change)
 
+class DataSourceAdminForm(forms.ModelForm):
+    class Meta:
+        model = models.DataSource
+        fields = '__all__'
+
+    def clean(self):
+        cleaned_data = super().clean()
+        source_type = cleaned_data.get('type')
+        conn_str = cleaned_data.get('connection_str')
+
+        if (
+            conn_str and
+            re.match(r'^sqlite:\/\/\/', conn_str.strip(), re.IGNORECASE) and
+            source_type and source_type.lower() != 'generic'
+        ):
+            raise forms.ValidationError("SQLite connection strings are only allowed with Generic type.")
+        
+        return cleaned_data
+
+
 
 @admin.register(models.DataSource)
 class DataSourceAdmin(OrganisationFilterMixin, admin.ModelAdmin):
-    list_display = ['display_name', 'type', 'enabled', 'dialect_name', 'dialect_version', 'connection_str']
+    form = DataSourceAdminForm
+    list_display = ['display_name', 'type', 'enabled', 'dialect_name', 'dialect_version', 'masked_connection_str']
     list_filter = ['enabled', 'type']
     search_fields = ['display_name', 'type']
     organisation_related_field_names = ['organisationdatasource__organisation']
+    actions = ['generate_descriptions_for_datasource']
+
+    def generate_descriptions_for_datasource(self, request, queryset):
+        if queryset.count() != 1:
+            self.message_user(request, "Please select exactly one DataSource.", level='error')
+            return
+
+        datasource = queryset.first()
+
+        task = generate_table_and_column_descriptions_task.delay(
+            datasource_id=datasource.id,
+        )
+
+        self.message_user(
+            request,
+            f"Table and column description generation task queued for DataSource '{datasource.id}'. Descriptions will take time to generate.",
+            level='info'
+        )
+
+    generate_descriptions_for_datasource.short_description = "Generate table and their column descriptions"
+
+
+    def get_readonly_fields(self, request, obj=None):
+        return ['masked_connection_str_readonly'] if obj and obj.type in ['generic', 'sqlite'] else []
+
+
+    def _get_obj_from_request(self, request):
+        try:
+            object_id = request.resolver_match.kwargs.get('object_id')
+            if object_id:
+                return self.model.objects.get(pk=object_id)
+        except Exception:
+            return None
+
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
+
+        obj = self._get_obj_from_request(request)
+
+        if db_field.name == 'connection_str' and obj and obj.dialect_name == 'sqlite':
+            formfield.initial = '*****'
+        return formfield
+
+
+    def masked_connection_str(self, obj):
+        if obj.dialect_name == 'sqlite':
+            return '*****'
+        return obj.connection_str or '-'
+    masked_connection_str.short_description = 'Connection Str'
+
+
+    def formfield_for_choice_field(self, db_field, request, **kwargs):
+        formfield = super().formfield_for_choice_field(db_field, request, **kwargs)
+
+        if db_field.name == 'type' and not request.user.is_superuser:
+            formfield.choices = [
+                (value, label) for value, label in formfield.choices
+                if value.lower() != 'generic'
+            ]
+        return formfield
+    
+
+    def masked_connection_str_readonly(self, obj):
+        return '*******'
+    masked_connection_str_readonly.short_description = 'Connection Str'
+
+    def get_fields(self, request, obj=None):
+        fields = super().get_fields(request, obj)
+        if obj and obj.dialect_name == 'sqlite' and 'connection_str' in fields:
+            fields = ['masked_connection_str_readonly' if f == 'connection_str' else f for f in fields]
+        return fields
+    
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+
+        if obj and obj.dialect_name == 'sqlite':
+            class MaskedForm(form):
+                class Meta(form.Meta):
+                    fields = [f for f in form.base_fields if f != 'connection_str']           
+            return MaskedForm
+        return form
+
 
     def save_model(self, request, obj, form, change):
+        if 'connection_str' in form.cleaned_data and form.cleaned_data['connection_str'] == '*****':
+            form.cleaned_data['connection_str'] = obj.connection_str
+
         super().save_model(request, obj, form, change)
         org_id = request.org_id
         organisation = get_object_or_404(models.Organisation, id=org_id)
@@ -269,6 +379,36 @@ class TableAdmin(OrganisationFilterMixin, admin.ModelAdmin):
         'data_source' : 'organisationdatasource__organisation'
     }
     organisation_list_filter_field_names = ['data_source__organisationdatasource__organisation']
+    actions = ['generate_descriptions_for_selected_tables']
+
+    def generate_descriptions_for_selected_tables(self, request, queryset):
+        """
+        Admin action to enqueue a Celery task for generating table descriptions.
+        """
+        tables_by_datasource = {}
+
+        # Group tables by datasource_id
+        for table in queryset:
+            data_source = table.data_source
+            key = data_source.id
+            if key not in tables_by_datasource:
+                tables_by_datasource[key] = []
+            tables_by_datasource[key].append(table.name)
+
+        # Enqueue tasks for each datasource group
+        for datasource_id, table_names in tables_by_datasource.items():
+            generate_table_and_column_descriptions_task.delay(
+                datasource_id,
+                table_names,
+            )
+
+        self.message_user(
+            request,
+            f"Table and column description generation task has been queued for {len(queryset)} tables. Descriptions will take time to generate.",
+            level='info'
+        )
+
+    generate_descriptions_for_selected_tables.short_description = "Generate descriptions for selected tables and their columns."
 
 
 @admin.register(models.PrivateTableSelector)
@@ -304,6 +444,11 @@ class TableColumnAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     organisation_list_filter_field_names = ['table__data_source__organisationdatasource__organisation']
 
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.annotate(data_source_id=F('table__data_source_id'))
+
+
 @admin.register(models.ForeignKey)
 class ForeignKeyAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     list_display = ['constrained_table', 'constrained_columns',
@@ -321,6 +466,10 @@ class ForeignKeyAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     organisation_list_filter_field_names = [
         'referred_table__data_source__organisationdatasource__organisation'
         ]
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.annotate(data_source_id=F('referred_table__data_source_id'))
     # search_fields = ['name', 'public_name', 'table__name', 'table__data_source']
 
 
@@ -432,6 +581,18 @@ class SystemPromptsAdmin(OrganisationFilterMixin, admin.ModelAdmin):
     organisation_related_field_names = ['data_source__organisationdatasource__organisation']
     list_filter = [DataSourceFilter]
     search_fields = ['data_source__display_name', 'system_prompt']
+    organisation_foreignkey_field_names = {
+        'data_source': 'organisationdatasource__organisation',
+    }
+    organisation_list_filter_field_names = ['data_source__organisationdatasource__organisation']
+
+
+@admin.register(models.DatasourceSuggestions)
+class DatasourceSuggestionsAdmin(OrganisationFilterMixin, admin.ModelAdmin):
+    list_display = ['data_source', 'suggestion']
+    organisation_related_field_names = ['data_source__organisationdatasource__organisation']
+    list_filter = [DataSourceFilter]
+    search_fields = ['data_source__display_name', 'suggestion']
     organisation_foreignkey_field_names = {
         'data_source': 'organisationdatasource__organisation',
     }

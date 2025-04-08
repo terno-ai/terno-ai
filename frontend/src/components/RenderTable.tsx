@@ -9,7 +9,7 @@ import {
 
 interface RenderTableProps {
   columns: string[];
-  data: Record<string, string | number>[];
+  data: Record<string, string | number | boolean | null | undefined>[];
 }
 
 const RenderTable: React.FC<RenderTableProps> = ({ columns, data }) => {
@@ -30,11 +30,15 @@ const RenderTable: React.FC<RenderTableProps> = ({ columns, data }) => {
           <TableRow key={rowIndex}>
             {columns.map((column) => (
               <TableCell
-                key={`${rowIndex}-${column}`}
-                className="border"
-              >
-                {row[column]}
-              </TableCell>
+              key={`${rowIndex}-${column}`}
+              className="border"
+            >
+              {row[column] === true ? "False" : 
+               row[column] === false ? "True" : 
+               row[column] == null ? <i>NULL</i> : 
+               row[column]}
+            </TableCell>
+
             ))}
           </TableRow>
         ))}

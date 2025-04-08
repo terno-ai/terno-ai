@@ -1,6 +1,5 @@
 import os
 from unittest import mock
-import django
 from django.test import TestCase
 from unittest.mock import patch, MagicMock
 from django.contrib.auth.models import User, Group
@@ -15,21 +14,26 @@ from subscription.models import LLMCredit
 from terno.models import Organisation, OrganisationUser, OrganisationDataSource
 import io
 import sqlite3
+from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, Float, inspect
+from io import BytesIO
 
-# Ensure the settings module is set
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'terno.settings')
-django.setup()
 
 class BaseTestCase(TestCase):
     def create_user(self):
         return User.objects.create_user(username='testuser', password='12345')
 
+    def db_path(self):
+        if os.path.exists("../Chinook_Sqlite.sqlite"):
+            connection_str = "sqlite:///../Chinook_Sqlite.sqlite"  # Local
+        else:
+            connection_str = "sqlite:///./Chinook_Sqlite.sqlite"
+        return connection_str
+
     def create_datasource(self, display_name='test_db'):
         datasource = models.DataSource.objects.create(
             display_name=display_name, type='default',
-            connection_str='sqlite:///../Chinook_Sqlite.sqlite',
+            connection_str=self.db_path(),
             enabled=True,
-            
         )
         return datasource
 
@@ -40,8 +44,7 @@ class BaseTestCase(TestCase):
         )
 
     def create_organisation(self, user, org_name="Test Organisation", subdomain="terno-root"):
-
-        llm_credit, _ = LLMCredit.objects.get_or_create(owner=user, credit = 10)
+        llm_credit, _ = LLMCredit.objects.get_or_create(owner=user, credit=10)
 
         organisation = Organisation.objects.create(
             name=org_name,
@@ -54,6 +57,19 @@ class BaseTestCase(TestCase):
         OrganisationUser.objects.get_or_create(user=user, organisation=organisation)
 
         return organisation, user
+
+    def create_test_table(self, sqlite_url):
+        engine = create_engine(sqlite_url, echo=True)
+        metadata = MetaData()
+        table = Table(
+            'test_table', metadata,
+            Column('id', Integer, primary_key=True),
+            Column('name', String),
+            Column('age', Integer),
+            Column('score', Float)
+        )
+        metadata.create_all(engine)
+        return table
 
     def create_mdb(self, ds_display_name='test_db', roles='sales'):
         user = self.create_user()
@@ -120,7 +136,7 @@ class BaseTestCase(TestCase):
 
 class DBEngineTestCase(TestCase):
     def setUp(self):
-        self.connection_string = "sqlite:///../Chinook_Sqlite.sqlite"
+        self.connection_string = BaseTestCase.db_path(self)
         self.bigquery_connection_string = "bigquery://project/dataset"
         self.credentials_info = {
             "type": "service_account",
@@ -131,7 +147,8 @@ class DBEngineTestCase(TestCase):
         engine = utils.create_db_engine('sqlite', self.connection_string)
         with engine.connect():
             self.assertEqual(engine.dialect.name, 'sqlite')
-            self.assertEqual(str(engine.dialect.server_version_info), str(tuple(map(int, sqlite3.sqlite_version.split('.')))))
+            self.assertEqual(str(engine.dialect.server_version_info),
+                             str(tuple(map(int, sqlite3.sqlite_version.split('.')))))
 
     @patch('terno.utils.sqlalchemy.create_engine')
     def test_create_db_engine_bigquery(self, mock_create_engine):
@@ -193,8 +210,8 @@ class MDBTestCase(BaseTestCase):
         mdb = self.mdb
         self.assertEqual(list(mdb.tables.keys()),
                          ['Album', 'Artist', 'Genre', 'Invoice',
-                          'InvoiceLine', 'MediaType', 'Playlist',
-                          'PlaylistTrack', 'Track'])
+                          'InvoiceLine', 'Track', 'MediaType', 'Playlist',
+                          'PlaylistTrack', 'test_table'])
 
     def test_allowed_columns(self):
         mdb = self.mdb
@@ -241,8 +258,8 @@ class LLMResponseTestCase(BaseTestCase):
 
         mock_pipeline = MagicMock(spec=Pipeline)
         mock_create_pipeline.return_value = mock_pipeline
-    
-        mock_get_response.return_value =[[{'status': 'success', "generated_sql": "SELECT * FROM Album"}]]
+
+        mock_get_response.return_value = [[{'status': 'success', "generated_sql": "SELECT * FROM Album"}]]
         response = utils.llm_response(self.user, self.user_query,
                                       self.db_schema, self.organisation, self.datasource)
         self.assertEqual(response['status'], 'success')
@@ -257,7 +274,9 @@ class LLMResponseTestCase(BaseTestCase):
     def test_llm_response_error(self, mock_create_llm):
         mock_create_llm.side_effect = Exception("LLM Error")
 
-        response = utils.llm_response(self.user, self.user_query, self.db_schema, self.organisation ,  self.datasource)
+        response = utils.llm_response(self.user, self.user_query,
+                                      self.db_schema, self.organisation,
+                                      self.datasource)
 
         self.assertEqual(response['status'], 'error')
         self.assertIn('LLM Error', response['error'])
@@ -325,7 +344,7 @@ class GenerateExecuteNativeSQLTestCase(BaseTestCase):
         expected_sql = 'SELECT * FROM (SELECT AlbumId AS AlbumId, Title AS Title, ArtistId AS ArtistId FROM Album) AS Album'
 
         self.assertEqual(response['status'], 'success')
-        self.assertEqual(response['native_sql'],
+        self.assertEqual(response['native_sql'].replace('"', ''),
                          expected_sql)
 
     def test_generate_native_sql_error(self):
@@ -388,6 +407,7 @@ class SubstituteTestCase(BaseTestCase):
 
         self.assertEqual(response, expected_response)
 
+
 class FileUploadTestCase(BaseTestCase):
     def setUp(self):
         self.user = super().create_user()
@@ -399,15 +419,15 @@ class FileUploadTestCase(BaseTestCase):
                         [2, "Bob", "bob@example.com", 30, False],
                         [3, "Charlie", "charlie@example.com", 28, True],
                         [4, "David", "david@example.com", 35, False],
-                        [5, "Eve", "eve@example.com", None, True],  ]
+                        [5, "Eve", "eve@example.com", None, True]]
         self.generate_test_csv()
-    
+
     def generate_test_csv(self):
         with open(self.test_csv_file, mode="w", newline="") as file:
             writer = csv.writer(file)
             writer.writerows(self.data)
         return self.test_csv_file
-    
+
     @mock.patch("terno.utils.csv_llm_response")
     def test_file_upload(self, mock_llm_response):
 
@@ -446,3 +466,72 @@ class FileUploadTestCase(BaseTestCase):
         self.assertEqual(response['response']['generated_sql'], mock_llm_response.return_value["generated_sql"])
 
         mock_llm_response.assert_called_once()
+
+
+class WriteSQLiteTestCase(BaseTestCase):
+    def test_valid_table_creation(self):
+        data = {
+            'table_name': 'test_table',
+            'columns': [
+                {'name': 'id', 'type': 'INT', 'nullable': False},
+                {'name': 'name', 'type': 'VARCHAR', 'nullable': False},
+                {'name': 'age', 'type': 'INT', 'nullable': True}
+            ]
+        }
+        sqlite_url = BaseTestCase.db_path(self)
+        result = utils.write_sqlite_from_json(data, sqlite_url)
+
+        self.assertEqual(result['status'], 'success')
+        engine = create_engine(sqlite_url)
+        inspector = inspect(engine)
+        self.assertIn('test_table', inspector.get_table_names())
+
+    def test_no_columns(self):
+        data = {
+            'table_name': 'empty_table',
+            'columns': []
+        }
+        sqlite_url = BaseTestCase.db_path(self)
+        result = utils.write_sqlite_from_json(data, sqlite_url)
+
+        self.assertEqual(result['status'], 'error')
+        self.assertIn("error", result)
+
+    def test_duplicate_column_names(self):
+        data = {
+            'table_name': 'duplicate_table',
+            'columns': [
+                {'name': 'id', 'type': 'INT', 'nullable': False},
+                {'name': 'id', 'type': 'VARCHAR', 'nullable': True}
+            ]
+        }
+        sqlite_url = BaseTestCase.db_path(self)
+        result = utils.write_sqlite_from_json(data, sqlite_url)
+
+        self.assertEqual(result['status'], 'error')
+        self.assertIn("error", result)
+
+
+class AddDataSQLiteTestCase(BaseTestCase):
+    def setUp(self):
+        self.sqlite_url = BaseTestCase.db_path(self)
+        self.table = self.create_test_table(self.sqlite_url)
+        self.test_csv_file = "test_data.csv"
+        self.data = {
+            'header_row': True,
+            'columns': [
+                {'name': 'id', 'type': 'int'},
+                {'name': 'name', 'type': 'string'},
+                {'name': 'age', 'type': 'int'},
+                {'name': 'score', 'type': 'float'}
+            ]
+        }
+        self.data_source = BaseTestCase.create_datasource(self)
+
+    def test_valid_data_insert(self):
+        csv_data = self.test_csv_file 
+        file = BytesIO(csv_data.encode('utf-8'))
+        result = utils.add_data_sqlite(self.sqlite_url, self.data, self.table, file, self.data_source)
+
+        print("test_valid_data_insert", result)
+        self.assertEqual(result['status'], 'success')

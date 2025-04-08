@@ -38,6 +38,16 @@ class AnthropicLLM(BaseLLM):
         client = anthropic.Anthropic(api_key=self.api_key)
         return client
 
+    def get_role_specific_message(self, message, role):
+        if role == 'system':
+            return {"role": "user", "content": message}
+        elif role == 'assistant':
+            return {"role": "assistant", "content": message}
+        elif role == 'user':
+            return {"role": "user", "content": message}
+        else:
+            raise Exception("Invalid role")
+
     def create_message_for_llm(self, system_prompt, ai_prompt, human_prompt):
         messages = [
                 {"role": "user", "content": system_prompt},
@@ -50,7 +60,7 @@ class AnthropicLLM(BaseLLM):
         model = self.get_model_instance()
         response = model.messages.create(
                 model=self.model_name,
-                max_tokens=self.max_tokens,
+                # max_tokens=self.max_tokens,
                 temperature=self.temperature,
                 system=self.system_message,
                 messages=messages,
@@ -58,7 +68,7 @@ class AnthropicLLM(BaseLLM):
                 top_k=self.top_k,
                 **self.custom_parameters
             )
-        response = response.content.strip().removeprefix("```sql").removesuffix("```")
+        response = response.content.strip().removeprefix("```json").removeprefix("```sql").removesuffix("```")
         return {'generated_sql': response}
 
 
@@ -67,7 +77,6 @@ class AnthropicLLM(BaseLLM):
 
         response = model.messages.create(
             model=self.model_name,
-                max_tokens=self.max_tokens,
                 temperature=self.temperature,
                 system=self.system_message,
                 messages=messages,

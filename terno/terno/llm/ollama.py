@@ -23,6 +23,16 @@ class OllamaLLM(BaseLLM):
         client = ollama.Client(host=self.host)
         return client
 
+    def get_role_specific_message(self, message, role):
+        if role == 'system':
+            return {"role": "system", "content": message}
+        elif role == 'assistant':
+            return {"role": "assistant", "content": message}
+        elif role == 'user':
+            return {"role": "user", "content": message}
+        else:
+            raise Exception("Invalid role")
+
     def create_message_for_llm(self, system_prompt, ai_prompt, human_prompt):
         messages = [
             {"role": "system", "content": system_prompt},
