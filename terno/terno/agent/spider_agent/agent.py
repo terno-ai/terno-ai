@@ -63,7 +63,8 @@ class PromptAgent:
 
         self.instruction = task #self.env.task_config['instruction']
 
-        self._AVAILABLE_ACTION_CLASSES = [Terminate, EXECUTE_SQL, GET_TABLES, GET_TABLE_INFO, SAMPLE_ROWS, SEMANTIC_SEARCH_TABLE]
+        # self._AVAILABLE_ACTION_CLASSES = [Terminate, EXECUTE_SQL, GET_TABLES, GET_TABLE_INFO, SAMPLE_ROWS, SEMANTIC_SEARCH_TABLE]
+        self._AVAILABLE_ACTION_CLASSES = [Terminate, EXECUTE_SQL, GET_TABLES, GET_TABLE_INFO]
         action_space = "".join([action_cls.get_action_description() for action_cls in self._AVAILABLE_ACTION_CLASSES])
         self.system_message = GENERIC_SQL.format(db_type=env.db_type, action_space=action_space, task=self.instruction, max_steps=self.max_steps)
 
