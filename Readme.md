@@ -2,7 +2,9 @@
 
 # Terno AI
 
-Terno AI is an open-source, enterprise-grade Text-to-SQL solution that ensures accuracy, security, and performance when querying databases using natural language. It integrates domain knowledge management and SQL sanitization to generate safe and optimized queries.
+Terno AI is a team of AI data scientist for your structured data in organizations.
+
+It an open-source, enterprise-grade solution that ensures accuracy, security, and performance when querying databases using natural language. It integrates domain knowledge management and SQL sanitization to generate safe and optimized queries. It builds the supervised and unsupervised machine learning models along with domain specific algorithms such as job shop scheduler. It also prepares charts and schedules email reports.
 
 ## 🚀 Features
 
