@@ -10,17 +10,17 @@ It an open-source, enterprise-grade solution that ensures accuracy, security, an
 
 ### Metastore
     
-    - Stores domain knowledge inferred automatically or articulated by experts from internal team to improve SQL generation accuracy. 
-    - Metastore can updated automatically without any problems.
-    - Metastore also contains the knowledge inferred from 
+- Stores domain knowledge inferred automatically or articulated by experts from internal team to improve SQL generation accuracy. 
+- Metastore can updated automatically without any problems.
+- Metastore also contains the knowledge inferred from 
 
 ### SQLShield
 
-    - **Sanitizes queries**, prevents harmful SQL execution, and enforces RBAC (Role-Based Access Control) without touching the database.
+- **Sanitizes queries**, prevents harmful SQL execution, and enforces RBAC (Role-Based Access Control) without touching the database.
 
-    - **Optimized Query Generation** - Reduces prompt size while improving LLM-generated SQL efficiency
+- **Optimized Query Generation** - Reduces prompt size while improving LLM-generated SQL efficiency
 
-    - **Enterprise Security** - Protects against SQL injection and unauthorized access
+- **Enterprise Security** - Protects against SQL injection and unauthorized access
 
 ### Semantic Layer on Database
 
@@ -44,17 +44,17 @@ As an example, you may ask terno to "send the report in email to my team every m
 
 ### Multi-Database Support
     
-    - Works with major databases like PostgreSQL, MySQL, BigQuery, and more
-    - Also integrate with most of the ERPs such as Odoo.
+- Works with major databases like PostgreSQL, MySQL, BigQuery, and more
+- Also integrate with most of the ERPs such as Odoo.
 
 ### Works with any LLM
 
-    - Use LLM of your choice without leaking data in your database to them
-    - It also support multi-LLMs setup where you may have one LLM for long form generation, second LLM backend tasks and other LLM for text embeddings generation.
+- Use LLM of your choice without leaking data in your database to them
+- It also support multi-LLMs setup where you may have one LLM for long form generation, second LLM backend tasks and other LLM for text embeddings generation.
 
 ### Open Source & Extensible
     
-     - Built for developers, data teams, and enterprises
+ - Built for developers, data teams, and enterprises
 
 
 ## 📦 Installation
