@@ -434,9 +434,9 @@ def file_upload(request):
         try:
             datasource_id = request.POST.get('dsId')
             print("Datasource Id", datasource_id)
+            adding_file_to_existing_datasource = False
             if datasource_id:
                 datasource = models.OrganisationDataSource.objects.get(datasource=datasource_id, organisation=organisation)
-
             if datasource_id and datasource.datasource.type == 'sqlite':
                 sqlite_url = datasource.datasource.connection_str  
                 print("Sqlite Url", sqlite_url)
@@ -477,10 +477,15 @@ def file_upload(request):
                     return JsonResponse({'status': 'error', 'error': add_data_response['error']})
                 
                 if(adding_file_to_existing_datasource):
+                    dsId = datasource.datasource.id
                     datasource.datasource.save()
+                else :
+                    dsId = datasource.id
             
             logger.info(f"File Uploaded Successfully: {file_metadata_response['response']}")
-            return JsonResponse({'status': 'success', 'message': 'Files uploaded successfully'}, status=200)
+            return JsonResponse({'status': 'success', 
+                                 'message': 'Files uploaded successfully',
+                                 'datasource_id': dsId}, status=200)
         except Exception as e:
             return JsonResponse({'status': 'error', 'error': str(e)}, status=200)
     return JsonResponse({'status': 'error', 'error': 'Invalid request'}, status=400)

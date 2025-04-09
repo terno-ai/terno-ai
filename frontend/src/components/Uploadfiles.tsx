@@ -14,10 +14,12 @@ const Uploadfiles = ({
   open,
   setOpen,
   dsId,
+  onUploadSuccess,
 }: {
   open: boolean;
   setOpen: (open: boolean) => void;
   dsId: string;
+  onUploadSuccess?: (newDsId?: string, reloadDatasourceList?: boolean) => void;
 }) => {
   const [files, setFiles] = useState<FileList | null>(null);
   const [loading, setLoading] = useState(false);
@@ -41,7 +43,18 @@ const Uploadfiles = ({
 
       const response = await fileUpload(formData);
       if (response["status"] === "success") {
-        console.log("done");
+        const newDsId = response["datasource_id"];
+        console.log("✅ Upload success. New ID:", newDsId);
+        console.log("✅ Upload success. Old ID:", dsId);
+
+        // Determine whether a new datasource was created
+        const reloadDsList = newDsId && newDsId !== dsId;
+
+        if (onUploadSuccess) {
+          onUploadSuccess(newDsId, reloadDsList);
+        }
+
+        setOpen(false);
       } else {
         setError(response["error"]);
       }

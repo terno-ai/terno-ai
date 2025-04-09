@@ -8,12 +8,14 @@ import terno.models as models
 from django.core.cache import cache
 from django.contrib.auth.models import User
 from .tasks import load_metadata
+from django.db import transaction
+
 
 
 @receiver(post_save, sender=DataSource)
 def update_tables_on_datasource_change(sender, instance, created, **kwargs):
     """Fetches and saves table information when a data source is saved."""
-    load_metadata.delay(instance.id)
+    transaction.on_commit(lambda: load_metadata.delay(instance.id))
     # if created:
     #     for table_name in retrieved_tables:
     #         Table.objects.create(name=table_name, data_source=instance)
