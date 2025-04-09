@@ -2,9 +2,11 @@
 
 # Terno AI
 
-Terno AI is a team of AI data scientist for your structured data in organizations.
+Terno AI is a team of AI data scientists dedicated to helping organizations unlock insights from their structured data. Using SQL queries, machine learning model development, and domain-specific algorithms, Terno AI analyzes your databases to deliver actionable results.
 
-It an open-source, enterprise-grade solution that ensures accuracy, security, and performance when querying databases using natural language. It integrates domain knowledge management and SQL sanitization to generate safe and optimized queries. It builds the supervised and unsupervised machine learning models along with domain specific algorithms such as job shop scheduler. It also prepares charts and schedules email reports.
+These insights can be presented in various formats, including plain text, graphs, charts, and tables. You can easily share the results with your team or schedule them to be delivered via email.
+
+Additionally, intermediate datasets and models can be cached for reuse, streamlining your workflow.
 
 ## 🚀 Features
 
