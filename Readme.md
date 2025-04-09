@@ -9,38 +9,26 @@ It an open-source, enterprise-grade solution that ensures accuracy, security, an
 ## 🚀 Features
 
 ### Metastore
-    
-- Stores domain knowledge inferred automatically or articulated by experts from internal team to improve SQL generation accuracy. 
-- Metastore can updated automatically without any problems.
-- Metastore also contains the knowledge inferred from 
+- Stores domain knowledge—automatically inferred or provided by experts—to enhance SQL generation accuracy.
+- Supports seamless, automatic updates to the Metastore.
+- Captures inferred knowledge from data to improve query precision.
 
 ### SQLShield
+- **Query Sanitization**: Prevents harmful SQL execution and enforces Role-Based Access Control (RBAC) without direct database interaction.
+- **Optimized Query Generation**: Minimizes prompt size while boosting the efficiency of LLM-generated SQL.
+- **Enterprise Security**: Guards against SQL injection and unauthorized access.
 
-- **Sanitizes queries**, prevents harmful SQL execution, and enforces RBAC (Role-Based Access Control) without touching the database.
+### Semantic Layer on Databases
+Databases are critical for organizations but are limited to syntactic searches rather than semantic understanding. For example, searching for "blue jeans" in an e-commerce database might miss products labeled "navy denims" due to keyword-based limitations.
 
-- **Optimized Query Generation** - Reduces prompt size while improving LLM-generated SQL efficiency
+Terno AI addresses this with a semantic layer, enabling text searches based on meaning and similarity, not just exact matches.
 
-- **Enterprise Security** - Protects against SQL injection and unauthorized access
+### Artifact Store
+Terno AI generates intermediate artifacts—such as datasets, machine learning models, code, graphs, and charts—to answer complex queries. These artifacts are saved in the Artifact Store, making them reusable across teams. This accelerates result generation and enhances data understanding within organizations.
 
-### Semantic Layer on Database
+### Enterprise Tooling Augmentation
+Every organization has unique workflows, such as sending emails, calling internal APIs, or scheduling jobs. Terno AI offers an extensible tooling augmentation layer to integrate with these processes. For example, you can instruct Terno to "send a report via email to my team every Monday morning."
 
-Databases are and will remain critical for organizations but databases can only search syntactically not semantically.
-For example, imagine you are looking for all the products which are blue jeans from a database of e-commerce company. How would you go about it? Databases are in capable of searching based on the meaning. They can at most provide you all the products that match the word 'blue' or 'jeans'. What about the products with name 'navy denims'?
-
-To solve this, Terno has a semantic layer. It can handle the text search using the semantic similarity on databases.
-
-### Artifect Store
-
-Usually, to answer the complex queries, Terno would prepare the intermin artifects such as datasets, machine learning models, write code, prepare graphs and charts etc. Instead of preparing again and again, Terno can save these in artifect store which is available for everyone else to reuse.
-
-This would accelerate the process of generating results and improve the understanding of data in organizations.
-
-### Enterprize Tooling Augmentation
-
-Every organization has specific way of performing various tasks such as sending emails, calling internal APIs and scheduling jobs.
-To solve this, Terno has an inbuilt layer tooling augmentation which is extensible. 
-
-As an example, you may ask terno to "send the report in email to my team every morning on Monday.".
 
 ### Multi-Database Support
     
