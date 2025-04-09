@@ -6,19 +6,54 @@ Terno AI is an open-source, enterprise-grade Text-to-SQL solution that ensures a
 
 ## 🚀 Features
 
-- **Metastore** - Stores domain knowledge to improve SQL generation accuracy
+### Metastore
+    
+    - Stores domain knowledge inferred automatically or articulated by experts from internal team to improve SQL generation accuracy. 
+    - Metastore can updated automatically without any problems.
+    - Metastore also contains the knowledge inferred from 
 
-- **SQLShield** - Sanitizes queries, prevents harmful SQL execution, and enforces RBAC (Role-Based Access Control)
+### SQLShield
 
-- **Optimized Query Generation** - Reduces prompt size while improving LLM-generated SQL efficiency
+    - **Sanitizes queries**, prevents harmful SQL execution, and enforces RBAC (Role-Based Access Control) without touching the database.
 
-- **Enterprise Security** - Protects against SQL injection and unauthorized access
+    - **Optimized Query Generation** - Reduces prompt size while improving LLM-generated SQL efficiency
 
-- **Multi-Database Support** - Works with major databases like PostgreSQL, MySQL, BigQuery, and more
+    - **Enterprise Security** - Protects against SQL injection and unauthorized access
 
-- **LLM** - Use LLM of your choice without leaking data in your database to them
+### Semantic Layer on Database
 
-- **Open Source & Extensible** - Built for developers, data teams, and enterprises
+Databases are and will remain critical for organizations but databases can only search syntactically not semantically.
+For example, imagine you are looking for all the products which are blue jeans from a database of e-commerce company. How would you go about it? Databases are in capable of searching based on the meaning. They can at most provide you all the products that match the word 'blue' or 'jeans'. What about the products with name 'navy denims'?
+
+To solve this, Terno has a semantic layer. It can handle the text search using the semantic similarity on databases.
+
+### Artifect Store
+
+Usually, to answer the complex queries, Terno would prepare the intermin artifects such as datasets, machine learning models, write code, prepare graphs and charts etc. Instead of preparing again and again, Terno can save these in artifect store which is available for everyone else to reuse.
+
+This would accelerate the process of generating results and improve the understanding of data in organizations.
+
+### Enterprize Tooling Augmentation
+
+Every organization has specific way of performing various tasks such as sending emails, calling internal APIs and scheduling jobs.
+To solve this, Terno has an inbuilt layer tooling augmentation which is extensible. 
+
+As an example, you may ask terno to "send the report in email to my team every morning on Monday.".
+
+### Multi-Database Support
+    
+    - Works with major databases like PostgreSQL, MySQL, BigQuery, and more
+    - Also integrate with most of the ERPs such as Odoo.
+
+### Works with any LLM
+
+    - Use LLM of your choice without leaking data in your database to them
+    - It also support multi-LLMs setup where you may have one LLM for long form generation, second LLM backend tasks and other LLM for text embeddings generation.
+
+### Open Source & Extensible
+    
+     - Built for developers, data teams, and enterprises
+
 
 ## 📦 Installation
 
