@@ -3,7 +3,6 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import User, Group
 import json
 from django.core.exceptions import ValidationError
-from django.contrib.auth.models import Permission
 from subscription.models import LLMCredit
 
 
@@ -213,10 +212,12 @@ class TableRowFilter(models.Model):
 class Organisation(models.Model):
     name = models.CharField(max_length=255)
     subdomain = models.CharField(max_length=100, unique=True)
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='organisation')
+    owner = models.ForeignKey(User, on_delete=models.CASCADE,
+                              related_name='organisation')
     logo = models.URLField(null=True, blank=True)
     is_active = models.BooleanField(default=False)
-    llm_credit = models.ForeignKey(LLMCredit, null=True, blank=True, on_delete=models.SET_NULL)
+    llm_credit = models.ForeignKey(LLMCredit, null=True, blank=True,
+                                   on_delete=models.SET_NULL)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
 
@@ -309,9 +310,72 @@ class DatasourceSuggestions(models.Model):
 
 
 class Conversation(models.Model):
-    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE,
+                                     related_name='conversations')
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL,
+                                   null=True, blank=True,
+                                   related_name='conversations')
+    title = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.title or f"Conversation {self.pk}"
 
 
 class Chat(models.Model):
-    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)
-    
+    ROLE_CHOICES = (
+        ('user', 'User'),
+        ('agent', 'Agent'),
+    )
+
+    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE,
+                                     related_name='chats')
+    sender = models.ForeignKey(User, on_delete=models.SET_NULL,
+                               null=True, blank=True)
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES)
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"[{self.role}] {self.content[:30]}..."
+
+
+class AgentStep(models.Model):
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('running', 'Running'),
+        ('success', 'Success'),
+        ('error', 'Error'),
+    )
+
+    chat = models.ForeignKey(Chat, on_delete=models.CASCADE,
+                             related_name='agent_steps')
+    step_number = models.PositiveIntegerField()
+    thought = models.TextField()
+    action_type = models.CharField(max_length=100)
+    action_input = models.TextField(blank=True)
+    result = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES,
+                              default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('chat', 'step_number')
+        ordering = ['step_number']
+
+    def __str__(self):
+        return f"Step {self.step_number} - {self.action_type}"
+
+
+class Artifact(models.Model):
+    step = models.ForeignKey(AgentStep, on_delete=models.CASCADE,
+                             related_name='artifacts')
+    file = models.FileField(upload_to='artifacts/')
+    name = models.CharField(max_length=255)
+    artifact_type = models.CharField(max_length=100, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name or self.file.name
