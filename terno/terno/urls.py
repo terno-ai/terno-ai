@@ -7,6 +7,7 @@ app_name = 'terno'
 
 urlpatterns = [
     path('', views.index, name='index'),
+    path('chat', views.index, name='index'),
     path('console', views.console, name='console'),
     path('settings', views.usersettings, name='usersettings'),
     path('get-datasources', views.get_datasources, name='get_datasources'),

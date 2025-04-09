@@ -2,6 +2,7 @@ import PromptBox from "./PromptBox";
 import Conversation from "./Conversation";
 import { useState, useRef, useEffect  } from "react";
 import { FaArrowDown } from "react-icons/fa"
+import { WebSocketService, subscribeToChat, sendChatMessage } from "@/utils/api";
 
 const ChatWindow = () => {
   const [messages, setMessages] = useState<{ role: "user" | "bot"; text: string; timestamp: string }[]>([]);
@@ -10,12 +11,22 @@ const ChatWindow = () => {
   const [promptHeight, setPromptHeight] = useState(0);
   const [userHasScrolled, setUserHasScrolled] = useState(false);
 
-  const handleSend = (text: string) => {
-    setMessages((prev) => [...prev, { role: "user", text, timestamp: new Date().toLocaleTimeString()}]);
+  useEffect(() => {
+    const ws = WebSocketService.getInstance();
+    ws.connect();
 
-    setTimeout(() => {
-      setMessages((prev) => [...prev, { role: "bot", text: `Echo: ${text}`, timestamp: new Date().toLocaleTimeString()}]);
-    }, 500);
+    const unsubscribe = subscribeToChat((data) => {
+      if (data.message) {
+        setMessages((prev) => [...prev, { role: "bot", text: data.message, timestamp: new Date().toLocaleTimeString() }]);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const handleSend = async (text: string) => {
+    setMessages((prev) => [...prev, { role: "user", text, timestamp: new Date().toLocaleTimeString() }]);
+    sendChatMessage(text);
   };
 
   useEffect(() => {

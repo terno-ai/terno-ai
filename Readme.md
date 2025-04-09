@@ -1,6 +1,7 @@
-[![codecov](https://codecov.io/gh/terno-ai/terno-ai/graph/badge.svg?token=J9K3H77UOZ)](https://codecov.io/gh/terno-ai/terno-ai)
 
 # Terno AI
+
+[![codecov](https://codecov.io/gh/terno-ai/terno-ai/graph/badge.svg?token=J9K3H77UOZ)](https://codecov.io/gh/terno-ai/terno-ai)
 
 Terno AI is an open-source, enterprise-grade Text-to-SQL solution that ensures accuracy, security, and performance when querying databases using natural language. It integrates domain knowledge management and SQL sanitization to generate safe and optimized queries.
 
@@ -24,9 +25,11 @@ Terno AI is an open-source, enterprise-grade Text-to-SQL solution that ensures a
 
 ### Using Docker
 
-1. `git clone https://github.com/terno-ai/terno-ai.git`
-2. `cd terno-ai`
-3. `docker compose up --build`
+```bash
+git clone https://github.com/terno-ai/terno-ai.git --depth 1
+cd terno-ai
+docker compose up --build
+```
 
 ### Without docker
 1. Clone Repository `git clone git@github.com:terno-ai/terno-ai.git --depth 1`
