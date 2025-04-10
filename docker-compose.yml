@@ -1,10 +1,16 @@
 services:
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    container_name: "terno-rabbitmq"
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
   web:
     build:
       context: .
       dockerfile: Dockerfile
-    # If image is not building due to platform (on windows) you can uncomment this line
-    platform: linux/amd64 
     container_name: "terno-ai"
     image: terno-ai:latest
     command: bash -c ". /code/terno-ai/setup.sh && python3 manage.py runserver 0.0.0.0:8000"
@@ -15,6 +21,21 @@ services:
     env_file:
       - env-sample.sh
     restart: always
+    depends_on:
+      - rabbitmq
+
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: "terno-celery"
+    command: bash -c "celery -A mysite worker --loglevel=info"
+    environment:
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_RESULT_BACKEND=rpc://
+    depends_on:
+      - rabbitmq
+      - web
 
 volumes:
   terno_ai_static: {}
