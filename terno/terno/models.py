@@ -121,6 +121,7 @@ class Table(models.Model):
     public_name = models.CharField(max_length=255, null=True, blank=True)
     data_source = models.ForeignKey(DataSource, on_delete=models.CASCADE)
     description = models.CharField(max_length=300, null=True, blank=True)
+    complete_description = models.BooleanField(default=False, help_text="Denotes if description is generated for the table and all its columns.")
     sample_rows = models.JSONField(null=True, blank=True)
     description_updated_at = models.DateTimeField(blank=True, null=True)
 

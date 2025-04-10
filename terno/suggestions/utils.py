@@ -38,7 +38,7 @@ def get_column_stats(conn, table_inspector, Mtable_name, column_name, cardinalit
     Uses widely supported SQL aggregates and arithmetic.
     Each stat block is wrapped in try/except so that a failure in one does not stop the rest.
     """
-    logger.info(f"Analyzing column: {Mtable_name}.{column_name}")
+    logger.debug(f"Analyzing column: {Mtable_name}.{column_name}")
     stats = {}
 
     # Validate column existence
@@ -315,14 +315,17 @@ def generate_table_detailed_schema(conn, metadata, Mtable_name, Mtable_obj):
     return return_dict
 
 
-def generate_table_and_column_description(datasource_id, input_table_names=None, update_model=True, overwrite=False):
+def generate_table_and_column_description(datasource_id, org_id=None, input_table_names=None, update_model=True, overwrite=False):
     logger.info(f"Starting generate_table_and_column_description for datasource_id: {datasource_id}")
     table_descriptions = {}
 
     try:
         # 1. Fetch datasource and organisation info
         datasource = terno_models.DataSource.objects.get(id=datasource_id, enabled=True)
-        organisation = terno_models.OrganisationDataSource.objects.get(datasource=datasource).organisation
+        if org_id:
+            organisation = terno_models.Organisation.objects.get(id=org_id)
+        else:
+            organisation = terno_models.OrganisationDataSource.objects.get(datasource=datasource).organisation
 
         # 2. Generate metadata bridge (mDB)
         logger.debug("Generating mDB metadata bridge")
@@ -354,7 +357,7 @@ def generate_table_and_column_description(datasource_id, input_table_names=None,
 
                 terno_table = terno_models.Table.objects.get(name=Mtable_name, data_source=datasource)
 
-                if not overwrite and terno_table.description is not None:
+                if (not overwrite) and terno_table.complete_description:
                     logger.info(f"Skipping {Mtable_name} — already has a description.")
                     continue
 
@@ -402,11 +405,11 @@ def generate_table_and_column_description(datasource_id, input_table_names=None,
                         res = list(res.values())[0]
 
                     if update_model:
-                        terno_table.public_name = res.get("table_name")
+                        terno_table.public_name = res.get("table_public_name")
                         terno_table.description = res.get("table_description")
                         terno_table.sample_rows = table_schema_stats_dict['sample_rows']
                         terno_table.description_updated_at = now()
-
+                        terno_table.save()
                         terno_table_columns = {
                             col.name: col for col in terno_models.TableColumn.objects.filter(table=terno_table)
                         }
@@ -420,6 +423,7 @@ def generate_table_and_column_description(datasource_id, input_table_names=None,
                                     terno_table_col.unique_categories = table_schema_stats_dict['unique_values'][col["column_name"]]
                                 terno_table_col.save()
 
+                        terno_table.complete_description = True
                         terno_table.save()
 
                     logger.debug(f"Updated description for table {Mtable_name} and its columns")

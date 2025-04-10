@@ -8,6 +8,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('datasource_id', type=int, help='ID of the DataSource to describe')
+        parser.add_argument('--org-id', type=int, default=None, help='Optional: Organization ID related to the DataSource.')
         parser.add_argument('--tables', nargs='*', type=str, help='Optional: List of table names to process')
         parser.add_argument('--not-update-model', action='store_true', help='Optional: If passed, the Table and Column models will NOT be updated.')
         parser.add_argument('--overwrite', action='store_true', help='Optional: Overwrite existing descriptions')
@@ -17,6 +18,7 @@ class Command(BaseCommand):
         table_names = options.get('tables', None)
         overwrite = options.get('overwrite', False)
         update_model = not options.get('not_update_model', False)
+        org_id = options.get('org_id', None)
 
         try:
             datasource = DataSource.objects.get(id=datasource_id)
@@ -25,6 +27,7 @@ class Command(BaseCommand):
 
         task = generate_table_and_column_descriptions_task.delay(
             datasource_id=datasource_id,
+            org_id=org_id,
             input_table_names=table_names,
             update_model=update_model,
             overwrite=overwrite
