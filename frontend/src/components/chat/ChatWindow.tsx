@@ -1,6 +1,8 @@
 import PromptBox from "./PromptBox";
 import { useState } from "react";
 import Conversation from "./Conversation";
+import { useState } from "react";
+import Conversation from "./Conversation";
 
 const ChatWindow = () => {
   const [messages, setMessages] = useState<{ role: "user" | "bot"; text: string }[]>([]);
@@ -26,6 +28,7 @@ const ChatWindow = () => {
       </div>
     </div>
 
+    
   );
 };
 
