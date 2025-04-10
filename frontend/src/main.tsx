@@ -12,7 +12,7 @@ const ProviderCallback = lazy(() => import("./pages/ProviderCallback"));
 const RequestPasswordReset = lazy(() => import("./pages/RequestPasswordReset"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Login = lazy(() => import("./pages/Login"));
-import { ThemeProvider } from "./components/chat/theme-provider"
+import { ThemeProvider } from "./components/chat/theme-provider";
 
 const router = createBrowserRouter([
   {
@@ -71,9 +71,8 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       <RouterProvider router={router} />
     </ThemeProvider>
   </React.StrictMode>
-  
 );

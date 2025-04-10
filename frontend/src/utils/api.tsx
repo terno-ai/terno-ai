@@ -276,3 +276,31 @@ export const getDatasourceName = async (dsId: string) => {
   console.log(result);
   return result;
 };
+
+export const wsEndpoints = {
+  agentResponse: () => `${API_BASE_URL}/ws/agent/`,
+}
+
+export const agentResponse = async (prompt: string, onMessage: (data: any) => void) => {
+  const ws = new WebSocket(`ws://127.0.0.1:8000/ws/agent/`);
+
+  ws.onopen = () => {
+    ws.send(JSON.stringify({ message: prompt }));
+  };
+
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    onMessage(data);
+  };
+
+  ws.onerror = (error) => {
+    console.error('WebSocket error:', error);
+    onMessage({ status: 'error', message: 'Connection failed' });
+  };
+
+  ws.onclose = () => {
+    console.log('WebSocket connection closed');
+  };
+
+  return ws;
+};

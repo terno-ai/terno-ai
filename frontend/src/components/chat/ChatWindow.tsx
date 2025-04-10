@@ -1,12 +1,20 @@
 import PromptBox from "./PromptBox";
 import Conversation from "./Conversation";
 import { useState } from "react";
+import { agentResponse } from "@/utils/api";
 
 const ChatWindow = () => {
   const [messages, setMessages] = useState<{ role: "user" | "bot"; text: string }[]>([]);
 
-  const handleSend = (text: string) => {
+  const handleSend = async (text: string) => {
     setMessages((prev) => [...prev, { role: "user", text }]);
+
+    await agentResponse(text, (data) => {
+      console.log('Received message:', data);
+      if (data.message) {
+        setMessages((prev) => [...prev, { role: "bot", text: data.message }]);
+      }
+    });
 
     setTimeout(() => {
       setMessages((prev) => [...prev, { role: "bot", text: `Echo: ${text}` }]);

@@ -18,3 +18,4 @@ django-allauth==65.3.0
 django-allauth[socialaccount]
 psycopg2==2.9.10
 celery==5.4.0
+channels[daphne]==4.2.2
