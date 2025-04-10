@@ -111,7 +111,6 @@ const ChatWindow = () => {
       </div>
     </div>
 
-
   );
 };
 

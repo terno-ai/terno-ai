@@ -64,7 +64,6 @@ const PromptBox = ({ onSend }: { onSend: (text: string) => void }) => {
         <div className="flex flex-col-reverse">
           <div className="flex justify-between items-center mt-2">
             <div className="flex gap-2">
-
             </div>
             <button
               onClick={handleSend}
