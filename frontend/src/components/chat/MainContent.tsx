@@ -1,6 +1,6 @@
 import Sidebar from "./Sidebar";
 import ChatWindow from "./ChatWindow";
-import Artifact from "./Artifact";
+//import Artifact from "./Artifact";
 
 import { useContext, createContext } from "react";
 
@@ -19,7 +19,7 @@ const MainContent = () => {
       <Sidebar />
       <ChatWindow />
       <div className="hidden md:block">
-       <Artifact />
+       {/* <Artifact /> */}
       </div>
     </div>
   );

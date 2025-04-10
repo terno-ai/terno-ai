@@ -7,7 +7,7 @@ type Message = {
 
 const Conversation = ({ messages }: { messages: Message[] }) => {
   return (
-    <div className="w-full max-w-3xl mx-auto p-4 flex flex-col gap-4 overflow-y-auto bg-transparent h-[300vh]">
+    <div className="w-full max-w-3xl mx-auto p-4 flex flex-col gap-4 bg-white">
       {messages.map((msg, idx) => (
         <div
           key={idx}
