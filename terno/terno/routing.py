@@ -1,6 +1,6 @@
 from django.urls import path
-from .consumers import AgentConsumer
+from .consumers import TernoWebsockerConsumer
 
 websocket_urlpatterns = [
-    path("ws/agent/", AgentConsumer.as_asgi()),
+    path("ws/agent/", TernoWebsockerConsumer.as_asgi()),
 ]

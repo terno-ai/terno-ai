@@ -1,24 +1,27 @@
 import PromptBox from "./PromptBox";
 import Conversation from "./Conversation";
-import { useState } from "react";
-import { agentResponse } from "@/utils/api";
+import { useState, useEffect } from "react";
+import { WebSocketService, subscribeToChat, sendChatMessage } from "@/utils/api";
 
 const ChatWindow = () => {
   const [messages, setMessages] = useState<{ role: "user" | "bot"; text: string }[]>([]);
 
-  const handleSend = async (text: string) => {
-    setMessages((prev) => [...prev, { role: "user", text }]);
+  useEffect(() => {
+    const ws = WebSocketService.getInstance();
+    ws.connect();
 
-    await agentResponse(text, (data) => {
-      console.log('Received message:', data);
+    const unsubscribe = subscribeToChat((data) => {
       if (data.message) {
         setMessages((prev) => [...prev, { role: "bot", text: data.message }]);
       }
     });
 
-    setTimeout(() => {
-      setMessages((prev) => [...prev, { role: "bot", text: `Echo: ${text}` }]);
-    }, 500);
+    return () => unsubscribe();
+  }, []);
+
+  const handleSend = async (text: string) => {
+    setMessages((prev) => [...prev, { role: "user", text }]);
+    sendChatMessage(text);
   };
 
   return (
@@ -28,13 +31,10 @@ const ChatWindow = () => {
           <Conversation messages={messages} />
         </div>
       }
-
       <div className="">
         <PromptBox onSend={handleSend} />
       </div>
     </div>
-
-    
   );
 };
 

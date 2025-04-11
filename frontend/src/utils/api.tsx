@@ -277,30 +277,96 @@ export const getDatasourceName = async (dsId: string) => {
   return result;
 };
 
-export const wsEndpoints = {
-  agentResponse: () => `${API_BASE_URL}/ws/agent/`,
+// WebSocket message types
+export type WebSocketMessageType = 'chat' | 'notification';
+
+interface WebSocketMessage {
+  type: WebSocketMessageType;
+  message: string;
+  data?: any;
 }
 
-export const agentResponse = async (prompt: string, onMessage: (data: any) => void) => {
-  const ws = new WebSocket(`ws://127.0.0.1:8000/ws/agent/`);
+export class WebSocketService {
+  private static instance: WebSocketService;
+  private ws: WebSocket | null = null;
+  private messageHandlers: Map<WebSocketMessageType, ((data: any) => void)[]> = new Map();
 
-  ws.onopen = () => {
-    ws.send(JSON.stringify({ message: prompt }));
-  };
+  private constructor() {
+    this.messageHandlers.set('chat', []);
+    this.messageHandlers.set('notification', []);
+  }
 
-  ws.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-    onMessage(data);
-  };
+  public static getInstance(): WebSocketService {
+    if (!WebSocketService.instance) {
+      WebSocketService.instance = new WebSocketService();
+    }
+    return WebSocketService.instance;
+  }
 
-  ws.onerror = (error) => {
-    console.error('WebSocket error:', error);
-    onMessage({ status: 'error', message: 'Connection failed' });
-  };
+  public connect() {
+    if (!this.ws || this.ws.readyState === WebSocket.CLOSED) {
+      this.ws = new WebSocket(`ws://127.0.0.1:8000/ws/agent/`);
+      
+      this.ws.onmessage = (event) => {
+        const data: WebSocketMessage = JSON.parse(event.data);
+        const handlers = this.messageHandlers.get(data.type) || [];
+        handlers.forEach(handler => handler(data));
+      };
 
-  ws.onclose = () => {
-    console.log('WebSocket connection closed');
-  };
+      this.ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        this.notifyHandlers('notification', { status: 'error', message: 'Connection failed' });
+      };
 
-  return ws;
+      this.ws.onclose = () => {
+        console.log('WebSocket connection closed');
+        setTimeout(() => this.connect(), 5000);
+      };
+    }
+  }
+
+  public subscribe(type: WebSocketMessageType, handler: (data: any) => void) {
+    const handlers = this.messageHandlers.get(type) || [];
+    handlers.push(handler);
+    this.messageHandlers.set(type, handlers);
+  }
+
+  public unsubscribe(type: WebSocketMessageType, handler: (data: any) => void) {
+    const handlers = this.messageHandlers.get(type) || [];
+    const index = handlers.indexOf(handler);
+    if (index !== -1) {
+      handlers.splice(index, 1);
+      this.messageHandlers.set(type, handlers);
+    }
+  }
+
+  public send(type: WebSocketMessageType, message: string, data?: any) {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify({ type, message, data }));
+    } else {
+      console.error('WebSocket is not connected');
+    }
+  }
+
+  private notifyHandlers(type: WebSocketMessageType, data: any) {
+    const handlers = this.messageHandlers.get(type) || [];
+    handlers.forEach(handler => handler(data));
+  }
+}
+
+export const sendChatMessage = (message: string) => {
+  const ws = WebSocketService.getInstance();
+  ws.send('chat', message);
+};
+
+export const subscribeToChat = (handler: (data: any) => void) => {
+  const ws = WebSocketService.getInstance();
+  ws.subscribe('chat', handler);
+  return () => ws.unsubscribe('chat', handler);
+};
+
+export const subscribeToNotifications = (handler: (data: any) => void) => {
+  const ws = WebSocketService.getInstance();
+  ws.subscribe('notification', handler);
+  return () => ws.unsubscribe('notification', handler);
 };

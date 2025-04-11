@@ -33,9 +33,7 @@ const PromptBox = ({ onSend }: { onSend: (text: string) => void }) => {
   }, []);
 
   const handleSend = () => {
-    console.log("Coming in handleSend 1", textareaRef)
     if (!textareaRef.current?.value.trim()) return;
-    console.log("Coming in handleSend 2")
     setHasSentMessage(true);
     onSend(textareaRef.current.value);
     textareaRef.current.value = "";
@@ -98,10 +96,6 @@ const PromptBox = ({ onSend }: { onSend: (text: string) => void }) => {
           />
         </div>
       </div>
-
-
-
-
     </div>
   );
 };
