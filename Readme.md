@@ -113,7 +113,8 @@ Ex. To restrict row access for `sales` table with filter `company_id = 10 and ca
 2. To allow access to the globally restricted table to a specific group use `/admin/terno/grouptablerowfilter/`
 
 Ex. To allow access to group `Groceries` access to the restricted category_ids and category_ids 12 and 13  which was added using previous method, create grouptablerowfilter with group `Groceries` and filter like
-```where (
+```
+where (
 (company_id = 10 and category_id not in (1, 2, 3))
     AND (
         (category_id = 12)
@@ -126,6 +127,26 @@ Ex. To allow access to group `Groceries` access to the restricted category_ids a
 ## Celery
 1. Run rabbitmq for message broker
 2. `celery -A mysite worker --loglevel=info`
+
+### Milvus Mode Configuration
+
+To switch between **Milvus Lite** and **Milvus Server**, set the `MILVUS_MODE` environment variable as follows:
+
+#### For Milvus Lite (Milvus without Docker setup):
+Use this code inside `env.sh`:
+
+```
+# export MILVUS_MODE='server'
+export MILVUS_MODE='lite'
+```
+
+#### For Milvus Lite (Milvus with Docker setup):
+Use this code inside `env.sh`:
+
+```
+export MILVUS_MODE='server'
+# export MILVUS_MODE='lite'
+```
 
 ## 🤝 Contributing
 

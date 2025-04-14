@@ -15,6 +15,7 @@ from pymilvus import MilvusClient, DataType
 import json
 from django.utils.timezone import now
 import time
+import os
 import math
 from decimal import Decimal
 from django.conf import settings
@@ -564,10 +565,11 @@ def create_store_vector_DB(datasource_id, table_descriptions=[]):
         db_name = f"db_{org_name.replace(' ', '_')}"
         collection_name = f"coll_{org_name.replace(' ', '_')}"
         partition_name = f"ps_{datasource_id}"
-
-        if db_name not in milvus_client.list_databases():
-            milvus_client.create_database(db_name)
-        milvus_client.using_database(db_name)
+        
+        if os.getenv('MILVUS_MODE') != 'lite':
+            if db_name not in milvus_client.list_databases():
+                milvus_client.create_database(db_name)
+            milvus_client.using_database(db_name)
 
         if collection_name not in milvus_client.list_collections():
             schema = milvus_client.create_schema(auto_id=True, enable_dynamic_field=True)

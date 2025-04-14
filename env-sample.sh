@@ -22,3 +22,7 @@ export DEFAULT_FROM_EMAIL=''
 export MAIN_DOMAIN='http://127.0.0.1:8000'
 export USER_SQLITE_PATH='../'
 export CELERY_BROKER_URL='amqp://guest:guest@localhost:5672//'
+# Uncomment `export MILVUS_MODE='lite` if using locally without docker and then comment `export MILVUS_MODE='server'` line.
+# export MILVUS_MODE='lite'
+export MILVUS_MODE='server'
+export MILVUS_URI=''
