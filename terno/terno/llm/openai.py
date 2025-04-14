@@ -126,4 +126,21 @@ class OpenAILLM(BaseLLM):
         print("This is generated schema Json", generated_csv_schema)
         return generated_csv_schema_json
 
-       
+    def generate_vector(self, prompt):
+        """
+        Generates an embedding vector for a given prompt using OpenAI's text-embedding-ada-002 model.
+        """
+        model = self.get_model_instance()
+
+        try:
+            response = model.embeddings.create(
+                input=prompt,
+                model="text-embedding-ada-002"
+            )
+            
+            embedding = response.data[0].embedding
+            return embedding
+
+        except Exception as e:
+            print(f"Error generating embedding: {e}")
+            return None     

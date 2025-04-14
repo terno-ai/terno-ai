@@ -1,6 +1,6 @@
 from terno.models import DataSource, Table, TableColumn, ForeignKey
 from django.dispatch import receiver
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 import sqlalchemy
 import terno.utils as utils
 from sqlshield.models import MDatabase
@@ -9,12 +9,14 @@ from django.core.cache import cache
 from django.contrib.auth.models import User
 from .tasks import load_metadata
 from django.db import transaction
+from suggestions.utils import drop_vector_DB
 
 
 
 @receiver(post_save, sender=DataSource)
 def update_tables_on_datasource_change(sender, instance, created, **kwargs):
     """Fetches and saves table information when a data source is saved."""
+    print("receiver called")
     transaction.on_commit(lambda: load_metadata.delay(instance.id))
     # if created:
     #     for table_name in retrieved_tables:
@@ -78,3 +80,12 @@ def add_default_org_user(sender, instance, created, **kwargs):
     if get_default_org:
         org_user, created = models.OrganisationUser.objects.get_or_create(
             organisation=get_default_org.first(), user=instance)
+
+
+@receiver(post_delete, sender=DataSource)
+def delete_vector_DB_for_datasource(sender, instance, **kwargs):
+    """
+    clean up vector DB when a DataSource is deleted.
+    """
+    print(f"[post_delete] DataSource deleted: {instance.display_name}")
+    drop_vector_DB(instance)

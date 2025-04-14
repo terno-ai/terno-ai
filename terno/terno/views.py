@@ -14,6 +14,7 @@ import jwt
 from django.contrib.auth.models import User
 from urllib.parse import unquote
 from allauth.account.utils import perform_login
+from suggestions.utils import search_vector_DB
 
 
 logger = logging.getLogger(__name__)
@@ -175,14 +176,58 @@ def get_sql(request):
         })
     roles = request.user.groups.all()
 
-    models.QueryHistory.objects.create(
-        user=request.user, data_source=datasource,
-        data_type='user_prompt', data=question)
+    # Default: full schema
+    try:
+        allowed_tables, allowed_columns = utils.get_admin_config_object(datasource, roles)
 
-    mDB = utils.prepare_mdb(datasource, roles)
-    schema_generated = mDB.generate_schema()
+        # Convert from QuerySet to plain list of strings
+        allowed_tables = list(allowed_tables.values_list("name", flat=True))
+
+        # print(f"\nallowed_tables: {allowed_tables}\n")
+
+        relevant_tables = search_vector_DB(
+            datasource_id, question, allowed_tables,
+            threshold=0.72, max_results=15
+        )
+
+        if relevant_tables:
+            print(f"\nfound {len(relevant_tables)} relevant_tables\n")
+            print(f"\nrelevant_tables: {relevant_tables}\n")
+
+            mDb = utils.generate_mdb(datasource)
+            print(f"\ncreated mdb using generate_mdb\n")
+
+            mDb.keep_only_tables(relevant_tables)
+            print(f"\nfiltered tables using keep_only_tables\n")
+
+            allowed_table_qs = models.Table.objects.filter(name__in=allowed_tables, data_source=datasource)
+            print(f"\nconverted allowed_tables into Queryset\n")
+            print(f"{allowed_table_qs}")
+
+            utils.keep_only_columns(mDb, allowed_table_qs, allowed_columns)
+            print(f"\nfiltered columns using keep_only_columns\n")
+
+        else:
+            raise ValueError("No relevant tables found in vector search.")
+
+    except Exception as e:
+        print(f"\nFalling back to full schema due to: {e}\n")
+        mDb = utils.prepare_mdb(datasource, roles)
+
+    schema_generated = mDb.generate_schema()
+
+    # Log user prompt
+    models.QueryHistory.objects.create(
+        user=request.user,
+        data_source=datasource,
+        data_type='user_prompt',
+        data=question
+    )
+
+    # Send schema to LLM
     llm_response = utils.llm_response(
-        request.user, question, schema_generated, organisation, datasource)
+        request.user, question, schema_generated, organisation, datasource
+    )
 
     if llm_response['status'] == 'error':
         return JsonResponse({
@@ -190,9 +235,13 @@ def get_sql(request):
             'error': llm_response['error'],
         })
 
+    # Log generated SQL
     models.QueryHistory.objects.create(
-        user=request.user, data_source=datasource,
-        data_type='generated_sql', data=llm_response['generated_sql'])
+        user=request.user,
+        data_source=datasource,
+        data_type='generated_sql',
+        data=llm_response['generated_sql']
+    )
 
     return JsonResponse({
         'status': llm_response['status'],
