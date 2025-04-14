@@ -566,7 +566,7 @@ def create_store_vector_DB(datasource_id, table_descriptions=[]):
         collection_name = f"coll_{org_name.replace(' ', '_')}"
         partition_name = f"ps_{datasource_id}"
         
-        if os.getenv('MILVUS_MODE') != 'lite':
+        if settings.MILVUS_SERVER:
             if db_name not in milvus_client.list_databases():
                 milvus_client.create_database(db_name)
             milvus_client.using_database(db_name)

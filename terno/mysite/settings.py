@@ -269,4 +269,10 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 
-MILVUS_URI = "sqlite:///default_vector_DB.db" if os.getenv('MILVUS_MODE') == 'lite' else os.getenv('MILVUS_URI')
+
+if not DEBUG:
+    MILVUS_URI = os.getenv('MILVUS_SERVER_URI')
+    MILVUS_SERVER = True
+else:
+    MILVUS_URI = os.getenv('MILVUS_LOCAL_URI')
+    MILVUS_SERVER = False

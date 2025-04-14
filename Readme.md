@@ -128,26 +128,6 @@ where (
 1. Run rabbitmq for message broker
 2. `celery -A mysite worker --loglevel=info`
 
-### Milvus Mode Configuration
-
-To switch between **Milvus Lite** and **Milvus Server**, set the `MILVUS_MODE` environment variable as follows:
-
-#### For Milvus Lite (Milvus without Docker setup):
-Use this code inside `env.sh`:
-
-```
-# export MILVUS_MODE='server'
-export MILVUS_MODE='lite'
-```
-
-#### For Milvus Lite (Milvus with Docker setup):
-Use this code inside `env.sh`:
-
-```
-export MILVUS_MODE='server'
-# export MILVUS_MODE='lite'
-```
-
 ## 🤝 Contributing
 
 We welcome contributions! Feel free to open an issue or submit a pull request
