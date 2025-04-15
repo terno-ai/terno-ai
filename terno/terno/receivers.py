@@ -15,6 +15,10 @@ from django.db import transaction
 @receiver(post_save, sender=DataSource)
 def update_tables_on_datasource_change(sender, instance, created, **kwargs):
     """Fetches and saves table information when a data source is saved."""
+
+    if getattr(instance, '_skip_metadata_sync', False):
+        return
+    
     transaction.on_commit(lambda: load_metadata.delay(instance.id))
     # if created:
     #     for table_name in retrieved_tables:

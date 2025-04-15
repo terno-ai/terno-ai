@@ -601,6 +601,7 @@ def add_data_sqlite(sqlite_url, data, table, file, data_source):
                         ordered_row[col_name] = value
                 connection.execute(table.insert().values(**ordered_row))
             trans.commit()
+            data_source._skip_metadata_sync = True
             data_source.save()
             trans.close()
             return {'status': 'success'}

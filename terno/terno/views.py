@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponseRedirect, JsonResponse, HttpResponseForbidden
 from django.urls import reverse
 import terno.models as models
+from terno.tasks import load_metadata
 import terno.utils as utils
 import json
 from django.contrib.auth.decorators import login_required
@@ -454,6 +455,8 @@ def file_upload(request):
                     display_name=display_name,
                     enabled=True
                 )
+                datasource._skip_metadata_sync = True
+                datasource.save()
 
                 models.OrganisationDataSource.objects.create(
                     organisation=organisation,
@@ -482,6 +485,7 @@ def file_upload(request):
                 else :
                     dsId = datasource.id
             
+            load_metadata.delay(dsId)
             logger.info(f"File Uploaded Successfully: {file_metadata_response['response']}")
             return JsonResponse({'status': 'success', 
                                  'message': 'Files uploaded successfully',
