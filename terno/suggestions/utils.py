@@ -594,11 +594,12 @@ def create_store_vector_DB(datasource_id, table_descriptions=[]):
                 sync=True
             )
         
-        if partition_name in milvus_client.list_partitions(collection_name):
+        if settings.MILVUS_SERVER:
+            if partition_name not in milvus_client.list_partitions(collection_name):
+                milvus_client.create_partition(collection_name, partition_name)
             milvus_client.insert(collection_name, table_descriptions, partition_name=partition_name)
         else:
-            milvus_client.create_partition(collection_name, partition_name)
-            milvus_client.insert(collection_name, table_descriptions, partition_name=partition_name)
+            milvus_client.insert(collection_name, table_descriptions)
 
         print(f"Stored {len(table_descriptions)} tables in Milvus DB: {db_name}, Collection: {collection_name}, Partition: {partition_name}")
 
