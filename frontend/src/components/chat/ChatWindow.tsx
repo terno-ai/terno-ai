@@ -1,6 +1,6 @@
 import PromptBox from "./PromptBox";
 import Conversation from "./Conversation";
-import { useState, useRef, useEffect  } from "react";
+import { useState, useRef, useEffect, useLayoutEffect  } from "react";
 import { FaArrowDown } from "react-icons/fa"
 import { WebSocketService, subscribeToChat, sendChatMessage } from "@/utils/api";
 
@@ -24,9 +24,16 @@ const ChatWindow = () => {
     return () => unsubscribe();
   }, []);
 
-  const handleSend = async (text: string) => {
+  // const handleSend = async (text: string) => {
+  //   setMessages((prev) => [...prev, { role: "user", text, timestamp: new Date().toLocaleTimeString() }]);
+  //   sendChatMessage(text);
+  // };
+  const handleSend = (text: string) => {
     setMessages((prev) => [...prev, { role: "user", text, timestamp: new Date().toLocaleTimeString() }]);
-    sendChatMessage(text);
+
+    setTimeout(() => {
+      setMessages((prev) => [...prev, { role: "bot", text: `Echo: ${text}`, timestamp: new Date().toLocaleTimeString() }]);
+    }, 500);
   };
 
   useEffect(() => {
@@ -42,16 +49,7 @@ const ChatWindow = () => {
   
     return () => observer.disconnect();
   }, []);
-
-  useEffect(() => {
-    if (conversationRef.current) {
-      conversationRef.current.scrollTo({
-        top: conversationRef.current.scrollHeight,
-        behavior: "smooth",
-      });
-    }
-  }, [messages]);
-  
+ 
   useEffect(() => {
     const el = conversationRef.current;
     if (!el) return;
@@ -66,19 +64,16 @@ const ChatWindow = () => {
     return () => el.removeEventListener("scroll", handleScroll);
   }, []);
   
-  // useLayoutEffect(() => {
-  //   const el = conversationRef.current;
-  //   if (!el || userHasScrolled) return;
-
-  //   el.scrollTop = el.scrollHeight;
-  // }, [messages]);
   
   const scrollToBottom = () => {
     const el = conversationRef.current;
     if (el) {
-      el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+        setTimeout(() => {
+            el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+            setUserHasScrolled(false);
+        }, 0); // Delay slightly
     }
-  };
+};
   
 
   return (
@@ -92,6 +87,7 @@ const ChatWindow = () => {
           <Conversation
             messages={messages}
             promptBoxHeight={promptHeight}
+            userHasScrolled={userHasScrolled}
           />
         </div>
         {userHasScrolled && (
@@ -104,8 +100,6 @@ const ChatWindow = () => {
         )}
       </div>
     )}
-      
-
       <div ref={promptBoxRef} className="">
         <PromptBox onSend={handleSend} />
       </div>
