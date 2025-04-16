@@ -5,7 +5,12 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 
 class TernoWebsockerConsumer(AsyncWebsocketConsumer):
     async def connect(self):
+        self.group_name = f"user_{self.scope['user'].id}"
+        await self.channel_layer.group_add(self.group_name, self.channel_name)
         await self.accept()
+
+    async def disconnect(self, code):
+        await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
     async def receive(self, text_data):
         data = json.loads(text_data)
@@ -27,13 +32,3 @@ class TernoWebsockerConsumer(AsyncWebsocketConsumer):
                     "type": "chat",
                     "message": thought
                 }))
-
-        elif message_type == "notification":
-            await self.send(json.dumps({
-                "type": "notification",
-                "message": "Notification received",
-                "data": data.get("data")
-            }))
-
-    async def disconnect(self, close_code):
-        print("WebSocket Disconnected")
