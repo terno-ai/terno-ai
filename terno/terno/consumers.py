@@ -1,6 +1,7 @@
 import asyncio
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
+from terno.demo import simple_agent_demo
 
 
 class TernoWebsockerConsumer(AsyncWebsocketConsumer):
@@ -10,7 +11,10 @@ class TernoWebsockerConsumer(AsyncWebsocketConsumer):
         await self.accept()
 
     async def disconnect(self, code):
-        await self.channel_layer.group_discard(self.group_name, self.channel_name)
+        await self.channel_layer.group_discard(
+            self.group_name,
+            self.channel_name
+        )
 
     async def receive(self, text_data):
         data = json.loads(text_data)
@@ -18,16 +22,9 @@ class TernoWebsockerConsumer(AsyncWebsocketConsumer):
         user_message = data.get("message", "")
 
         if message_type == "chat":
-            thoughts = [
-                "Thought: I need to fetch the schema...",
-                "Action: Calling DBSchemaTool...",
-                "Thought: Now I need to generate SQL...",
-                "Action: Executing SQL query...",
-                "Result: 250 sales last month"
-            ]
+            agent_demo = simple_agent_demo()
 
-            for thought in thoughts:
-                await asyncio.sleep(2)
+            async for thought in agent_demo:
                 await self.send(json.dumps({
                     "type": "chat",
                     "message": thought
