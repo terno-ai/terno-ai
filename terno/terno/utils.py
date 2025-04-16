@@ -577,7 +577,7 @@ def write_sqlite_from_json(data, sqlite_url):
         return {'status': 'error', 'error': str(e)}
 
 
-def add_data_sqlite(sqlite_url, data, table, file, data_source):
+def add_data_sqlite(sqlite_url, data, table, file):
     engine = create_engine(sqlite_url, echo=True)
     with engine.connect() as connection:
         trans = connection.begin()
@@ -601,8 +601,6 @@ def add_data_sqlite(sqlite_url, data, table, file, data_source):
                         ordered_row[col_name] = value
                 connection.execute(table.insert().values(**ordered_row))
             trans.commit()
-            data_source._skip_metadata_sync = True
-            data_source.save()
             trans.close()
             return {'status': 'success'}
         except Exception as e:

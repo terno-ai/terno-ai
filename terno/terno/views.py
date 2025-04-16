@@ -486,7 +486,9 @@ def file_upload(request):
             print("Datasource Id", datasource_id)
             adding_file_to_existing_datasource = False
             if datasource_id:
+                print("Datasource Id called")
                 datasource = models.OrganisationDataSource.objects.get(datasource=datasource_id, organisation=organisation)
+                
             if datasource_id and datasource.datasource.type == 'sqlite':
                 sqlite_url = datasource.datasource.connection_str  
                 print("Sqlite Url", sqlite_url)
@@ -497,19 +499,11 @@ def file_upload(request):
                 user_sqlite_path = settings.USER_SQLITE_PATH
                 file_name = display_name + '.sqlite'
                 sqlite_url = 'sqlite:///' + user_sqlite_path + file_name
-                
-                datasource = models.DataSource.objects.create(
+                datasource = models.DataSource(
                     type='sqlite',
                     connection_str=sqlite_url,
                     display_name=display_name,
                     enabled=True
-                )
-                datasource._skip_metadata_sync = True
-                datasource.save()
-
-                models.OrganisationDataSource.objects.create(
-                    organisation=organisation,
-                    datasource=datasource
                 )
 
             for file in files:
@@ -521,20 +515,24 @@ def file_upload(request):
                 sqlite_write_response = utils.write_sqlite_from_json(file_metadata_response['response'], sqlite_url)
                 if sqlite_write_response['status'] == 'error':
                     return JsonResponse({'status': 'error', 'error': sqlite_write_response['error']})
-
+                
                 add_data_response = utils.add_data_sqlite(sqlite_write_response['sqlite_url'],
                                                           file_metadata_response['response'],
-                                                          sqlite_write_response['table'], file,datasource)
+                                                          sqlite_write_response['table'], file)
+                
                 if add_data_response['status'] == 'error':
                     return JsonResponse({'status': 'error', 'error': add_data_response['error']})
                 
-                if(adding_file_to_existing_datasource):
-                    dsId = datasource.datasource.id
-                    datasource.datasource.save()
-                else :
-                    dsId = datasource.id
-            
-            load_metadata.delay(dsId)
+            if(adding_file_to_existing_datasource):
+                print("Adding file to existing datasource")
+                dsId = datasource.datasource.id
+                datasource.datasource.save()
+            else :
+                dsId = datasource.id
+                datasource.save()
+                models.OrganisationDataSource.objects.create(organisation=organisation,
+                                                             datasource=datasource)
+                
             logger.info(f"File Uploaded Successfully: {file_metadata_response['response']}")
             return JsonResponse({'status': 'success', 
                                  'message': 'Files uploaded successfully',

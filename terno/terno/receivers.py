@@ -1,3 +1,5 @@
+import logging
+import traceback
 from terno.models import DataSource, Table, TableColumn, ForeignKey
 from django.dispatch import receiver
 from django.db.models.signals import post_save, post_delete
@@ -11,12 +13,16 @@ from .tasks import load_metadata
 from django.db import transaction
 from suggestions.utils import drop_vector_DB
 
+logger = logging.getLogger(__name__)
 
 
 @receiver(post_save, sender=DataSource)
 def update_tables_on_datasource_change(sender, instance, created, **kwargs):
     """Fetches and saves table information when a data source is saved."""
-    print("receiver called")
+
+    print("Testing load metadata called: Reciever called")
+    logger.info(f"[Signal Triggered] load_metadata will be scheduled for DataSource(id={instance.id})")
+    logger.info("Trigger stack:\n" + ''.join(traceback.format_stack(limit=10)))
     transaction.on_commit(lambda: load_metadata.delay(instance.id))
     # if created:
     #     for table_name in retrieved_tables:
