@@ -11,7 +11,6 @@ const placeholders = [
 const PromptBox = ({ onSend }: { onSend: (text: string) => void }) => {
   const [currentPlaceholderIndex, setCurrentPlaceholderIndex] = useState(0);
   const [hasSentMessage, setHasSentMessage] = useState(false);
-  //const [inputValue, setInputValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const [isButtonActive, setIsButtonActive] = useState(false);
@@ -65,7 +64,6 @@ const PromptBox = ({ onSend }: { onSend: (text: string) => void }) => {
         <div className="flex flex-col-reverse">
           <div className="flex justify-between items-center mt-2">
             <div className="flex gap-2">
-              
             </div>
             <button
               onClick={handleSend}
@@ -96,6 +94,10 @@ const PromptBox = ({ onSend }: { onSend: (text: string) => void }) => {
           />
         </div>
       </div>
+
+
+
+
     </div>
   );
 };
