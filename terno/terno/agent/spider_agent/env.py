@@ -1,7 +1,8 @@
-from .actions import Action, Terminate, EXECUTE_SQL, GET_TABLES, GET_TABLE_INFO, SAMPLE_ROWS, SEMANTIC_SEARCH_TABLE
+from .actions import Action, Terminate, EXECUTE_SQL, LIST_TABLES, GET_TABLE_INFO, SAMPLE_ROWS, SEMANTIC_SEARCH_TABLE
 from .utils import *
 import terno.utils as utils
 import re
+import terno.models as terno_models
 
 DEFAULT_TIME_OUT = 200
 
@@ -16,9 +17,9 @@ class TernoShieldEnv:
         try:
             # with timeout(DEFAULT_TIME_OUT, "Action execution time exceeded!"):
             done = False
-            if isinstance(action, GET_TABLES):
+            if isinstance(action, LIST_TABLES):
                 print('action ---', action)
-                observation = self.execute_get_tables(action)
+                observation = self.execute_list_tables(action)
             elif isinstance(action, GET_TABLE_INFO):
                 observation = self.get_table_info(action)
             elif isinstance(action, EXECUTE_SQL):
@@ -39,9 +40,16 @@ class TernoShieldEnv:
         # logger.info("Observation: %s", observation)
         return observation, done
 
-    def execute_get_tables(self, action):
-        print('-------------execute get tables', self.mDB.generate_schema())
-        return self.mDB.generate_schema()
+    def execute_list_tables(self, action):
+        print('-------------Get list of tables')
+        datasource = terno_models.DataSource.objects.get(id=action.datasource_id)
+        relevant_table_schema, ignored_tables_with_metadata = get_filtered_tables_utils(datasource, action.user_question)
+        final_prompt = combine_list_tables_prompt_utils(datasource_id=datasource.id,
+                                                        datasource_name=datasource.display_name,
+                                                        user_question=action.user_question,
+                                                        ignored_tables_with_metadata=ignored_tables_with_metadata,
+                                                        relevant_table_schema=relevant_table_schema)
+        return final_prompt
 
     def get_table_info(action):
         return

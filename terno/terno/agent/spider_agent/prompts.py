@@ -272,3 +272,24 @@ REFERENCE_PLAN_SYSTEM = """
 To solve this problem, here is a plan that may help you write the SQL query.
 {plan}
 """
+
+
+LIST_TABLES_PROMPT = """I have prepared the schema for the datasource "{datasource_name}" with id '{datasource_id}'. I have used semantic search, matching user's query "{user_query}" with table descriptions, and filtered out the most relevant tables which I think is sufficient to answer user's query. However, to preserve the broader context of the complete database, I've also listed the remaining tables separately.
+
+The remaining tables are presented simply by name, along with their descriptions (if available).
+
+For these filtered tables, I’ve included the full CREATE TABLE schema with detailed inline comments:
+  - Table descriptions (if available), appended as "-- <description>" immediately after the table definition.
+  - Column descriptions (if available), appended as "-- <description>" immediately after the column definition.
+  - Top values (i.e. for high‑cardinality categorical columns, lists the most frequent values and their counts) formatted as "Top values: [ ... ]".
+  - Unique values (i.e. For low‑cardinality columns, lists all distinct values) formatted as "Unique values: [ ... ]".
+  - Sample rows: a comment block at the end of the schema (starting with "-- Sample Rows:") that shows the column names and up to three sample data rows.
+
+Tables or columns without any metadata and description simply omit comments.  
+
+=== Remaining Tables (for context only) ===  // Each table is listed by name (and description if available)
+{list_of_remaining_tables}
+
+=== Filtered Tables (full schema) === // Each table is shown with its full CREATE TABLE statement and (inline comments if available)
+{filtered_table_schema}
+"""

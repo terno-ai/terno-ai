@@ -434,3 +434,16 @@ def generate_table_and_column_description(datasource_id, input_table_names=None,
     except Exception as e:
         logger.exception(f"Unhandled error in table description task {e}")
         return {'status': 'error', 'error': str(e)}
+
+
+def get_filtered_tables_demo(datasource_id, user_question):
+    datasource = terno_models.DataSource.objects.get(id=datasource_id, enabled=True)
+    filtered_table_names = ["course_courseapplication",
+    "course_coursebatches",
+    "course_course",
+    "product_subscriptiondetail", "auth_user", "tickets_ticket", 
+    "cxl_enrollment", "course_cxlcourseapplication"]
+    ignored_tables = ["jobs_jobapplication", "product_instamojorefunddetail", "product_productsku",
+                      "userprofile_chatmessage", "tickets_installmentpayment", "tickets_ticketinstallment",
+                      "course_courseenrollment"]
+    return filtered_table_names, ignored_tables

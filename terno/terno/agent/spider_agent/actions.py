@@ -64,29 +64,67 @@ class EXECUTE_SQL(Action):
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}(sql_query="{self.sql_query}")'
 
-@dataclass
-class GET_TABLES(Action):
 
-    action_type: str = field(default="get_tables",init=False,repr=False,metadata={"help": 'type of action, c.f., "get_tables"'})
+# @dataclass
+# class GET_TABLES(Action):
+
+#     action_type: str = field(default="get_tables",init=False,repr=False,metadata={"help": 'type of action, c.f., "get_tables"'})
+
+#     @classmethod
+#     def get_action_description(cls) -> str:
+#         return """
+# ## GET_TABLES Action
+# * Signature: GET_TABLES()
+# * Description: Fetch all table names from the database. The results are results are displayed in CSV File format.
+# * Examples:
+#   - Example1: GET_TABLES()
+# """
+#     @classmethod
+#     def parse_action_from_text(cls, text: str) -> Optional[Action]:
+#         matches = re.findall(r'GET_TABLES\(\)', text, flags=re.DOTALL)
+#         if matches:
+#             return cls()
+#         return None
+
+#     def __repr__(self) -> str:
+#         return f'{self.__class__.__name__}()'
+
+
+@dataclass
+class LIST_TABLES(Action):
+    action_type: str = field(default="list_tables",init=False,repr=False,metadata={"help": 'type of action, c.f., "list_tables"'})
+    datasource_id: int = field(metadata={"help": 'ID of the datasource for which to list the tables'})
+    user_question: str = field(metadata={"help": 'User input question.'})
 
     @classmethod
     def get_action_description(cls) -> str:
         return """
-## GET_TABLES Action
-* Signature: GET_TABLES()
-* Description: Fetch all table names from the database. The results are results are displayed in CSV File format.
+## LIST TABLES Action
+* Signature: LIST_TABLES(datasource_id: int, user_question: str)
+* Description:
+            This action retrieves a list of all tables in the given data source, including their short descriptions.
+Additionally, it filters tables based on their relevance to the user's question and returns the schema along with some metadata for the tables it thinks are useful and enough to answer user's question.
+This action is useful for giving visibility into the entire database structure while allowing it to focus on the most relevant parts when formulating an SQL query.
+Filtering is performed using semantic similarity or keyword matching between the user question and the table names/descriptions.
+
 * Examples:
-  - Example1: GET_TABLES()
+  - Example1: LIST_TABLES(datasource_id=2, user_question='Which customers made purchases in December?')
 """
+
     @classmethod
     def parse_action_from_text(cls, text: str) -> Optional[Action]:
-        matches = re.findall(r'GET_TABLES\(\)', text, flags=re.DOTALL)
+        pattern = r'LIST_TABLES\(datasource_id=(\d+),\s*user_question=(.*?)\)'
+        matches = re.findall(pattern, text, flags=re.DOTALL)
         if matches:
-            return cls()
+            datasource_id, user_question = matches[0]
+            return cls(
+                datasource_id=int(datasource_id.strip()),
+                user_question=remove_quote(user_question.strip())
+            )
         return None
 
     def __repr__(self) -> str:
-        return f'{self.__class__.__name__}()'
+        return f'{self.__class__.__name__}(datasource_id={self.datasource_id}, user_question="{self.user_question}")'
 
 @dataclass
 class GET_TABLE_INFO(Action):
