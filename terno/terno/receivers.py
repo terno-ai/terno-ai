@@ -22,7 +22,7 @@ def update_tables_on_datasource_change(sender, instance, created, **kwargs):
 
     print("Testing load metadata called: Reciever called")
     logger.info(f"[Signal Triggered] load_metadata will be scheduled for DataSource(id={instance.id})")
-    logger.info("Trigger stack:\n" + ''.join(traceback.format_stack(limit=10)))
+    # logger.info("Trigger stack:\n" + ''.join(traceback.format_stack(limit=10)))
     transaction.on_commit(lambda: load_metadata.delay(instance.id))
     # if created:
     #     for table_name in retrieved_tables:
