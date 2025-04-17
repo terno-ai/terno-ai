@@ -1,6 +1,7 @@
 from celery import shared_task
 from terno.models import DataSource, Table, TableColumn, ForeignKey
 import terno.utils as utils
+from suggestions.utils import is_ERP
 import sqlalchemy
 from sqlshield.models import MDatabase
 
@@ -76,4 +77,7 @@ def load_metadata(datasource_id):
                     referred_columns=referred_columns
                 )
 
-    print("Finished building the tables!!")
+    # print("Finished building the tables!!")
+    print("Finished building the tables!!\nChecking for is it a ERP or not.")
+    
+    is_ERP(datasource_id)

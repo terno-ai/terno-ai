@@ -317,7 +317,7 @@ class DataSourceAdmin(OrganisationFilterMixin, admin.ModelAdmin):
 
 
     def masked_connection_str(self, obj):
-        if obj.dialect_name == 'sqlite':
+        if obj.dialect_name in ['sqlite', 'postgresql']:
             return '*****'
         return obj.connection_str or '-'
     masked_connection_str.short_description = 'Connection Str'
@@ -398,8 +398,8 @@ class TableAdmin(OrganisationFilterMixin, admin.ModelAdmin):
         # Enqueue tasks for each datasource group
         for datasource_id, table_names in tables_by_datasource.items():
             generate_table_and_column_descriptions_task.delay(
-                datasource_id,
-                table_names,
+                datasource_id=datasource_id,
+                input_table_names=table_names,
             )
 
         self.message_user(

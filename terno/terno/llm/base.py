@@ -44,7 +44,7 @@ class BaseLLM(ABC):
 
 class LLMFactory:
     @staticmethod
-    def create_llm(organisation) -> BaseLLM:
+    def create_llm(organisation, model_name_override=None) -> BaseLLM:
         organisation_llm = OrganisationLLM.objects.filter(
             organisation=organisation,
             llm__enabled=True
@@ -74,7 +74,7 @@ class LLMFactory:
 
         common_params = {
                 'api_key': config.api_key,
-                'model_name': config.model_name,
+                'model_name': model_name_override or config.model_name,
                 'temperature': config.temperature,
                 'max_tokens': config.max_tokens,
                 'top_p': config.top_p,

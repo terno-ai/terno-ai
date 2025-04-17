@@ -91,6 +91,10 @@ class DataSource(models.Model):
     display_name = models.CharField(max_length=20, default='Datasource 1')
     type = models.CharField(max_length=20, choices=DBType,
                             default=DBType.default)
+    is_erp = models.BooleanField(
+        default=False,
+        help_text="Flag to indicate if the datasource is an ERP system."
+    )
     connection_str = models.TextField(
         max_length=300, help_text="Connection string for the datasource")
     connection_json = models.JSONField(
@@ -120,7 +124,9 @@ class Table(models.Model):
     name = models.CharField(max_length=255)
     public_name = models.CharField(max_length=255, null=True, blank=True)
     data_source = models.ForeignKey(DataSource, on_delete=models.CASCADE)
-    description = models.CharField(max_length=300, null=True, blank=True)
+    description = models.CharField(max_length=500, null=True, blank=True)
+    complete_description = models.BooleanField(default=False, help_text="Denotes if description is generated for the table and all its columns.")
+    category = models.CharField(max_length=255, null=True, blank=True)
     sample_rows = models.JSONField(null=True, blank=True)
     description_updated_at = models.DateTimeField(blank=True, null=True)
 

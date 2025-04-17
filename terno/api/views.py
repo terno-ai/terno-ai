@@ -173,7 +173,7 @@ def add_datasource(request):
     redirect_url = f"https://{organisation.subdomain}.{main_domain}"
 
     # Generate table and column Descriptions
-    # suggestion_tasks.generate_table_and_column_descriptions_task(datasource_id=datasource.id)
+    # suggestion_tasks.generate_table_and_column_descriptions_task(datasource_id=datasource.id, org_id=org_id)
 
     return JsonResponse({
         'status': 'success',

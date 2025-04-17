@@ -47,6 +47,7 @@ def deduct_llm_credits(llm_credit, response):
     for res in response:
         data.append(res[0])
     usage = calculate_price_from_tokens(data)
+    # print(f"{usage}")
     llm_credit.credit -= usage
     llm_credit.updated_at = timezone.now()
     llm_credit.save()

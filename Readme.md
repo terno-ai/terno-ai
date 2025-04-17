@@ -113,7 +113,8 @@ Ex. To restrict row access for `sales` table with filter `company_id = 10 and ca
 2. To allow access to the globally restricted table to a specific group use `/admin/terno/grouptablerowfilter/`
 
 Ex. To allow access to group `Groceries` access to the restricted category_ids and category_ids 12 and 13  which was added using previous method, create grouptablerowfilter with group `Groceries` and filter like
-```where (
+```
+where (
 (company_id = 10 and category_id not in (1, 2, 3))
     AND (
         (category_id = 12)
