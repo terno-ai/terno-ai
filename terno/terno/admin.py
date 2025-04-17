@@ -317,7 +317,7 @@ class DataSourceAdmin(OrganisationFilterMixin, admin.ModelAdmin):
 
 
     def masked_connection_str(self, obj):
-        if obj.dialect_name in ['sqlite', 'postgresql']:
+        if obj.dialect_name in ['sqlite', 'postgresql', 'postgres']:
             return '*****'
         return obj.connection_str or '-'
     masked_connection_str.short_description = 'Connection Str'
